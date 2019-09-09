@@ -28,10 +28,10 @@ def read_obj(filename):
                 face = line.split()
                 
                 if len(face) == 4:
-                    tmpFaces.append([int(face[1]), int(face[2]), int(face[3])])
+                    tmpFaces.append([int(face[1])-1, int(face[2])-1, int(face[3])-1])
             
                 if len(face) == 5:
-                    tmpFaces.append([int(face[1]), int(face[2]), int(face[3]), int(face[4])])
+                    tmpFaces.append([int(face[1])-1, int(face[2])-1, int(face[3])-1, int(face[4])-1])
             
             if line[0:2] == 'fn':
                     face_normal = line.split()
