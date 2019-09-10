@@ -119,6 +119,6 @@ class AbstractMesh(object):
         min_z_coord = self.vertices[:,2].min()
         max_z_coord = self.vertices[:,2].max()
         
-        self.__bounding_box = np.array([[min_x_coord, max_x_coord],[min_y_coord, max_y_coord],[min_z_coord, max_z_coord]])
+        self.__bounding_box = np.array([[min_x_coord, min_y_coord, min_z_coord],[max_x_coord, max_y_coord, max_z_coord]])
         
         
