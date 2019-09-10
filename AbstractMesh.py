@@ -94,6 +94,12 @@ class AbstractMesh(object):
         return self.__bounding_box
     
     
+    @property
+    def num_vertices(self):
+        
+        return self.vertices.shape[0]
+    
+    
     def __update_bounding_box(self):
         
         minXCoord = self.vertices[:,0].min()
