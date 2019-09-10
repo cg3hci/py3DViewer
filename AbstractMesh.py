@@ -8,7 +8,7 @@ class AbstractMesh(object):
         self.vtx_normals       = None #npArray (Nx3)
         self.boundary         = None #TriMesh or QuadMesh
         self.faces            = None #npArray (NxM)
-        self.vtx2face         = None #npArray (NxM)
+        self.__vtx2face         = None #npArray (NxM)
         self.__vtx2vtx        = None
         self.__bounding_box    = None #npArray (2x3)
         self.subspace         = None #npArray (3x2)
@@ -25,15 +25,16 @@ class AbstractMesh(object):
                                  'max_z':None}  
         
         super(AbstractMesh, self).__init__()
+        
      
     @property
     def cut(self):
         return self.__cut
     
+    
     def set_cut(self, min_x = None, max_x = None, 
             min_y = None, max_y = None, 
             min_z = None, max_z = None):
-        
         
         if min_x:
             self.__cut['min_x'] = min_x
@@ -55,39 +56,48 @@ class AbstractMesh(object):
         
     
     def save_file(self, filename):
+        
         raise NotImplementedError('This method must be implemented in the subclasses')
 
 
-    def get_metric(self, propertyName, idElement):
+    def get_metric(self, property_name, id_element):
         
-        return self.simplex_metrics[propertyName][idElement]
+        return self.simplex_metrics[property_name][id_element]
     
     @property
     def simplex_centroids(self):
+        
         raise NotImplementedError('This method must be implemented in the subclasses')
+        
     
     def __compute_metrics(self): 
+        
         raise NotImplementedError('This method must be implemented in the subclasses')
+        
         
     def add_vertex(self, x, y, z): 
         
-        newVertex = np.array([x,y,z], dtype=np.float)
+        new_vertex = np.array([x,y,z], dtype=np.float)
         
-        self.vertices = np.concatenate([self.vertices, newVertex])
+        self.vertices = np.concatenate([self.vertices, new_vertex])
     
     
-    def add_vertex_list(newVertices):
+    def add_vertex_list(new_vertices):
         
-        newVertices = np.array(newVertices)
-        self.vertices = np.concatenate([self.vertices, newVertices])
+        new_vertices = np.array(new_vertices)
+        self.vertices = np.concatenate([self.vertices, new_vertices])
         
         
     @property
-    def vtx2vtx(self, vtx):
+    def vtx2vtx(self):
         
-        return self.__vtx2vtx[vtx]
+        return self.__vtx2vtx
         
-    
+    @property
+    def vtx2face(self):
+        
+        return self.__vtx2face  
+
     @property
     def bbox(self):
 
@@ -102,13 +112,13 @@ class AbstractMesh(object):
     
     def __update_bounding_box(self):
         
-        minXCoord = self.vertices[:,0].min()
-        maxXCoord = self.vertices[:,0].max()
-        minYCoord = self.vertices[:,1].min()
-        maxYCoord = self.vertices[:,1].max()
-        minZCoord = self.vertices[:,2].min()
-        maxZCoord = self.vertices[:,2].max()
+        min_x_coord = self.vertices[:,0].min()
+        max_x_coord = self.vertices[:,0].max()
+        min_y_coord = self.vertices[:,1].min()
+        max_y_coord = self.vertices[:,1].max()
+        min_z_coord = self.vertices[:,2].min()
+        max_z_coord = self.vertices[:,2].max()
         
-        self.__bounding_box = np.array([[minXCoord, maxXCoord],[minYCoord, maxXCoord],[minZCoord, maxZCoord]])
+        self.__bounding_box = np.array([[min_x_coord, max_x_coord],[min_y_coord, max_y_coord],[min_z_coord, max_z_coord]])
         
         
