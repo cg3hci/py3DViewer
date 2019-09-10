@@ -27,11 +27,8 @@ def read_obj(filename):
             if line[0:2] == 'f ':
                 face = line.split()
                 
-                if len(face) == 4:
-                    tmpFaces.append([int(face[1])-1, int(face[2])-1, int(face[3])-1])
+                tmpFaces.append([int(f) -1 for f in face[1:]])
             
-                if len(face) == 5:
-                    tmpFaces.append([int(face[1])-1, int(face[2])-1, int(face[3])-1, int(face[4])-1])
             
             if line[0:2] == 'fn':
                     face_normal = line.split()
