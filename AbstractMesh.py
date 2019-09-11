@@ -4,17 +4,16 @@ class AbstractMesh(object):
     
     def __init__(self):
         
-        self.vertices         = None #npArray (Nx3)
-        self.vtx_normals       = None #npArray (Nx3)
-        self.boundary         = None #TriMesh or QuadMesh
-        self.faces            = None #npArray (NxM)
-        self.__vtx2face         = None #npArray (NxM)
-        self.__vtx2vtx        = None
-        self.__bounding_box    = None #npArray (2x3)
-        self.subspace         = None #npArray (3x2)
-        self.simplex_metrics   = None #dictionary[propertyName : npArray (Nx1)]
+        self.vertices            = None #npArray (Nx3)
+        self.vtx_normals         = None #npArray (Nx3)
+        self.boundary            = None #TriMesh or QuadMesh
+        self.faces               = None #npArray (NxM)
+        self.__vtx2face          = None #npArray (NxM)
+        self.__vtx2vtx           = None
+        self.__bounding_box      = None #npArray (2x3)
+        self.subspace            = None #npArray (3x2)
+        self.simplex_metrics     = dict() #dictionary[propertyName : npArray (Nx1)]
         self.__simplex_centroids = None #npArray (Nx1)
-        self.is_dirty          = None #Bool
         
         #CUT
         self.__cut            = {'min_x':None, 
@@ -78,11 +77,12 @@ class AbstractMesh(object):
     def add_vertex(self, x, y, z): 
         
         new_vertex = np.array([x,y,z], dtype=np.float)
+        new_vertex.shape = (1,3)
         
         self.vertices = np.concatenate([self.vertices, new_vertex])
     
     
-    def add_vertex_list(new_vertices):
+    def add_vertices(self, new_vertices):
         
         new_vertices = np.array(new_vertices)
         self.vertices = np.concatenate([self.vertices, new_vertices])
