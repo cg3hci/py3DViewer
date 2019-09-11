@@ -6,7 +6,6 @@ class AbstractMesh(object):
         
         self.vertices            = None #npArray (Nx3)
         self.vtx_normals         = None #npArray (Nx3)
-        self.boundary            = None #TriMesh or QuadMesh
         self.faces               = None #npArray (NxM)
         self.__vtx2face          = None #npArray (NxM)
         self.__vtx2vtx           = None
@@ -35,17 +34,17 @@ class AbstractMesh(object):
             min_y = None, max_y = None, 
             min_z = None, max_z = None):
         
-        if min_x:
+        if min_x is not None:
             self.__cut['min_x'] = min_x
-        if max_x:
+        if max_x is not None:
             self.__cut['max_x'] = max_x
-        if min_y:
+        if min_y is not None:
             self.__cut['min_y'] = min_y
-        if max_y:
+        if max_y is not None:
             self.__cut['max_y'] = max_y
-        if min_z:
+        if min_z is not None:
             self.__cut['min_z'] = min_z
-        if max_z:
+        if max_z is not None:
             self.__cut['max_z'] = max_z
            
 
@@ -70,6 +69,10 @@ class AbstractMesh(object):
         
     
     def __compute_metrics(self): 
+        
+        raise NotImplementedError('This method must be implemented in the subclasses')
+        
+    def boundary(self, flip_x = None, flip_y = None, flip_z = None):
         
         raise NotImplementedError('This method must be implemented in the subclasses')
         
