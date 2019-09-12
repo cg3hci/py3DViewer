@@ -8,31 +8,32 @@ class AbstractMesh(object):
         self.vtx_normals         = None #npArray (Nx3)
         self.faces               = None #npArray (NxM)
         self.__vtx2face          = None #npArray (NxM)
-        self.__vtx2vtx           = None
+        self.__vtx2vtx           = None #npArray (Nx1)
         self.__bounding_box      = None #npArray (2x3)
         self.subspace            = None #npArray (3x2)
         self.simplex_metrics     = dict() #dictionary[propertyName : npArray (Nx1)]
         self.__simplex_centroids = None #npArray (Nx1)
-        
-        #CUT
         self.__cut            = {'min_x':None, 
                                  'max_x':None, 
                                  'min_y':None, 
                                  'max_y':None, 
                                  'min_z':None, 
-                                 'max_z':None}  
+                                 'max_z':None}  #dictionary
         
         super(AbstractMesh, self).__init__()
         
      
+    # ==================== METHODS ==================== #
+    
     @property
     def cut(self):
+        
         return self.__cut
     
     
     def set_cut(self, min_x = None, max_x = None, 
-            min_y = None, max_y = None, 
-            min_z = None, max_z = None):
+                      min_y = None, max_y = None, 
+                      min_z = None, max_z = None):
         
         if min_x is not None:
             self.__cut['min_x'] = min_x
@@ -72,6 +73,7 @@ class AbstractMesh(object):
         
         raise NotImplementedError('This method must be implemented in the subclasses')
         
+        
     def boundary(self, flip_x = None, flip_y = None, flip_z = None):
         
         raise NotImplementedError('This method must be implemented in the subclasses')
@@ -96,11 +98,13 @@ class AbstractMesh(object):
         
         return self.__vtx2vtx
         
+        
     @property
     def vtx2face(self):
         
         return self.__vtx2face  
 
+    
     @property
     def bbox(self):
 
@@ -122,6 +126,7 @@ class AbstractMesh(object):
         min_z_coord = self.vertices[:,2].min()
         max_z_coord = self.vertices[:,2].max()
         
-        self.__bounding_box = np.array([[min_x_coord, min_y_coord, min_z_coord],[max_x_coord, max_y_coord, max_z_coord]])
+        self.__bounding_box = np.array([[min_x_coord, min_y_coord, min_z_coord],
+                                        [max_x_coord, max_y_coord, max_z_coord]])
         
         
