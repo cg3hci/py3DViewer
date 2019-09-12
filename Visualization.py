@@ -48,7 +48,7 @@ class Viewer(object):
         
         
         tri_properties = {
-            'position': BufferAttribute(self.mesh.vertices[self.mesh.boundary(flip_x=True, flip_y=True, flip_z=True).flatten()], normalized=False),
+            'position': BufferAttribute(self.mesh.vertices[self.mesh.boundary(flip_x=False, flip_y=False, flip_z=False).flatten()], normalized=False),
             #'index' : BufferAttribute(np.asarray(self.surface, dtype='uint32').ravel(), normalized=False),
             'color' : BufferAttribute(self.mesh_color, normalized=False),
         }
