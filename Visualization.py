@@ -98,6 +98,71 @@ class Viewer(object):
         self.scene.add(mesh_)
         self.scene.add(line_)
 
+    def __draw_quadmesh(self, color=None):
+        
+        boundaries = self.mesh.boundary(flip_x=False, flip_y=False, flip_z=False)
+        tris = np.c_[boundaries[:,:3], boundaries[:,2:], boundaries[:,0]]
+        tris.shape = (-1, 3)
+        
+        
+        quad_properties = {
+            'position': BufferAttribute(self.mesh.vertices[tris.flatten()], normalized=False),
+            #'index' : BufferAttribute(np.asarray(self.surface, dtype='uint32').ravel(), normalized=False),
+            'color' : BufferAttribute(self.mesh_color, normalized=False),
+        }
+        
+        mesh_geometry = BufferGeometry(attributes=quad_properties)
+        mesh_geometry.exec_three_obj_method('computeVertexNormals')
+        
+        
+        edges = np.c_[self.mesh.boundary()[:,:2], self.mesh.boundary()[:,1:3], self.mesh.boundary()[:,2:4], self.mesh.boundary()[:,3], self.mesh.boundary()[:,0]].flatten()
+        surface_wireframe = self.mesh.vertices[edges].tolist()
+        
+        wireframe = BufferGeometry(attributes={'position': BufferAttribute(surface_wireframe, normalized=False)})
+        
+        mesh_material = MeshLambertMaterial(#shininess=25,
+                                         #emissive = '#aaaaaa',#phong
+                                         #specular = '#aaaaaa',#phong
+                                           polygonOffset=True,
+                                           polygonOffsetFactor=1,
+                                           polygonOffsetUnits=1,
+                                           flatShading = True,
+                                           side = 'FrontSide',
+                                           #color = '#550000',
+                                           wireframe=False,
+                                           vertexColors = 'FaceColors',
+                                          )
+        
+        edges_material = MeshBasicMaterial(color='black',
+#                                           side= 'FrontSide'
+                                           polygonOffset=True,
+                                           polygonOffsetFactor=1,
+                                           polygonOffsetUnits=1,
+                                           #shininess=0.5,
+                                           wireframe=True,
+                                           linewidth = 1,
+                                           opacity=1,
+                                           depthTest=True,
+                                           transparent=True)
+        
+        mesh_ = Mesh(
+            geometry=mesh_geometry,
+            material=mesh_material,
+            position=[0, 0, 0]   # Center in 0
+        )
+        
+        line_ = LineSegments(wireframe,
+                             material=LineBasicMaterial(color='black', 
+                                                        linewidth = 1, 
+                                                        depthTest=True, 
+                                                        opacity=1,
+                                                        transparent=True), 
+                             type = 'LinePieces')
+
+
+        #aggiunge la mesh alla scena
+        self.scene.add(mesh_)
+        self.scene.add(line_)
     
     
     def initialize_camera(self, center_target, width, height):
