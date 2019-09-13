@@ -54,3 +54,49 @@ def quad_aspect_ratio(vertices, quads):
 
     return l_max / (4*a)
 
+#______________________________________Tets______________________________________________________
+
+def tetScaledJacobian(self,p0, p1, p2, p3):
+    
+        """Compute quality of hexa Scaled Jacobian in tensor mode
+
+        Paramenters:
+        -----
+            p0: array of float
+              array of vertices 0
+            p1: array of float
+              array of vertices 1
+            p2: array of float
+              array of vertices 2
+            p3: array of float
+              array of vertices 3
+
+
+        Return:
+        -----
+            array of Scaled Jacobian values
+        """
+        l0 = p1 - p0
+        l1 = p2 - p1
+        l2 = p0 - p2
+        l3 = p3 - p0
+        l4 = p3 - p1
+        l5 = p3 - p2
+
+        l0_length = super().length(l0)
+        l1_length = super().length(l1)
+        l2_length = super().length(l2)
+        l3_length = super().length(l3)
+        l4_length = super().length(l4)
+        l5_length = super().length(l5)
+
+        J = np.einsum('ij,ij->i', np.cross(l2, l0, axis= 1), l3)
+        lambda_1 = np.expand_dims(l0_length * l2_length * l3_length, axis = 0).transpose()
+        lambda_2 = np.expand_dims(l0_length * l1_length * l4_length, axis = 0).transpose()
+        lambda_3 = np.expand_dims(l1_length * l2_length * l5_length, axis = 0).transpose()
+        lambda_4 = np.expand_dims(l3_length * l4_length * l5_length, axis = 0).transpose()
+        lambda_5 = np.expand_dims(J, axis = 0).transpose()
+        lambda_ = np.concatenate((lambda_1, lambda_2, lambda_3, lambda_4, lambda_5), axis = 1)
+        max_el = np.amax(lambda_, axis=1)
+
+        return (J * np.sqrt(2)) / max_el
