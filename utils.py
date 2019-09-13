@@ -68,7 +68,48 @@ def read_mesh(filename):
         tmp_labels = np.array(tmp_labels)
         
         return tmp_vtx, tmp_simplices, tmp_labels
+    
+
+def save_mesh(mesh, filename):
+    """
+    Writes the data from the given mesh object to a file
+    
+    Parameters
+    ----------
+    mesh : Tetmesh / Hexmesh
+        the mesh you want to serialize
+    filename : str
+        name of the file
+    
+    Returns
+    -------
+    void
+    """
+    
+    with open(filename, 'w') as f:
         
+        f.write('MeshVersionFormatted 1\nDimension 3\n')
+        f.write('Vertices\n')
+        f.write(f'{mesh.num_vertices}\n')
+        
+        for v in mesh.vertices:
+            f.write(f'{v[0]} {v[1]} {v[2]} 0\n')
+        
+        if mesh.tets.shape[1] == 4:
+            f.write('Tetrahedra\n')
+            f.write(f'{mesh.num_tets}\n')
+            for idx, t in enumerate(mesh.tets):
+                f.write(f'{t[0]+1} {t[1]+1} {t[2]+1} {t[3]+1} {mesh.labels[idx]}\n')
+        
+        else:
+            f.write('Hexahedra\n')
+            f.write(f'{mesh.num_hexes}\n')
+            for idx, h in enumerate(mesh.hexes):
+                f.write(f'{h[0]+1} {h[1]+1} {h[2]+1} {h[3]+1} {h[4]+1} {h[5]+1} {h[6]+1} {h[7]+1} {mesh.labels[idx]}\n')
+        
+        f.write('End')
+
+ 
 
 def read_obj(filename):
     """

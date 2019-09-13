@@ -11,7 +11,7 @@ class Viewer(object):
         self.mesh = mesh
         self.scene = None
         self.mesh_color = np.array([[0.88, 0.9, 0.94],[0.88, 0.9, 0.94],[0.88, 0.9, 0.94]])
-        self.mesh_color = np.repeat(self.mesh_color, self.mesh.num_faces*3, axis=0)
+        self.mesh_color = np.repeat(self.mesh_color, self.mesh.boundary.shape[0]*3, axis=0)
         self.center = list(mesh.vertices.mean(axis = 0))
         
         if UI:
@@ -28,12 +28,12 @@ class Viewer(object):
         
         if mesh_color is not None:
             self.mesh_color = np.array([mesh_color, mesh_color, mesh_color], dtype=np.float)
-            self.mesh_color = np.repeat(self.mesh_color, self.mesh.num_faces*3, axis=0)
+            self.mesh_color = np.repeat(self.mesh_color, self.mesh.boundary.shape[0]*3, axis=0)
         
         
         renderer = self.initialize_camera(self.center, width, height)
         
-        if 'Trimesh' in str(type(self.mesh)):
+        if 'Trimesh' in str(type(self.mesh)) or 'Tetmesh' in str(type(self.mesh)):
             
             self.__draw_trimesh()
             

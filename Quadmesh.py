@@ -10,7 +10,6 @@ class Quadmesh(AbstractMesh):
         
         self.face_normals    = None #npArray (Nx3)
         self.face_labels     = None #npArray (Nx1)
-        self.faces           = None #npArray (Nx4)
         self.__face2face     = None #npArray (Nx3?)
         
         super(Quadmesh, self).__init__()
@@ -238,5 +237,9 @@ class Quadmesh(AbstractMesh):
         tris = np.c_[self.faces[:,:3], self.faces[:,2:], self.faces[:,0]]
         tris.shape = (-1, 3)
         return tris
+    
+    def __repr__(self):
+        self.show()
+        return f"Showing {self.boundary().shape[0]} polygons."
     
  
