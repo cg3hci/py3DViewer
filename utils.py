@@ -58,8 +58,8 @@ def read_mesh(filename):
         else:
             for i in range(num_simplices):
                 line = f.readline()
-                a, b, c, d, e, f, label = list(map(lambda x : int(x)-1, line.split()))
-                tmp_simplices += [(a, b, c, d, e, f)]
+                a, b, c, d, e, f_, g, h, label = list(map(lambda x : int(x)-1, line.split()))
+                tmp_simplices += [(a, b, c, d, e, f_, g, h)]
                 tmp_labels += [label]
 
         
