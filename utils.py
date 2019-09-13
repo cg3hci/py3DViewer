@@ -1,5 +1,21 @@
 import numpy as np
 
+def read_mesh(filename):
+    """
+    Imports the data from the given MESH file
+    
+    Parameters
+    ----------
+    filename : str
+        name of the file
+    
+    Returns
+    -------
+    (Array,Array)
+        the mesh vertices, normals and the topology arrays
+    """
+
+
 def read_obj(filename):
     """
     Imports the data from the given OBJ file
