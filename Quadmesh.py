@@ -223,11 +223,11 @@ class Quadmesh(AbstractMesh):
         return self._AbstractMesh__simplex_centroids
     
     
-    @propery
+    @property
     def edges(self):
         
-        edges =  np.c_[self.faces()[:,:2], self.faces()[:,1:3], self.faces()[:,2:4], self.faces()[:,3], self.faces()[:,0]].flatten()
-        esges.shape = (-1,2)
+        edges =  np.c_[self.faces[:,:2], self.faces[:,1:3], self.faces[:,2:4], self.faces[:,3], self.faces[:,0]]
+        edges.shape = (-1,2)
         
         return edges
     
