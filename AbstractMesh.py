@@ -5,7 +5,7 @@ class AbstractMesh(object):
     def __init__(self):
         
         self.vertices            = None #npArray (Nx3)
-        self.vtx_normals         = None #npArray (Nx3)
+        self.vtx_normals         = None #npArray (Nx3) ## Is this used by volumetric meshes? Consider moving it inside surface meshes only
         self.faces               = None #npArray (NxM)
         self.__vtx2face          = None #npArray (NxM)
         self.__vtx2vtx           = None #npArray (Nx1)
