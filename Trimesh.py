@@ -230,4 +230,9 @@ class Trimesh(AbstractMesh):
         
         return edges
        
+    def __repr__(self):
+        self.show()
+        return f"Showing {self.boundary().shape[0]} polygons."
+    
+    
     
