@@ -56,26 +56,14 @@ def quad_aspect_ratio(vertices, quads):
 
 #______________________________________Tets______________________________________________________
 
-def tetScaledJacobian(self,p0, p1, p2, p3):
+def tet_scaled_jacobian(vertices, tets):
     
-        """Compute quality of hexa Scaled Jacobian in tensor mode
-
-        Paramenters:
-        -----
-            p0: array of float
-              array of vertices 0
-            p1: array of float
-              array of vertices 1
-            p2: array of float
-              array of vertices 2
-            p3: array of float
-              array of vertices 3
-
-
-        Return:
-        -----
-            array of Scaled Jacobian values
-        """
+        p0 = vertices[tets[:,0]]
+        p1 = vertices[tets[:,1]]
+        p2 = vertices[tets[:,2]]
+        p3 = vertices[tets[:,3]]
+        
+        
         l0 = p1 - p0
         l1 = p2 - p1
         l2 = p0 - p2
@@ -83,12 +71,12 @@ def tetScaledJacobian(self,p0, p1, p2, p3):
         l4 = p3 - p1
         l5 = p3 - p2
 
-        l0_length = super().length(l0)
-        l1_length = super().length(l1)
-        l2_length = super().length(l2)
-        l3_length = super().length(l3)
-        l4_length = super().length(l4)
-        l5_length = super().length(l5)
+        l0_length = np.linalg.norm(l0, axis=1)
+        l1_length = np.linalg.norm(l1, axis=1)
+        l2_length = np.linalg.norm(l2, axis=1)
+        l3_length = np.linalg.norm(l3, axis=1)
+        l4_length = np.linalg.norm(l4, axis=1)
+        l5_length = np.linalg.norm(l5, axis=1)
 
         J = np.einsum('ij,ij->i', np.cross(l2, l0, axis= 1), l3)
         lambda_1 = np.expand_dims(l0_length * l2_length * l3_length, axis = 0).transpose()
