@@ -10,7 +10,6 @@ class Trimesh(AbstractMesh):
         
         self.face_normals     = None #npArray (Nx3)
         self.face_labels      = None #npArray (Nx1)
-        self.faces            = None #npArray (Nx3)
         self.__face2face      = None #npArray (Nx3?)
         
         super(Trimesh, self).__init__()
