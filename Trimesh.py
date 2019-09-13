@@ -6,7 +6,7 @@ from metrics import triangle_aspect_ratio, triangle_area
 
 class Trimesh(AbstractMesh):
     
-    def __init__(self, vertices = None, faces = None, face_normals = None, labels = None):
+    def __init__(self, vertices = None, faces = None, labels = None):
         
         self.face_normals     = None #npArray (Nx3)
         self.face_labels      = None #npArray (Nx1)
@@ -19,9 +19,6 @@ class Trimesh(AbstractMesh):
             
             self.vertices = np.array(vertices) 
             self.faces = np.array(faces)
-            
-            if face_normals:
-                self.face_normals = np.array(face_normals)
             
             if labels:
                 self.labels = np.array(labels)
@@ -189,20 +186,12 @@ class Trimesh(AbstractMesh):
         if ext == 'obj':
             utils.save_obj(self, filename)
         
-        
-    @property
-    def simplex_centroids(self):
-        
-        if self._AbstractMesh__simplex_centroids is None:
-            self._AbstractMesh__simplex_centroids = self.vertices[self.faces].mean(axis = 1)
-        
-        return self._AbstractMesh__simplex_centroids
     
-    
-    @property
-    def face2face(self):
-        return self.__face2face
-       
+    def __compute_metrics(self): 
+        
+        self.simplex_metrics['area'] = triangle_area(self.vertices, self.faces)
+        self.simplex_metrics['aspect_ratio'] = triangle_aspect_ratio(self.vertices, self.faces)
+        
     
     def boundary(self, flip_x = False, flip_y = False, flip_z = False):
         
@@ -218,9 +207,27 @@ class Trimesh(AbstractMesh):
         z_range = np.logical_xor(flip_z,((self.simplex_centroids[:,2] >= min_z) & (self.simplex_centroids[:,2] <= max_z)))
         
         return self.faces[ x_range & y_range & z_range]
+    
         
+    @property
+    def face2face(self):
+        return self.__face2face
+
         
-    def __compute_metrics(self): 
+    @property
+    def simplex_centroids(self):
         
-        self.simplex_metrics['area'] = triangle_area(self.vertices, self.faces)
-        self.simplex_metrics['aspect_ratio'] = triangle_aspect_ratio(self.vertices, self.faces)
+        if self._AbstractMesh__simplex_centroids is None:
+            self._AbstractMesh__simplex_centroids = self.vertices[self.faces].mean(axis = 1)
+        
+        return self._AbstractMesh__simplex_centroids
+    
+    @propery
+    def edges(self):
+        
+        edges =  np.c_[self.faces()[:,:2], self.faces()[:,1:], self.faces()[:,3], self.faces()[:,0]].flatten()
+        esges.shape = (-1,2)
+        
+        return edges
+       
+    

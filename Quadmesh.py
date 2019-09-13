@@ -6,7 +6,7 @@ from metrics import quad_area, quad_aspect_ratio
 from scipy.sparse import *
 
 class Quadmesh(AbstractMesh):
-    def __init__(self, vertices= None, faces = None, face_normals = None, labels = None):
+    def __init__(self, vertices= None, faces = None, labels = None):
         
         self.face_normals    = None #npArray (Nx3)
         self.face_labels     = None #npArray (Nx1)
@@ -19,8 +19,6 @@ class Quadmesh(AbstractMesh):
             self.vertices = np.array(vertices)
             self.faces = np.array(faces)
             
-            if(faces_normals):
-                self.face_normals = np.array(face_normals)
                 
             if(labels):
                 self.labels = np.array(labels)
@@ -225,9 +223,20 @@ class Quadmesh(AbstractMesh):
         return self._AbstractMesh__simplex_centroids
     
     
+    @propery
+    def edges(self):
+        
+        edges =  np.c_[self.faces()[:,:2], self.faces()[:,1:3], self.faces()[:,2:4], self.faces()[:,3], self.faces()[:,0]].flatten()
+        esges.shape = (-1,2)
+        
+        return edges
+    
+    
     @property
     def export_triangles(self):
         
         tris = np.c_[self.faces[:,:3], self.faces[:,2:], self.faces[:,0]]
         tris.shape = (-1, 3)
         return tris
+    
+ 
