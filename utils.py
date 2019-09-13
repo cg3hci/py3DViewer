@@ -52,13 +52,13 @@ def read_mesh(filename):
         if "Tetrahedra" in line:
             for i in range(num_simplices):
                 line = f.readline()
-                a, b, c, d, label = list(map(lambda x : int(x), line.split()))
+                a, b, c, d, label = list(map(lambda x : int(x)-1, line.split()))
                 tmp_simplices += [(a, b, c, d)]
                 tmp_labels += [label]
         else:
             for i in range(num_simplices):
                 line = f.readline()
-                a, b, c, d, e, f, label = list(map(lambda x : int(x), line.split()))
+                a, b, c, d, e, f, label = list(map(lambda x : int(x)-1, line.split()))
                 tmp_simplices += [(a, b, c, d, e, f)]
                 tmp_labels += [label]
 
