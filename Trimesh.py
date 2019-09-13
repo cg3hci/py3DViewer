@@ -225,7 +225,7 @@ class Trimesh(AbstractMesh):
     @property
     def edges(self):
         
-        edges =  np.c_[self.faces[:,:2], self.faces[:,1:], self.faces[:,3], self.faces[:,0]]
+        edges =  np.c_[self.faces[:,:2], self.faces[:,1:], self.faces[:,2], self.faces[:,0]]
         edges.shape = (-1,2)
         
         return edges
