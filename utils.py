@@ -11,10 +11,64 @@ def read_mesh(filename):
     
     Returns
     -------
-    (Array,Array)
-        the mesh vertices, normals and the topology arrays
+    (Array,Array,Array)
+        the mesh vertex, tet and label arrays
     """
+    
+    assert filename.split(".")[-1] == "mesh" # Maybe throw exception?
+        
+    
+    with open(filename) as f:
+        reading_vertices = False
+        tmp_vtx          = []
+        tmp_simplices    = []
+        tmp_labels   = []
+        num_vtx          = 0
+        num_simplices         = 0
+        
+        line             = f.readline()
+        
+        while line != "" and "Vertices" not in line:        
+            line = f.readline()
+             
+        assert line != ""
 
+        num_vtx = int(f.readline())
+        
+        for i in range(num_vtx):
+            line = f.readline()
+            x, y, z = list(map(lambda x : float(x), line.split()[:-1]))
+            tmp_vtx += [(x, y, z)]
+        
+        line = f.readline()
+        
+        while "Tetrahedra" not in line and "Hexahedra" not in line and line != "":
+            line = f.readline()
+            
+        assert line != ""
+        
+        num_simplices = int(f.readline())
+        
+        if "Tetrahedra" in line:
+            for i in range(num_simplices):
+                line = f.readline()
+                a, b, c, d, label = list(map(lambda x : int(x), line.split()))
+                tmp_simplices += [(a, b, c, d)]
+                tmp_labels += [label]
+        else:
+            for i in range(num_simplices):
+                line = f.readline()
+                a, b, c, d, e, f, label = list(map(lambda x : int(x), line.split()))
+                tmp_simplices += [(a, b, c, d, e, f)]
+                tmp_labels += [label]
+
+        
+        tmp_vtx = np.array(tmp_vtx)
+        tmp_simplices = np.array(tmp_simplices)
+        tmp_labels = np.array(tmp_labels)
+        
+        return tmp_vtx, tmp_simplices, tmp_labels
+        
 
 def read_obj(filename):
     """
