@@ -12,7 +12,7 @@ class Viewer(object):
         self.scene = None
         self.mesh_color = np.array([[0.88, 0.9, 0.94],[0.88, 0.9, 0.94],[0.88, 0.9, 0.94]])
         self.mesh_color = np.repeat(self.mesh_color, self.mesh.boundary(False, False, False).shape[0]*3, axis=0)
-        self.center = list(mesh.vertices.mean(axis = 0))
+        self.center = list(mesh.vertices[self.mesh.boundary().flatten()].mean(axis = 0))
         
         if UI:
             self.__create_UI()
@@ -172,13 +172,13 @@ class Viewer(object):
         #key_light2 = SpotLight(position=[0, 0, 0], angle = 0.3, penumbra = 0.1, target = tetraObj,castShadow = True)
 
         camera_t = PerspectiveCamera(
-            position=camera_position, lookAt=camera_target, fov=50,
+            position=camera_position, lookAt=camera_target, fov=50, near=.5, ##careful with this near clipping plane...
             children=[key_light]
         )
         self.scene = Scene(children=[camera_t, AmbientLight(color='white')], background='#ffffff')
         controls_c = OrbitControls(controlling=camera_t)
         controls_c.enableDamping = False
-        controls_c.dumping = 0.01
+        controls_c.dumping = 0.01 ##TODO: Check if this is a typo
         controls_c.dampingFactor = 0.1 #friction
         controls_c.rotateSpeed = 0.5 #mouse sensitivity
         controls_c.target = center_target # centro dell'oggetto
