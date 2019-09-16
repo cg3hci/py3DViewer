@@ -29,7 +29,7 @@ class Trimesh(AbstractMesh):
     
     def show(self, width = 700, height = 700, mesh_color = None):
         
-        Viewer(self, mesh_color=mesh_color).show(width = width , height = height)
+        Viewer(self, UI=False, mesh_color=mesh_color).show(width = width , height = height)
     
     
     @property

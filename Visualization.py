@@ -19,9 +19,9 @@ class Viewer:
             
         self.center = list(mesh.vertices[self.mesh.boundary().flatten()].mean(axis = 0))
         
-        self.flip_x = False
-        self.flip_y = False
-        self.flip_z = False
+        self.flip_x_value = False
+        self.flip_y_value = False
+        self.flip_z_value = False
         
         if UI:
             self.__create_UI()
@@ -191,11 +191,11 @@ class Viewer:
 #                            layout=Layout(width='50', height='80px')                            
                             )
         """
-        self.flip_x.observe(self.__update_draw, names='value')
+        self.flip_x.observe(self.slicing, names='value')
         self.percXp.observe(self.slicing, names='value')
-        self.flip_y.observe(self.__update_draw, names='value')
+        self.flip_y.observe(self.slicing, names='value')
         self.percYp.observe(self.slicing, names='value')
-        self.flip_z.observe(self.__update_draw, names='value')
+        self.flip_z.observe(self.slicing, names='value')
         self.percZp.observe(self.slicing, names='value')
 
         #self.wireSlider.observe(self.drawWireframeWidth, names='value')
@@ -284,7 +284,7 @@ class Viewer:
         renderer = self.initialize_camera(self.center, width, height)
         
         
-        self.__draw(mesh_color)
+        self.__draw()
         
         display(renderer)
         
@@ -311,12 +311,22 @@ class Viewer:
             
     
     def __update_draw_tri(self):
-        pass
+        
+        boundaries = self.mesh.boundary(flip_x=self.flip_x_value, flip_y=self.flip_y_value, flip_z=self.flip_z_value)
+        tris_properties = {
+            'position': BufferAttribute(self.mesh.vertices[boundaries.flatten()], normalized=False),
+            #'index' : BufferAttribute(np.asarray(self.surface, dtype='uint32').ravel(), normalized=False),
+            'color' : BufferAttribute(self.mesh_color, normalized=False),
+        }
+        self.mesh_.geometry = BufferGeometry(attributes=tris_properties)
+        self.mesh_.geometry.exec_three_obj_method('computeVertexNormals')
+        
+        self.line_.geometry = self.mesh_.geometry
         
         
     def __update_draw_quad(self):
         
-        boundaries = self.mesh.boundary(flip_x=self.flip_x.value, flip_y=self.flip_y.value, flip_z=self.flip_z.value)
+        boundaries = self.mesh.boundary(flip_x=self.flip_x_value, flip_y=self.flip_y_value, flip_z=self.flip_z_value)
         tris = np.c_[boundaries[:,:3], boundaries[:,2:], boundaries[:,0]]
         tris.shape = (-1, 3)
         
@@ -330,9 +340,9 @@ class Viewer:
         self.mesh_.geometry = BufferGeometry(attributes=quad_properties)
         self.mesh_.geometry.exec_three_obj_method('computeVertexNormals')
     
-        edges = np.c_[self.mesh.boundary()[:,:2], self.mesh.boundary()[:,1:3], 
-                      self.mesh.boundary()[:,2:4], self.mesh.boundary()[:,3],
-                      self.mesh.boundary()[:,0]].flatten()
+        edges = np.c_[boundaries[:,:2], boundaries[:,1:3], 
+                      boundaries[:,2:4], boundaries[:,3],
+                      boundaries[:,0]].flatten()
         
         surface_wireframe = self.mesh.vertices[edges].tolist()
         
@@ -347,15 +357,15 @@ class Viewer:
         
         
         tri_properties = {
-            'position': BufferAttribute(self.mesh.vertices[self.mesh.boundary(flip_x=self.flip_x.value, flip_y=self.flip_y.value, flip_z=self.flip_z.value).flatten()], normalized=False),
+            'position': BufferAttribute(self.mesh.vertices[self.mesh.boundary(flip_x=self.flip_x_value, flip_y=self.flip_y_value, flip_z=self.flip_z_value).flatten()], normalized=False),
             #'index' : BufferAttribute(np.asarray(self.surface, dtype='uint32').ravel(), normalized=False),
             'color' : BufferAttribute(self.mesh_color, normalized=False),
         }
         
-        self.mesh_geometry = BufferGeometry(attributes=tri_properties)
+        mesh_geometry = BufferGeometry(attributes=tri_properties)
         mesh_geometry.exec_three_obj_method('computeVertexNormals')
         
-        self.mesh_material = MeshLambertMaterial(#shininess=25,
+        mesh_material = MeshLambertMaterial(#shininess=25,
                                          #emissive = '#aaaaaa',#phong
                                          #specular = '#aaaaaa',#phong
                                            polygonOffset=True,
@@ -368,7 +378,7 @@ class Viewer:
                                            vertexColors = 'FaceColors',
                                           )
         
-        self.edges_material = MeshBasicMaterial(color='black',
+        edges_material = MeshBasicMaterial(color='black',
 #                                           side= 'FrontSide'
                                            polygonOffset=True,
                                            polygonOffsetFactor=1,
@@ -399,7 +409,7 @@ class Viewer:
 
     def __draw_quadmesh(self):
         
-        boundaries = self.mesh.boundary(flip_x=self.flip_x.value, flip_y=self.flip_y.value, flip_z=self.flip_z.value)
+        boundaries = self.mesh.boundary(flip_x=self.flip_x_value, flip_y=self.flip_y_value, flip_z=self.flip_z_value)
         tris = np.c_[boundaries[:,:3], boundaries[:,2:], boundaries[:,0]]
         tris.shape = (-1, 3)
         
@@ -414,7 +424,7 @@ class Viewer:
         mesh_geometry.exec_three_obj_method('computeVertexNormals')
         
         
-        edges = np.c_[self.mesh.boundary()[:,:2], self.mesh.boundary()[:,1:3], self.mesh.boundary()[:,2:4], self.mesh.boundary()[:,3], self.mesh.boundary()[:,0]].flatten()
+        edges = np.c_[boundaries[:,:2], boundaries[:,1:3], boundaries[:,2:4], boundaries[:,3], boundaries[:,0]].flatten()
         surface_wireframe = self.mesh.vertices[edges].tolist()
         
         wireframe = BufferGeometry(attributes={'position': BufferAttribute(surface_wireframe, normalized=False)})
@@ -481,6 +491,12 @@ class Viewer:
         self.mesh.set_cut(self.percXp.value[0], self.percXp.value[1], 
                           self.percYp.value[0], self.percYp.value[1],
                           self.percZp.value[0], self.percZp.value[1])
+        
+        self.flip_x_value = self.flip_x.value
+        self.flip_y_value = self.flip_y.value
+        self.flip_z_value = self.flip_z.value
+
+
         
         
         self.__update_draw()
