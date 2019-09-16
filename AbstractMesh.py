@@ -10,7 +10,6 @@ class AbstractMesh(object):
         self.__vtx2face          = None #npArray (NxM)
         self.__vtx2vtx           = None #npArray (Nx1)
         self.__bounding_box      = None #npArray (2x3)
-        self.subspace            = None #npArray (3x2)
         self.simplex_metrics     = dict() #dictionary[propertyName : npArray (Nx1)]
         self.__simplex_centroids = None #npArray (Nx1)
         self.__cut            = {'min_x':None, 
@@ -47,6 +46,12 @@ class AbstractMesh(object):
             self.__cut['min_z'] = min_z
         if max_z is not None:
             self.__cut['max_z'] = max_z
+            
+    def reset_cut(self):
+        
+        self.set_cut(min_x = self.bbox[0,0], max_x = self.bbox[1,0], 
+                     min_y = self.bbox[0,1], max_y = self.bbox[1,1],
+                     min_z = self.bbox[0,2], max_z = self.bbox[1,2])
            
 
     def load_from_file(filename):
