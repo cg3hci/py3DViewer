@@ -123,7 +123,7 @@ class Viewer:
         hbox3 = widgets.HBox([self.percZp,self.flip_z])
         vbox=widgets.VBox([hbox1,hbox2,hbox3],
                      layout=widgets.Layout(width='100%'))
-        """
+        
         self.wireSlider = widgets.FloatSlider(
                         value=1,
                         min=0.,
@@ -142,7 +142,7 @@ class Viewer:
                             value='black',
                             disabled=False,
                         )
-        
+        """
         self.colorMap = widgets.Dropdown(
             options=[('Parula',0),('Jet', 1), ('Red-Blue', 2), ('Virdis', 3)],
             value=0,
@@ -154,23 +154,22 @@ class Viewer:
             value=0,
             description='Type Color:',
         )
-        
+        """
         self.colorSurface = widgets.ColorPicker(
                             concise=True,
                             description='Color surface',
                             value='#FF0000',
                             disabled=False,
-                            layout= self.invisibleLayout
+                            #layout= self.invisibleLayout
                         )
-
+        
         self.colorInside = widgets.ColorPicker(
                             concise=True,
                             description='Color inside',
                             value='#0000FF',
                             disabled=False,
-                            layout= self.invisibleLayout
                         )
-        
+        """
         self.itemsColorsLabel = [widgets.ColorPicker(
                                             concise=True,
                                             description='Label ' + str(self.mesh.labels[i]),
@@ -178,33 +177,21 @@ class Viewer:
                                             disabled=False,
                                             layout= self.invisibleLayout
                                             ) for i in range(len(self.mesh.labels))]
-        
-        self.sideView = widgets.ToggleButtons(options=['Front', 'Back','Double'],
-                            description='View Side:',
-                            disabled=False,
-                            button_style='info', # 'success', 'info', 'warning', 'danger' or ''
-                            tooltips=['View front side of shape', 
-                                      'View back side of shape',
-                                      'View both front and back side of shape'],
-                            #icons=['check'] * 3,
-                            style = {'button_width':'65px'}
-#                            layout=Layout(width='50', height='80px')                            
-                            )
         """
-        self.flip_x.observe(self.slicing, names='value')
-        self.percXp.observe(self.slicing, names='value')
-        self.flip_y.observe(self.slicing, names='value')
-        self.percYp.observe(self.slicing, names='value')
-        self.flip_z.observe(self.slicing, names='value')
-        self.percZp.observe(self.slicing, names='value')
+        
+        self.flip_x.observe(self.__slicing, names='value')
+        self.percXp.observe(self.__slicing, names='value')
+        self.flip_y.observe(self.__slicing, names='value')
+        self.percYp.observe(self.__slicing, names='value')
+        self.flip_z.observe(self.__slicing, names='value')
+        self.percZp.observe(self.__slicing, names='value')
 
-        #self.wireSlider.observe(self.drawWireframeWidth, names='value')
-        #self.colorWireframe.observe(self.changeColorWireframe, names='value')
-        #self.sideView.observe(self.changeSideView, names='value')
+        self.wireSlider.observe(self.__set_wireframe_width, names='value')
+        self.colorWireframe.observe(self.__set_wireframe_color, names='value')
         
         #self.colorMap.observe(self.changeColorMap, names='value')
-        #self.colorSurface.observe(self.changeColorSurface, names='value')
-        #self.colorInside.observe(self.changeColorInside, names='value')
+        self.colorSurface.observe(self.change_color_surface, names='value')
+        self.colorInside.observe(self.change_color_inside, names='value')
         #[i.observe(self.changeColorByLabel,names='value') for i in self.itemsColorsLabel]
         
         #self.typeColorSurface.observe(self.changeTypeColor, names='value')
@@ -213,17 +200,31 @@ class Viewer:
         #menu slice
         vvbox=widgets.VBox([vbox])
         #menu rendering
-        #boxRendering = widgets.HBox([self.wireSlider,self.colorWireframe, self.sideView])
-        #boxRendering01 = widgets.HBox([self.typeColorSurface,self.colorMap, self.colorSurface, self.colorInside])
+        box_rendering = widgets.HBox([self.wireSlider,self.colorWireframe])
+        box_rendering01 = widgets.HBox([self.colorSurface])
+        if 'Hexmesh' in str(type(self.mesh)) or 'Tetmesh' in str(type(self.mesh)):
+            box_rendering01 = widgets.HBox([self.colorSurface, self.colorInside])# widgets.HBox([self.typeColorSurface,self.colorMap, self.colorSurface, self.colorInside])
         #boxRendering02 = widgets.HBox(self.itemsColorsLabel)
         #boxRendering1 = widgets.HBox([boxRendering01,boxRendering02])
-        #verticalRendering = widgets.VBox([boxRendering,boxRendering1])
+        vertical_rendering = widgets.VBox([box_rendering, box_rendering01])
 
 
-        self.accordion = widgets.Accordion(children=[vvbox])
+        self.accordion = widgets.Accordion(children=[vvbox, vertical_rendering])
         self.accordion.set_title(0,"Slice from axes")
-        #self.accordion.set_title(1,"Rendering")
+        self.accordion.set_title(1,"Rendering")
         display(self.accordion)
+        
+    
+    def __set_wireframe_color(self, change):
+        
+        self.line_.material.color = self.colorWireframe.value
+        
+    def __set_wireframe_width(self, change):
+        
+        self.line_.material.opacity = self.wireSlider.value
+        
+        
+    
         
     
     def listColor(self,n):
@@ -269,9 +270,31 @@ class Viewer:
         return math.floor(n * multiplier) / multiplier  
         
     
-    
-    
-    
+    def change_color_surface(self, change):
+        mesh_color = [int(self.colorSurface.value[1:3],16)/255,int(self.colorSurface.value[3:5],16)/255,int(self.colorSurface.value[5:7],16)/255]
+        self.mesh_color = np.array([ mesh_color,  mesh_color,  mesh_color])
+        self.mesh_color = np.repeat(self.mesh_color, self.mesh.boundary().shape[0]*3, axis=0)
+        self.__update_draw()
+        
+    def change_color_inside(self, change):
+        mesh_color = [int(self.colorSurface.value[1:3],16)/255,int(self.colorSurface.value[3:5],16)/255,int(self.colorSurface.value[5:7],16)/255]
+        self.mesh_color = np.array([ mesh_color,  mesh_color,  mesh_color])
+        pass
+
+    def change_side_view(self,change):
+        """Check button pressed
+
+        Parameter
+        ----
+            change: widget value
+                value of option toggle buttons 
+        """
+        if change.new == 'Front':
+            self.view_fromt_side()
+        elif change.new == 'Back':
+            self.view_back_side()
+        elif change.new == 'Double':
+            self.view_double_side()
     
     
 #============================================================================SHOW===========================================================================================================================  
@@ -480,7 +503,7 @@ class Viewer:
 
 
 
-    def slicing(self,change):
+    def __slicing(self,change):
         """Update visible mesh based on value of cut
 
         Parameter
