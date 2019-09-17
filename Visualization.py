@@ -15,9 +15,9 @@ class Viewer:
         else:
             self.mesh_color = np.array([mesh_color,mesh_color,mesh_color])
         
-        self.mesh_color = np.repeat(self.mesh_color, self.mesh.boundary().shape[0]*3, axis=0)
+        self.mesh_color = np.repeat(self.mesh_color, self.mesh.boundary()[0].shape[0]*3, axis=0)
             
-        self.center = list(mesh.vertices[self.mesh.boundary().flatten()].mean(axis = 0))
+        self.center = list(mesh.vertices[self.mesh.boundary()[0].flatten()].mean(axis = 0))
         
         self.flip_x_value = False
         self.flip_y_value = False
@@ -273,7 +273,7 @@ class Viewer:
     def change_color_surface(self, change):
         mesh_color = [int(self.colorSurface.value[1:3],16)/255,int(self.colorSurface.value[3:5],16)/255,int(self.colorSurface.value[5:7],16)/255]
         self.mesh_color = np.array([ mesh_color,  mesh_color,  mesh_color])
-        self.mesh_color = np.repeat(self.mesh_color, self.mesh.boundary().shape[0]*3, axis=0)
+        self.mesh_color = np.repeat(self.mesh_color, self.mesh.boundary()[0].shape[0]*3, axis=0)
         self.__update_draw()
         
     def change_color_inside(self, change):
@@ -335,7 +335,7 @@ class Viewer:
     
     def __update_draw_tri(self):
         
-        boundaries = self.mesh.boundary(flip_x=self.flip_x_value, flip_y=self.flip_y_value, flip_z=self.flip_z_value)
+        boundaries = self.mesh.boundary(flip_x=self.flip_x_value, flip_y=self.flip_y_value, flip_z=self.flip_z_value)[0]
         tris_properties = {
             'position': BufferAttribute(self.mesh.vertices[boundaries.flatten()], normalized=False),
             #'index' : BufferAttribute(np.asarray(self.surface, dtype='uint32').ravel(), normalized=False),
@@ -349,7 +349,7 @@ class Viewer:
         
     def __update_draw_quad(self):
         
-        boundaries = self.mesh.boundary(flip_x=self.flip_x_value, flip_y=self.flip_y_value, flip_z=self.flip_z_value)
+        boundaries = self.mesh.boundary(flip_x=self.flip_x_value, flip_y=self.flip_y_value, flip_z=self.flip_z_value)[0]
         tris = np.c_[boundaries[:,:3], boundaries[:,2:], boundaries[:,0]]
         tris.shape = (-1, 3)
         
@@ -380,7 +380,7 @@ class Viewer:
         
         
         tri_properties = {
-            'position': BufferAttribute(self.mesh.vertices[self.mesh.boundary(flip_x=self.flip_x_value, flip_y=self.flip_y_value, flip_z=self.flip_z_value).flatten()], normalized=False),
+            'position': BufferAttribute(self.mesh.vertices[self.mesh.boundary(flip_x=self.flip_x_value, flip_y=self.flip_y_value, flip_z=self.flip_z_value)[0].flatten()], normalized=False),
             #'index' : BufferAttribute(np.asarray(self.surface, dtype='uint32').ravel(), normalized=False),
             'color' : BufferAttribute(self.mesh_color, normalized=False),
         }
@@ -432,7 +432,7 @@ class Viewer:
 
     def __draw_quadmesh(self):
         
-        boundaries = self.mesh.boundary(flip_x=self.flip_x_value, flip_y=self.flip_y_value, flip_z=self.flip_z_value)
+        boundaries = self.mesh.boundary(flip_x=self.flip_x_value, flip_y=self.flip_y_value, flip_z=self.flip_z_value)[0]
         tris = np.c_[boundaries[:,:3], boundaries[:,2:], boundaries[:,0]]
         tris.shape = (-1, 3)
         
