@@ -41,6 +41,7 @@ class Viewer:
         wireframe_layout = {'width':'100px','padding':'1px 1px 1px 1px', 'margin':'1px 1px 1px 1px'}
         self.invisibleLayout = {'display':'none'}
         self.visibleLayout = {'display':''}
+        self.label_layout = {'display':'block', 'max_width' : '80px'}
 
         self.flip_x = widgets.ToggleButton(
                     value=False,
@@ -183,7 +184,7 @@ class Viewer:
         
         self.itemsColorsLabel = [widgets.ColorPicker(
                                             concise=True,
-                                            description='Label ' + str(self.mesh.labels[i]),
+                                            description='Label ' + str(i),
                                             value= self.listColor(int(i)),
                                             disabled=False,
                                             layout= self.invisibleLayout
@@ -204,7 +205,7 @@ class Viewer:
         self.colorSurface.observe(self.change_color_surface, names='value')
         self.colorInside.observe(self.change_color_inside, names='value')
         self.chosen_metric.observe(self.change_color_map, names='value')
-        #[i.observe(self.changeColorByLabel,names='value') for i in self.itemsColorsLabel]
+        [i.observe(self.change_color_label,names='value') for i in self.itemsColorsLabel]
         
         self.typeColorSurface.observe(self.change_type_color, names='value')
         
@@ -215,9 +216,9 @@ class Viewer:
         box_rendering = widgets.HBox([self.wireSlider,self.colorWireframe])
         box_rendering01 = widgets.HBox([self.colorSurface])
         if 'Hexmesh' in str(type(self.mesh)) or 'Tetmesh' in str(type(self.mesh)):
-            box_rendering01 = widgets.HBox([self.typeColorSurface,self.colorMap, self.chosen_metric, self.colorSurface, self.colorInside])
+            box_rendering01 = widgets.HBox([self.typeColorSurface,self.colorMap, self.chosen_metric, self.colorSurface, self.colorInside] + self.itemsColorsLabel)
         else:
-            box_rendering01 = widgets.HBox([self.typeColorSurface,self.colorMap, self.chosen_metric, self.colorSurface])
+            box_rendering01 = widgets.HBox([self.typeColorSurface,self.colorMap, self.chosen_metric, self.colorSurface] + self.itemsColorsLabel)
         #boxRendering02 = widgets.HBox(self.itemsColorsLabel)
         #boxRendering1 = widgets.HBox([boxRendering01,boxRendering02])
         vertical_rendering = widgets.VBox([box_rendering, box_rendering01])
@@ -281,7 +282,26 @@ class Viewer:
         return math.floor(n * multiplier) / multiplier  
         
     
-    
+    def change_color_label(self, change):
+        
+        if self.mesh_color.shape[0] != self.mesh.labels.shape[0]:
+            self.mesh_color = np.zeros((self.mesh.labels.shape[0], 3))
+        
+        for idx, color in enumerate(self.itemsColorsLabel):
+            self.mesh_color[self.mesh.labels == idx] = [int(color.value[1:3],16)/255,int(color.value[3:5],16)/255,int(color.value[5:7],16)/255]
+        
+        if 'Hexmesh' in str(type(self.mesh)):
+            self.mesh_color = np.repeat(self.mesh_color, 6*2*3, axis=0)
+        elif 'Quadmesh' in str(type(self.mesh)):
+            self.mesh_color = np.repeat(self.mesh_color, 2*3, axis=0)
+        elif 'Tetmesh' in str(type(self.mesh)):
+            self.mesh_color = np.repeat(self.mesh_color, 4*3, axis=0)
+        else:
+            self.mesh_color = np.repeat(self.mesh_color, 3, axis=0)        
+        
+        self.__update_draw()
+        
+
     def change_color_surface(self, change):
         
         faces_per_poly = 0
@@ -401,7 +421,7 @@ class Viewer:
             self.colorMap.layout = self.invisibleLayout
             self.chosen_metric.layout = self.invisibleLayout
             for i in self.itemsColorsLabel:
-                i.layout = self.visibleLayout
+                i.layout = self.label_layout
             self.changeColorByLabel()
     
     
