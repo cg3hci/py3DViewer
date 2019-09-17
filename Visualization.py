@@ -33,7 +33,7 @@ class Viewer:
 
         #style = {width: '50px'}
         #titax = widgets.Label(value='Slice from axes', layout=widgets.Layout(padding='1px 1px 1px 1px', margin='1px 1px 1px 1px'))
-        row_layout = {'width':'50px','padding':'1px 1px 1px 1px', 'margin':'1px 1px 1px 1px'}
+        row_layout = {'width':'100px','padding':'1px 1px 1px 1px', 'margin':'1px 1px 1px 1px'}
         wireframe_layout = {'width':'100px','padding':'1px 1px 1px 1px', 'margin':'1px 1px 1px 1px'}
         self.invisibleLayout = {'display':'none'}
         self.visibleLayout = {'display':''}
@@ -279,7 +279,7 @@ class Viewer:
     def change_color_inside(self, change):
         mesh_color = [int(self.colorSurface.value[1:3],16)/255,int(self.colorSurface.value[3:5],16)/255,int(self.colorSurface.value[5:7],16)/255]
         self.mesh_color = np.array([ mesh_color,  mesh_color,  mesh_color])
-        pass
+        
 
     def change_side_view(self,change):
         """Check button pressed
@@ -520,8 +520,6 @@ class Viewer:
         self.flip_z_value = self.flip_z.value
 
 
-        
-        
         self.__update_draw()
     
     
