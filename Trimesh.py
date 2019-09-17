@@ -236,7 +236,7 @@ class Trimesh(AbstractMesh):
        
     def __repr__(self):
         self.show()
-        return f"Showing {self.boundary().shape[0]} polygons."
+        return f"Showing {self.boundary()[0].shape[0]} polygons."
     
     
     

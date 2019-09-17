@@ -2,6 +2,8 @@ import numpy as np
 from pythreejs import *
 import ipywidgets as widgets
 import math
+import ColorMap
+import pdb
 
 
 class Viewer:
@@ -148,15 +150,21 @@ class Viewer:
                         )
         
         self.colorMap = widgets.Dropdown(
-            options=[('Parula',0),('Jet', 1), ('Red-Blue', 2), ('Virdis', 3)],
+            options=[(i, idx) for idx, i in enumerate(ColorMap.color_maps.keys())],
             value=0,
             description='Color-Map:',
         )
 
         self.typeColorSurface = widgets.Dropdown(
-            options=[('Hex Quality',0),('Easy', 1),('Label',2)],
+            options=[('Simplex Quality',0),('Easy', 1),('Label',2)],
             value=0,
             description='Type Color:',
+        )
+        
+        self.chosen_metric = widgets.Dropdown(
+            options= [(i, idx) for idx, i in enumerate(self.mesh.simplex_metrics.keys())],
+            value=0,
+            description='Metric:',
         )
         
         self.colorSurface = widgets.ColorPicker(
@@ -197,6 +205,7 @@ class Viewer:
         self.colorMap.observe(self.change_color_map, names='value')
         self.colorSurface.observe(self.change_color_surface, names='value')
         self.colorInside.observe(self.change_color_inside, names='value')
+        self.chosen_metric.observe(self.change_color_map, names='value')
         #[i.observe(self.changeColorByLabel,names='value') for i in self.itemsColorsLabel]
         
         self.typeColorSurface.observe(self.change_type_color, names='value')
@@ -208,9 +217,9 @@ class Viewer:
         box_rendering = widgets.HBox([self.wireSlider,self.colorWireframe])
         box_rendering01 = widgets.HBox([self.colorSurface])
         if 'Hexmesh' in str(type(self.mesh)) or 'Tetmesh' in str(type(self.mesh)):
-            box_rendering01 = widgets.HBox([self.typeColorSurface,self.colorMap, self.colorSurface, self.colorInside])
+            box_rendering01 = widgets.HBox([self.typeColorSurface,self.colorMap, self.chosen_metric, self.colorSurface, self.colorInside])
         else:
-            box_rendering01 = widgets.HBox([self.typeColorSurface,self.colorMap, self.colorSurface])
+            box_rendering01 = widgets.HBox([self.typeColorSurface,self.colorMap, self.chosen_metric, self.colorSurface])
         #boxRendering02 = widgets.HBox(self.itemsColorsLabel)
         #boxRendering1 = widgets.HBox([boxRendering01,boxRendering02])
         vertical_rendering = widgets.VBox([box_rendering, box_rendering01])
@@ -277,33 +286,47 @@ class Viewer:
         return math.floor(n * multiplier) / multiplier  
         
     
+    
     def change_color_surface(self, change):
         
         faces_per_poly = 0
+        faces_in_face  = 2
         if 'Tetmesh' in str(type(self.mesh)):
             faces_per_poly = 4
+            faces_in_face  = 1
         elif 'Hexmesh' in str(type(self.mesh)):
             faces_per_poly = 6
         elif 'Quadmesh' in str(type(self.mesh)):
             faces_per_poly = 2
         elif 'Trimesh' in str(type(self.mesh)):
             faces_per_poly = 1
+            faces_in_face  = 1
         
         mesh_color = [int(self.colorSurface.value[1:3],16)/255,int(self.colorSurface.value[3:5],16)/255,int(self.colorSurface.value[5:7],16)/255]
-        indices = np.repeat(self.mesh.internals, faces_per_poly*2*3)
-        self.mesh_color[np.logical_not(indices)] = np.array(mesh_color)
+        if 'Trimesh' in str(type(self.mesh)) or 'Quadmesh' in str(type(self.mesh)):
+            indices = np.repeat(self.mesh.boundary()[1], faces_per_poly*faces_in_face*3)
+            
+        else:
+            indices = np.logical_not(np.repeat(self.mesh.internals, faces_per_poly*faces_in_face*3))
+        
+        self.mesh_color[indices] = np.array(mesh_color)
         self.__update_draw()
+        
+        
         
     def change_color_inside(self, change):
         
         faces_per_poly = 0
+        faces_in_face  = 2
         if 'Tetmesh' in str(type(self.mesh)):
             faces_per_poly = 4
+            faces_in_face  = 1
+            
         elif 'Hexmesh' in str(type(self.mesh)):
             faces_per_poly = 6
             
         mesh_color = [int(self.colorInside.value[1:3],16)/255,int(self.colorInside.value[3:5],16)/255,int(self.colorInside.value[5:7],16)/255]
-        indices = np.repeat(self.mesh.internals, faces_per_poly*2*3)
+        indices = np.repeat(self.mesh.internals, faces_per_poly*faces_in_face*3)
         self.mesh_color[indices] = np.array(mesh_color)
         self.__update_draw()
         
@@ -325,10 +348,33 @@ class Viewer:
             
 
 
-    def change_color_map(self,change=None):
+    def change_color_map(self, change):
         
-        return
+        metric_keys = list(self.mesh.simplex_metrics.keys())
+        metric_idx = metric_keys[self.chosen_metric.value]
+        metric = self.mesh.simplex_metrics[metric_idx]
+
+        color_map_keys = list(ColorMap.color_maps.keys())
+        color_map_idx = color_map_keys[self.colorMap.value]
+        color_map = ColorMap.color_maps[color_map_idx]
+        
+        normalized_metric = ((metric - np.min(metric))/np.ptp(metric)) * (color_map.shape[0]-1)
+        metric_to_colormap = np.rint(normalized_metric).astype(np.int)
+        
+
+        mesh_color = color_map[metric_to_colormap]
+        
+        if 'Hexmesh' in str(type(self.mesh)):
+            self.mesh_color = np.repeat(mesh_color, 6*2*3, axis=0)
+        elif 'Quadmesh' in str(type(self.mesh)):
+            self.mesh_color = np.repeat(mesh_color, 2*3, axis=0)
+        elif 'Tetmesh' in str(type(self.mesh)):
+            self.mesh_color = np.repeat(mesh_color, 4*3, axis=0)
+        else:
+            self.mesh_color = np.repeat(mesh_color, 3, axis=0)        
+
         self.__update_draw()
+
         
     def change_type_color(self,change):
         """Check buttons on interface to select color
@@ -341,6 +387,7 @@ class Viewer:
             self.colorSurface.layout = self.invisibleLayout
             self.colorInside.layout = self.invisibleLayout
             self.colorMap.layout = self.visibleLayout
+            self.chosen_metric.layout = self.visibleLayout
             for i in self.itemsColorsLabel:
                 i.layout = self.invisibleLayout
             self.changeColorMap()
@@ -348,6 +395,7 @@ class Viewer:
             self.colorInside.layout = self.visibleLayout
             self.colorSurface.layout = self.visibleLayout
             self.colorMap.layout = self.invisibleLayout
+            self.chosen_metric.layout = self.invisibleLayout
             for i in self.itemsColorsLabel:
                 i.layout = self.invisibleLayout
             self.changeColorSurface()
@@ -356,6 +404,7 @@ class Viewer:
             self.colorInside.layout = self.invisibleLayout
             self.colorSurface.layout = self.invisibleLayout
             self.colorMap.layout = self.invisibleLayout
+            self.chosen_metric.layout = self.invisibleLayout
             for i in self.itemsColorsLabel:
                 i.layout = self.visibleLayout
             self.changeColorByLabel()
@@ -610,3 +659,7 @@ class Viewer:
 
         return Renderer(camera=camera_t, background_opacity=1,
                         scene = self.scene, controls=[controls_c], width=width, height=height,antialias=True)
+    
+    
+    
+    
