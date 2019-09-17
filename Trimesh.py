@@ -205,7 +205,9 @@ class Trimesh(AbstractMesh):
         y_range = np.logical_xor(flip_y,((self.simplex_centroids[:,1] >= min_y) & (self.simplex_centroids[:,1] <= max_y)))
         z_range = np.logical_xor(flip_z,((self.simplex_centroids[:,2] >= min_z) & (self.simplex_centroids[:,2] <= max_z)))
         
-        return self.faces[ x_range & y_range & z_range]
+        cut_range = x_range & y_range & z_range
+        
+        return self.faces[cut_range], cut_range
     
         
     @property
