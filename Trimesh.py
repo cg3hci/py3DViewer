@@ -113,7 +113,7 @@ class Trimesh(AbstractMesh):
     def __compute_adjacencies(self):
         
         map_ = dict()
-        adjs =  [[] for i in range(self.num_faces)]
+        adjs =  np.zeros((self.num_faces, 3))-1
         vtx2vtx = [[] for i in range(self.num_vertices)]
         vtx2face = [[] for i in range(self.num_vertices)]
 
@@ -140,11 +140,14 @@ class Trimesh(AbstractMesh):
             if tmp is None:
                 map_[(e[1], e[0])] = f
             else:
-                adjs[f].append(map_[e])
-                adjs[map_[e]].append(f)
+                idx_to_append1 = np.where(adjs[f] == -1)[0][0]
+                idx_to_append2 = np.where(adjs[map_[e]] == -1)[0][0]
+                adjs[f][idx_to_append1] = map_[e]
+                adjs[map_[e]][idx_to_append2] = f
+                
 
 
-        self.__face2face =  np.array([np.array(a) for a in adjs])
+        self.__face2face =  adjs
         self._AbstractMesh__vtx2vtx = np.array([np.array(a) for a in vtx2vtx])
         self._AbstractMesh__vtx2face = np.array([np.unique(np.array(a)) for a in vtx2face])
 

@@ -15,7 +15,11 @@ class Viewer:
         else:
             self.mesh_color = np.array([mesh_color,mesh_color,mesh_color])
         
-        self.mesh_color = np.repeat(self.mesh_color, self.mesh.boundary()[0].shape[0]*3, axis=0)
+        if 'Hexmesh' in str(type(mesh)) or 'Quadmesh' in str(type(mesh)):
+            self.mesh_color = np.repeat(self.mesh_color, self.mesh.num_faces*2, axis=0)
+        else:
+            self.mesh_color = np.repeat(self.mesh_color, self.mesh.num_faces, axis=0)
+
             
         self.center = list(mesh.vertices[self.mesh.boundary()[0].flatten()].mean(axis = 0))
         
@@ -142,7 +146,7 @@ class Viewer:
                             value='black',
                             disabled=False,
                         )
-        """
+        
         self.colorMap = widgets.Dropdown(
             options=[('Parula',0),('Jet', 1), ('Red-Blue', 2), ('Virdis', 3)],
             value=0,
@@ -154,13 +158,13 @@ class Viewer:
             value=0,
             description='Type Color:',
         )
-        """
+        
         self.colorSurface = widgets.ColorPicker(
                             concise=True,
                             description='Color surface',
                             value='#FF0000',
                             disabled=False,
-                            #layout= self.invisibleLayout
+                            layout= self.invisibleLayout
                         )
         
         self.colorInside = widgets.ColorPicker(
@@ -168,6 +172,7 @@ class Viewer:
                             description='Color inside',
                             value='#0000FF',
                             disabled=False,
+                            layout= self.invisibleLayout
                         )
         """
         self.itemsColorsLabel = [widgets.ColorPicker(
@@ -189,12 +194,12 @@ class Viewer:
         self.wireSlider.observe(self.__set_wireframe_width, names='value')
         self.colorWireframe.observe(self.__set_wireframe_color, names='value')
         
-        #self.colorMap.observe(self.changeColorMap, names='value')
+        self.colorMap.observe(self.change_color_map, names='value')
         self.colorSurface.observe(self.change_color_surface, names='value')
         self.colorInside.observe(self.change_color_inside, names='value')
         #[i.observe(self.changeColorByLabel,names='value') for i in self.itemsColorsLabel]
         
-        #self.typeColorSurface.observe(self.changeTypeColor, names='value')
+        self.typeColorSurface.observe(self.change_type_color, names='value')
         
     
         #menu slice
@@ -203,7 +208,9 @@ class Viewer:
         box_rendering = widgets.HBox([self.wireSlider,self.colorWireframe])
         box_rendering01 = widgets.HBox([self.colorSurface])
         if 'Hexmesh' in str(type(self.mesh)) or 'Tetmesh' in str(type(self.mesh)):
-            box_rendering01 = widgets.HBox([self.colorSurface, self.colorInside])# widgets.HBox([self.typeColorSurface,self.colorMap, self.colorSurface, self.colorInside])
+            box_rendering01 = widgets.HBox([self.typeColorSurface,self.colorMap, self.colorSurface, self.colorInside])
+        else:
+            box_rendering01 = widgets.HBox([self.typeColorSurface,self.colorMap, self.colorSurface])
         #boxRendering02 = widgets.HBox(self.itemsColorsLabel)
         #boxRendering1 = widgets.HBox([boxRendering01,boxRendering02])
         vertical_rendering = widgets.VBox([box_rendering, box_rendering01])
@@ -271,14 +278,34 @@ class Viewer:
         
     
     def change_color_surface(self, change):
+        
+        faces_per_poly = 0
+        if 'Tetmesh' in str(type(self.mesh)):
+            faces_per_poly = 4
+        elif 'Hexmesh' in str(type(self.mesh)):
+            faces_per_poly = 6
+        elif 'Quadmesh' in str(type(self.mesh)):
+            faces_per_poly = 2
+        elif 'Trimesh' in str(type(self.mesh)):
+            faces_per_poly = 1
+        
         mesh_color = [int(self.colorSurface.value[1:3],16)/255,int(self.colorSurface.value[3:5],16)/255,int(self.colorSurface.value[5:7],16)/255]
-        self.mesh_color = np.array([ mesh_color,  mesh_color,  mesh_color])
-        self.mesh_color = np.repeat(self.mesh_color, self.mesh.boundary()[0].shape[0]*3, axis=0)
+        indices = np.repeat(self.mesh.internals, faces_per_poly*2*3)
+        self.mesh_color[np.logical_not(indices)] = np.array(mesh_color)
         self.__update_draw()
         
     def change_color_inside(self, change):
-        mesh_color = [int(self.colorSurface.value[1:3],16)/255,int(self.colorSurface.value[3:5],16)/255,int(self.colorSurface.value[5:7],16)/255]
-        self.mesh_color = np.array([ mesh_color,  mesh_color,  mesh_color])
+        
+        faces_per_poly = 0
+        if 'Tetmesh' in str(type(self.mesh)):
+            faces_per_poly = 4
+        elif 'Hexmesh' in str(type(self.mesh)):
+            faces_per_poly = 6
+            
+        mesh_color = [int(self.colorInside.value[1:3],16)/255,int(self.colorInside.value[3:5],16)/255,int(self.colorInside.value[5:7],16)/255]
+        indices = np.repeat(self.mesh.internals, faces_per_poly*2*3)
+        self.mesh_color[indices] = np.array(mesh_color)
+        self.__update_draw()
         
 
     def change_side_view(self,change):
@@ -295,6 +322,44 @@ class Viewer:
             self.view_back_side()
         elif change.new == 'Double':
             self.view_double_side()
+            
+
+
+    def change_color_map(self,change=None):
+        
+        return
+        self.__update_draw()
+        
+    def change_type_color(self,change):
+        """Check buttons on interface to select color
+        Paramenter
+        -----
+            change: not used
+
+        """ 
+        if self.typeColorSurface.value==0:
+            self.colorSurface.layout = self.invisibleLayout
+            self.colorInside.layout = self.invisibleLayout
+            self.colorMap.layout = self.visibleLayout
+            for i in self.itemsColorsLabel:
+                i.layout = self.invisibleLayout
+            self.changeColorMap()
+        elif self.typeColorSurface.value==1:
+            self.colorInside.layout = self.visibleLayout
+            self.colorSurface.layout = self.visibleLayout
+            self.colorMap.layout = self.invisibleLayout
+            for i in self.itemsColorsLabel:
+                i.layout = self.invisibleLayout
+            self.changeColorSurface()
+            self.changeColorInside()
+        elif self.typeColorSurface.value==2:
+            self.colorInside.layout = self.invisibleLayout
+            self.colorSurface.layout = self.invisibleLayout
+            self.colorMap.layout = self.invisibleLayout
+            for i in self.itemsColorsLabel:
+                i.layout = self.visibleLayout
+            self.changeColorByLabel()
+    
     
     
 #============================================================================SHOW===========================================================================================================================  
@@ -339,7 +404,7 @@ class Viewer:
         tris_properties = {
             'position': BufferAttribute(self.mesh.vertices[boundaries.flatten()], normalized=False),
             #'index' : BufferAttribute(np.asarray(self.surface, dtype='uint32').ravel(), normalized=False),
-            'color' : BufferAttribute(self.mesh_color, normalized=False),
+            'color' : BufferAttribute(self.mesh_color[np.repeat(self.mesh.boundary()[1], 3)], normalized=False),
         }
         self.mesh_.geometry = BufferGeometry(attributes=tris_properties)
         self.mesh_.geometry.exec_three_obj_method('computeVertexNormals')
@@ -357,7 +422,7 @@ class Viewer:
         quad_properties = {
             'position': BufferAttribute(self.mesh.vertices[tris.flatten()], normalized=False),
             #'index' : BufferAttribute(np.asarray(self.surface, dtype='uint32').ravel(), normalized=False),
-            'color' : BufferAttribute(self.mesh_color, normalized=False),
+            'color' : BufferAttribute(self.mesh_color[np.repeat(self.mesh.boundary()[1], 2*3)], normalized=False),
         }
         
         self.mesh_.geometry = BufferGeometry(attributes=quad_properties)
@@ -382,7 +447,7 @@ class Viewer:
         tri_properties = {
             'position': BufferAttribute(self.mesh.vertices[self.mesh.boundary(flip_x=self.flip_x_value, flip_y=self.flip_y_value, flip_z=self.flip_z_value)[0].flatten()], normalized=False),
             #'index' : BufferAttribute(np.asarray(self.surface, dtype='uint32').ravel(), normalized=False),
-            'color' : BufferAttribute(self.mesh_color, normalized=False),
+            'color' : BufferAttribute(self.mesh_color[np.repeat(self.mesh.boundary()[1], 3)], normalized=False),
         }
         
         mesh_geometry = BufferGeometry(attributes=tri_properties)
@@ -440,7 +505,7 @@ class Viewer:
         quad_properties = {
             'position': BufferAttribute(self.mesh.vertices[tris.flatten()], normalized=False),
             #'index' : BufferAttribute(np.asarray(self.surface, dtype='uint32').ravel(), normalized=False),
-            'color' : BufferAttribute(self.mesh_color, normalized=False),
+            'color' : BufferAttribute(self.mesh_color[np.repeat(self.mesh.boundary()[1], 2*3)], normalized=False),
         }
         
         mesh_geometry = BufferGeometry(attributes=quad_properties)
