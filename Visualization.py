@@ -3,8 +3,6 @@ from pythreejs import *
 import ipywidgets as widgets
 import math
 import ColorMap
-import pdb
-
 
 class Viewer:
     
@@ -182,15 +180,15 @@ class Viewer:
                             disabled=False,
                             layout= self.invisibleLayout
                         )
-        """
+        
         self.itemsColorsLabel = [widgets.ColorPicker(
                                             concise=True,
                                             description='Label ' + str(self.mesh.labels[i]),
                                             value= self.listColor(int(i)),
                                             disabled=False,
                                             layout= self.invisibleLayout
-                                            ) for i in range(len(self.mesh.labels))]
-        """
+                                            ) for i in range(max(self.mesh.labels))]
+        
         
         self.flip_x.observe(self.__slicing, names='value')
         self.percXp.observe(self.__slicing, names='value')
@@ -238,9 +236,6 @@ class Viewer:
     def __set_wireframe_width(self, change):
         
         self.line_.material.opacity = self.wireSlider.value
-        
-        
-    
         
     
     def listColor(self,n):
@@ -644,7 +639,7 @@ class Viewer:
         #key_light2 = SpotLight(position=[0, 0, 0], angle = 0.3, penumbra = 0.1, target = tetraObj,castShadow = True)
 
         camera_t = PerspectiveCamera(
-            position=camera_position, lookAt=camera_target, fov=50, near=.5, ##careful with this near clipping plane...
+            position=camera_position, lookAt=camera_target, fov=50, near=.5, far=10000, ##careful with this near clipping plane...
             children=[key_light]
         )
         self.scene = Scene(children=[camera_t, AmbientLight(color='white')], background='#ffffff')
