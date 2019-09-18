@@ -11,6 +11,7 @@ class Viewer:
         
         self.mesh = mesh
         self.scene = None
+        self.__UI = UI
         if mesh_color is None:
             self.mesh_color = np.array([[1, 212, 180],[1, 212, 180],[1, 212, 180]], dtype=np.float) / 255
         else:
@@ -459,9 +460,11 @@ class Viewer:
         
         
         self.__draw()
-        self.change_color_inside()
-        self.__set_wireframe_width()
-        self.__set_wireframe_color()
+        
+        if self.__UI :
+            self.change_color_inside()
+            self.__set_wireframe_width()
+            self.__set_wireframe_color()
         
         display(renderer)
         
