@@ -24,12 +24,7 @@ class Quadmesh(AbstractMesh):
             self.__load_operations()
             
         
-# ==================== METHODS ==================== # 
-
-    def show(self, width = 700, height = 700, mesh_color = None):
-        
-        Viewer(self, UI=False, mesh_color=mesh_color).show(width = width , height = height)
-    
+# ==================== METHODS ==================== #     
     
     @property
     def num_faces(self):
@@ -242,9 +237,5 @@ class Quadmesh(AbstractMesh):
         tris = np.c_[self.faces[:,:3], self.faces[:,2:], self.faces[:,0]]
         tris.shape = (-1, 3)
         return tris
-    
-    def __repr__(self):
-        self.show()
-        return f"Showing {self.boundary()[0].shape[0]} polygons."
     
  

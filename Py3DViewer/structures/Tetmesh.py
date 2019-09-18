@@ -31,10 +31,6 @@ class Tetmesh(AbstractMesh):
     
     # ==================== METHODS ==================== #
     
-    def show(self, width = 700, height = 700, mesh_color = None):
-        Viewer(self, UI=False, mesh_color=mesh_color).show(width = width, height = height)
-    
-    
     @property
     def num_faces(self):
         
@@ -237,7 +233,3 @@ class Tetmesh(AbstractMesh):
         
         return self._AbstractMesh__simplex_centroids
 
-       
-    def __repr__(self):
-        self.show()
-        return f"Showing {self.boundary()[0].shape[0]} polygons."

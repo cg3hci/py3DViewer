@@ -7,11 +7,13 @@ from ..utils import ColorMap
 
 class Viewer:
     
-    def __init__(self, mesh, UI = True, mesh_color=None):
+    def __init__(self, mesh, UI = True, mesh_color=None, width=700, height=700):
         
         self.mesh = mesh
         self.scene = None
         self.__UI = UI
+        self.width = width
+        self.height = height
         if mesh_color is None:
             self.mesh_color = np.array([[1, 212, 180],[1, 212, 180],[1, 212, 180]], dtype=np.float) / 255
         else:
@@ -452,17 +454,17 @@ class Viewer:
 #============================================================================SHOW===========================================================================================================================  
     
     
-    def show(self, width=700, height=700):
+    def show(self):
         
         
         
-        renderer = self.initialize_camera(self.center, width, height)
-        
+        renderer = self.initialize_camera(self.center, self.width, self.height)
         
         self.__draw()
         
         if self.__UI :
-            self.change_color_inside()
+            if 'Tetmesh' in str(type(self.mesh)) or 'Hexmesh' in str(type(self.mesh)):
+                self.change_color_inside()
             self.__set_wireframe_width()
             self.__set_wireframe_color()
         
@@ -703,6 +705,8 @@ class Viewer:
         return Renderer(camera=camera_t, background_opacity=1,
                         scene = self.scene, controls=[controls_c], width=width, height=height,antialias=True)
     
-    
+    def __repr__(self):
+        
+        self.show()
     
     

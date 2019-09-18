@@ -1,4 +1,6 @@
 import numpy as np
+from ..visualization.Viewer import Viewer
+
 
 class AbstractMesh(object):
     
@@ -23,6 +25,12 @@ class AbstractMesh(object):
         
      
     # ==================== METHODS ==================== #
+    
+        
+    def show(self, UI = False, width = 700, height = 700, mesh_color = None):
+        view = Viewer(self, UI=UI, mesh_color=mesh_color, width = width, height = height).show()
+        return view
+        
     
     @property
     def cut(self):
@@ -135,3 +143,7 @@ class AbstractMesh(object):
                                         [max_x_coord, max_y_coord, max_z_coord]])
         
         
+       
+    def __repr__(self):
+        self.show()
+        return f"Showing {self.num_faces} polygons."
