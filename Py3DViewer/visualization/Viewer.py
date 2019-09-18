@@ -1,5 +1,6 @@
 import numpy as np
 from pythreejs import *
+from ipywidgets import Layout
 import ipywidgets as widgets
 import math
 from ..utils import ColorMap
@@ -40,6 +41,13 @@ class Viewer:
         #titax = widgets.Label(value='Slice from axes', layout=widgets.Layout(padding='1px 1px 1px 1px', margin='1px 1px 1px 1px'))
         row_layout = {'width':'100px','padding':'1px 1px 1px 1px', 'margin':'1px 1px 1px 1px'}
         wireframe_layout = {'width':'100px','padding':'1px 1px 1px 1px', 'margin':'1px 1px 1px 1px'}
+        h_box_layout = Layout(display='flex',
+                    flex_flow='row',
+                    align_items='stretch',
+                    width='100%',
+                    height='100%')
+        
+        
         self.invisibleLayout = {'display':'none'}
         self.visibleLayout = {'display':''}
         self.label_layout = {'display':'block', 'max_width' : '80px'}
@@ -217,12 +225,12 @@ class Viewer:
         box_rendering = widgets.HBox([self.wireSlider,self.colorWireframe])
         box_rendering01 = widgets.HBox([self.colorSurface])
         if 'Hexmesh' in str(type(self.mesh)) or 'Tetmesh' in str(type(self.mesh)):
-            box_rendering01 = widgets.HBox([self.typeColorSurface,self.colorMap, self.chosen_metric, self.colorSurface, self.colorInside] + self.itemsColorsLabel)
+            box_rendering01 = widgets.HBox([self.typeColorSurface,self.colorMap, self.chosen_metric, self.colorSurface, self.colorInside] + self.itemsColorsLabel, layout=h_box_layout)
         else:
             box_rendering01 = widgets.HBox([self.typeColorSurface,self.colorMap, self.chosen_metric, self.colorSurface] + self.itemsColorsLabel)
         #boxRendering02 = widgets.HBox(self.itemsColorsLabel)
         #boxRendering1 = widgets.HBox([boxRendering01,boxRendering02])
-        vertical_rendering = widgets.VBox([box_rendering, box_rendering01])
+        vertical_rendering = widgets.VBox([box_rendering, box_rendering01], layout=h_box_layout)
 
 
         self.accordion = widgets.Accordion(children=[vvbox, vertical_rendering])
