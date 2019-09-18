@@ -7,7 +7,7 @@ def triangle_area(vertices, triangles):
     
     b = vertices[triangles][:,1] - vertices[triangles][:,0]
     h = vertices[triangles][:,2] - vertices[triangles][:,1]
-    return ((None, None,), 0.5 * np.linalg.norm(np.cross(b, h), axis = 1))
+    return ((None, None), 0.5 * np.linalg.norm(np.cross(b, h), axis = 1))
 
 
 def triangle_aspect_ratio(vertices, triangles):
@@ -20,7 +20,7 @@ def triangle_aspect_ratio(vertices, triangles):
     r = (2 * a) / (l1 + l2 + l3)
     l_max = np.max(np.c_[l1, l2, l3], axis = 1)
 
-    return l_max / (2 * np.sqrt(3) * r)
+    return ((None, None), l_max / (2 * np.sqrt(3) * r))
 
 
 
@@ -38,7 +38,7 @@ def quad_area(vertices, quads):
     a_tri1 = triangle_area(vertices, tris[idx_1])
     a_tri2 = triangle_area(vertices, tris[idx_2])
     
-    return a_tri1+a_tri2
+    return ((None, None), a_tri1+a_tri2)
 
 
 def quad_aspect_ratio(vertices, quads):
@@ -52,7 +52,7 @@ def quad_aspect_ratio(vertices, quads):
     
     l_max = np.max(np.c_[l1, l2, l3, l4], axis = 1)
 
-    return l_max / (4*a)
+    return ((None, None), l_max / (4*a))
 
 #______________________________________Tets______________________________________________________
 
@@ -87,7 +87,7 @@ def tet_scaled_jacobian(vertices, tets):
         lambda_ = np.concatenate((lambda_1, lambda_2, lambda_3, lambda_4, lambda_5), axis = 1)
         max_el = np.amax(lambda_, axis=1)
 
-        return (J * np.sqrt(2)) / max_el
+        return ((-1., 1.), (J * np.sqrt(2)) / max_el)
     
     
     
@@ -103,7 +103,7 @@ def tet_volume(vertices, tets):
     l2 = p0 - p2
     l3 = p3 - p0
     
-    return np.dot(np.cross(l2, l0), l3)/6
+    return ((None, None), (np.cross(l2, l0, axis=1)* l3)/6)
     
 #______________________________________Hexes______________________________________________________
 
@@ -178,7 +178,7 @@ def hex_scaled_jacobian(vertices, hexes):
 
         min_el[min_el > 1.1] = -1
 
-        return min_el
+        return ((-1., 1.), min_el)
     
     
 def hex_volume(vertices, hexes):
@@ -198,4 +198,4 @@ def hex_volume(vertices, hexes):
         x3  = (p4 - p0) + (p5 - p1) + (p6 - p2) + (p7 - p3)
         
         alpha8 = np.linalg.det(np.c_[x1,x2,x3].reshape(-1,3,3))
-        return alpha8/64
+        return ((None, None), alpha8/64)

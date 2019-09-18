@@ -155,7 +155,7 @@ class Viewer:
         )
 
         self.typeColorSurface = widgets.Dropdown(
-            options=[('Simplex Quality',0),('Easy', 1),('Label',2)],
+            options=[('Default', 0), ('Simplex Quality', 1), ('Label',2)],
             value=0,
             description='Type Color:',
         )
@@ -367,15 +367,23 @@ class Viewer:
         
         metric_keys = list(self.mesh.simplex_metrics.keys())
         metric_idx = metric_keys[self.chosen_metric.value]
-        metric = self.mesh.simplex_metrics[metric_idx]
+        metric = self.mesh.simplex_metrics[metric_idx][1]
 
         color_map_keys = list(ColorMap.color_maps.keys())
         color_map_idx = color_map_keys[self.colorMap.value]
         color_map = ColorMap.color_maps[color_map_idx]
         
-        normalized_metric = ((metric - np.min(metric))/np.ptp(metric)) * (color_map.shape[0]-1)
+        min_range = self.mesh.simplex_metrics[metric_idx][0][0]
+        max_range = self.mesh.simplex_metrics[metric_idx][0][1]
+        if ( min_range is None or max_range is None):
+            normalized_metric = ((metric - np.min(metric))/np.ptp(metric)) * (color_map.shape[0]-1)
+        else:
+            normalized_metric = np.clip(metric, min_range, max_range)
+            normalized_metric = (normalized_metric - min_range)/(max_range-min_range) * (color_map.shape[0]-1)
+            
+        normalized_metric = 1-normalized_metric
+            
         metric_to_colormap = np.rint(normalized_metric).astype(np.int)
-        
 
         mesh_color = color_map[metric_to_colormap]
         
@@ -398,7 +406,7 @@ class Viewer:
             change: not used
 
         """ 
-        if self.typeColorSurface.value==0:
+        if self.typeColorSurface.value==1:
             self.colorSurface.layout = self.invisibleLayout
             self.colorInside.layout = self.invisibleLayout
             self.colorMap.layout = self.visibleLayout
@@ -406,7 +414,7 @@ class Viewer:
             for i in self.itemsColorsLabel:
                 i.layout = self.invisibleLayout
             self.changeColorMap()
-        elif self.typeColorSurface.value==1:
+        elif self.typeColorSurface.value==0:
             self.colorInside.layout = self.visibleLayout
             self.colorSurface.layout = self.visibleLayout
             self.colorMap.layout = self.invisibleLayout
