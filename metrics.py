@@ -16,7 +16,7 @@ def triangle_aspect_ratio(vertices, triangles):
     l2 = np.linalg.norm(vertices[triangles][:,1] - vertices[triangles][:,2], axis = 1)
     l3 = np.linalg.norm(vertices[triangles][:,2] - vertices[triangles][:,0], axis = 1)
 
-    a = triangle_area(vertices, triangles)
+    a = triangle_area(vertices, triangles)[1]
     r = (2 * a) / (l1 + l2 + l3)
     l_max = np.max(np.c_[l1, l2, l3], axis = 1)
 

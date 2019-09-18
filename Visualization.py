@@ -152,6 +152,7 @@ class Viewer:
             options=[(i, idx) for idx, i in enumerate(ColorMap.color_maps.keys())],
             value=0,
             description='Color-Map:',
+            layout=self.invisibleLayout
         )
 
         self.typeColorSurface = widgets.Dropdown(
@@ -164,6 +165,7 @@ class Viewer:
             options= [(i, idx) for idx, i in enumerate(self.mesh.simplex_metrics.keys())],
             value=0,
             description='Metric:',
+            layout=self.invisibleLayout
         )
         
         self.colorSurface = widgets.ColorPicker(
@@ -171,7 +173,6 @@ class Viewer:
                             description='Color surface',
                             value='#FF0000',
                             disabled=False,
-                            layout= self.invisibleLayout
                         )
         
         self.colorInside = widgets.ColorPicker(
@@ -179,7 +180,6 @@ class Viewer:
                             description='Color inside',
                             value='#0000FF',
                             disabled=False,
-                            layout= self.invisibleLayout
                         )
         
         self.itemsColorsLabel = [widgets.ColorPicker(
@@ -282,7 +282,7 @@ class Viewer:
         return math.floor(n * multiplier) / multiplier  
         
     
-    def change_color_label(self, change):
+    def change_color_label(self, change=None):
         
         if self.mesh_color.shape[0] != self.mesh.labels.shape[0]:
             self.mesh_color = np.zeros((self.mesh.labels.shape[0], 3))
@@ -302,7 +302,7 @@ class Viewer:
         self.__update_draw()
         
 
-    def change_color_surface(self, change):
+    def change_color_surface(self, change=None):
         
         faces_per_poly = 0
         faces_in_face  = 2
@@ -329,7 +329,7 @@ class Viewer:
         
         
         
-    def change_color_inside(self, change):
+    def change_color_inside(self, change=None):
         
         faces_per_poly = 0
         faces_in_face  = 2
@@ -346,7 +346,7 @@ class Viewer:
         self.__update_draw()
         
 
-    def change_side_view(self,change):
+    def change_side_view(self,change=None):
         """Check button pressed
 
         Parameter
@@ -363,7 +363,7 @@ class Viewer:
             
 
 
-    def change_color_map(self, change):
+    def change_color_map(self, change=None):
         
         metric_keys = list(self.mesh.simplex_metrics.keys())
         metric_idx = metric_keys[self.chosen_metric.value]
@@ -376,7 +376,12 @@ class Viewer:
         min_range = self.mesh.simplex_metrics[metric_idx][0][0]
         max_range = self.mesh.simplex_metrics[metric_idx][0][1]
         if ( min_range is None or max_range is None):
-            normalized_metric = ((metric - np.min(metric))/np.ptp(metric)) * (color_map.shape[0]-1)
+            min_range = np.min(metric)
+            max_range = np.max(metric)
+            if (np.abs(max_range-min_range) > 1e-7):
+                normalized_metric = ((metric - np.min(metric))/np.ptp(metric)) * (color_map.shape[0]-1)
+            else:
+                normalized_metric = np.repeat(np.mean(metric), metric.shape[0])
         else:
             normalized_metric = np.clip(metric, min_range, max_range)
             normalized_metric = (normalized_metric - min_range)/(max_range-min_range) * (color_map.shape[0]-1)
@@ -399,7 +404,7 @@ class Viewer:
         self.__update_draw()
 
         
-    def change_type_color(self,change):
+    def change_type_color(self,change=None):
         """Check buttons on interface to select color
         Paramenter
         -----
@@ -413,7 +418,7 @@ class Viewer:
             self.chosen_metric.layout = self.visibleLayout
             for i in self.itemsColorsLabel:
                 i.layout = self.invisibleLayout
-            self.changeColorMap()
+            self.change_color_map()
         elif self.typeColorSurface.value==0:
             self.colorInside.layout = self.visibleLayout
             self.colorSurface.layout = self.visibleLayout
@@ -421,8 +426,8 @@ class Viewer:
             self.chosen_metric.layout = self.invisibleLayout
             for i in self.itemsColorsLabel:
                 i.layout = self.invisibleLayout
-            self.changeColorSurface()
-            self.changeColorInside()
+            self.change_color_surface()
+            self.change_color_inside()
         elif self.typeColorSurface.value==2:
             self.colorInside.layout = self.invisibleLayout
             self.colorSurface.layout = self.invisibleLayout
@@ -430,7 +435,7 @@ class Viewer:
             self.chosen_metric.layout = self.invisibleLayout
             for i in self.itemsColorsLabel:
                 i.layout = self.label_layout
-            self.changeColorByLabel()
+            self.change_color_label()
     
     
     
