@@ -312,7 +312,7 @@ class Viewer:
         elif 'Hexmesh' in str(type(self.mesh)):
             faces_per_poly = 6
         elif 'Quadmesh' in str(type(self.mesh)):
-            faces_per_poly = 2
+            faces_per_poly = 1
         elif 'Trimesh' in str(type(self.mesh)):
             faces_per_poly = 1
             faces_in_face  = 1

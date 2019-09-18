@@ -9,7 +9,7 @@ class Quadmesh(AbstractMesh):
     def __init__(self, vertices= None, faces = None, labels = None):
         
         self.face_normals    = None #npArray (Nx3)
-        self.face_labels     = None #npArray (Nx1)
+        self.labels     = None #npArray (Nx1)
         self.__face2face     = None #npArray (Nx3?)
         
         super(Quadmesh, self).__init__()
