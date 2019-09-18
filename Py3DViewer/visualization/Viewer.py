@@ -2,7 +2,7 @@ import numpy as np
 from pythreejs import *
 import ipywidgets as widgets
 import math
-import ColorMap
+from ..utils import ColorMap
 
 class Viewer:
     
@@ -11,7 +11,7 @@ class Viewer:
         self.mesh = mesh
         self.scene = None
         if mesh_color is None:
-            self.mesh_color = np.array([[0.88, 0.7, 0.94],[0.88, 0.7, 0.94],[0.88, 0.7, 0.94]])
+            self.mesh_color = np.array([[1, 212, 180],[1, 212, 180],[1, 212, 180]], dtype=np.float) / 255
         else:
             self.mesh_color = np.array([mesh_color,mesh_color,mesh_color])
         
@@ -29,6 +29,7 @@ class Viewer:
         
         if UI:
             self.__create_UI()
+        
                 
     def __create_UI(self):
         """Creates user interface
@@ -130,7 +131,7 @@ class Viewer:
                      layout=widgets.Layout(width='100%'))
         
         self.wireSlider = widgets.FloatSlider(
-                        value=1,
+                        value=0.2,
                         min=0.,
                         max=1.,
                         step=0.1,
@@ -144,7 +145,7 @@ class Viewer:
         self.colorWireframe = widgets.ColorPicker(
                             concise=True,
                             description='Color',
-                            value='black',
+                            value='#686868',
                             disabled=False,
                         )
         
@@ -171,14 +172,14 @@ class Viewer:
         self.colorSurface = widgets.ColorPicker(
                             concise=True,
                             description='Color surface',
-                            value='#FF0000',
+                            value='#01D4B4',
                             disabled=False,
                         )
         
         self.colorInside = widgets.ColorPicker(
                             concise=True,
                             description='Color inside',
-                            value='#0000FF',
+                            value='#FF9C00',
                             disabled=False,
                         )
         
@@ -230,11 +231,11 @@ class Viewer:
         display(self.accordion)
         
     
-    def __set_wireframe_color(self, change):
+    def __set_wireframe_color(self, change=None):
         
         self.line_.material.color = self.colorWireframe.value
         
-    def __set_wireframe_width(self, change):
+    def __set_wireframe_width(self, change=None):
         
         self.line_.material.opacity = self.wireSlider.value
         
@@ -450,6 +451,9 @@ class Viewer:
         
         
         self.__draw()
+        self.change_color_inside()
+        self.__set_wireframe_width()
+        self.__set_wireframe_color()
         
         display(renderer)
         
@@ -543,7 +547,7 @@ class Viewer:
                                            vertexColors = 'FaceColors',
                                           )
         
-        edges_material = MeshBasicMaterial(color='black',
+        edges_material = MeshBasicMaterial(color='#686868',
 #                                           side= 'FrontSide'
                                            polygonOffset=True,
                                            polygonOffsetFactor=1,
@@ -551,7 +555,7 @@ class Viewer:
                                            #shininess=0.5,
                                            wireframe=True,
                                            linewidth = 1,
-                                           opacity=1,
+                                           opacity=0.2,
                                            depthTest=True,
                                            transparent=True)
         
@@ -607,7 +611,7 @@ class Viewer:
                                            vertexColors = 'FaceColors',
                                           )
         
-        edges_material = MeshBasicMaterial(color='black',
+        edges_material = MeshBasicMaterial(color='#686868',
 #                                           side= 'FrontSide'
                                            polygonOffset=True,
                                            polygonOffsetFactor=1,
@@ -615,7 +619,7 @@ class Viewer:
                                            #shininess=0.5,
                                            wireframe=True,
                                            linewidth = 1,
-                                           opacity=1,
+                                           opacity=0.2,
                                            depthTest=True,
                                            transparent=True)
         

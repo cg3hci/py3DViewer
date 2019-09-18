@@ -1,8 +1,8 @@
-from AbstractMesh import AbstractMesh
-from Visualization import Viewer
+from .Abstractmesh import AbstractMesh
+from ..visualization.Viewer import Viewer
 import numpy as np
-import utils
-from metrics import triangle_aspect_ratio, triangle_area
+from ..utils import IO
+from ..utils.metrics import triangle_aspect_ratio, triangle_area
 
 class Trimesh(AbstractMesh):
     
@@ -176,7 +176,10 @@ class Trimesh(AbstractMesh):
         ext = filename.split('.')[-1]
         
         if ext == 'obj':
-            self.vertices, self.faces, self.face_normals = utils.read_obj(filename)
+            self.vertices, self.faces, self.face_normals = IO.read_obj(filename)
+        
+        else:
+            raise Exception("Only .obj files are supported")
             
         self.__load_operations()
         
@@ -188,7 +191,7 @@ class Trimesh(AbstractMesh):
         ext = filename.split('.')[-1]
         
         if ext == 'obj':
-            utils.save_obj(self, filename)
+            IO.save_obj(self, filename)
         
     
     def __compute_metrics(self): 
