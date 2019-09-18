@@ -89,6 +89,22 @@ def tet_scaled_jacobian(vertices, tets):
 
         return (J * np.sqrt(2)) / max_el
     
+    
+    
+def tet_volume(vertices, tets):
+    
+    p0 = vertices[tets[:,0]]
+    p1 = vertices[tets[:,1]]
+    p2 = vertices[tets[:,2]]
+    p3 = vertices[tets[:,3]]
+        
+        
+    l0 = p1 - p0
+    l2 = p0 - p2
+    l3 = p3 - p0
+    
+    return np.dot(np.cross(l2, l0), l3)/6
+    
 #______________________________________Hexes______________________________________________________
 
 
@@ -131,21 +147,21 @@ def hex_scaled_jacobian(vertices, hexes):
         x2  = (p3 - p0) + (p2 - p1) + (p7 - p4) + (p6 - p5)
         x3  = (p4 - p0) + (p5 - p1) + (p6 - p2) + (p7 - p3)
 
-        l0norm = np.linalg.norm(l0, axis=1)          
-        l1norm = np.linalg.norm(l1, axis=1) 
-        l2norm = np.linalg.norm(l2, axis=1) 
-        l3norm = np.linalg.norm(l3, axis=1) 
-        l4norm = np.linalg.norm(l4, axis=1) 
-        l5norm = np.linalg.norm(l5, axis=1) 
-        l6norm = np.linalg.norm(l6, axis=1) 
-        l7norm = np.linalg.norm(l7, axis=1) 
-        l8norm = np.linalg.norm(l8, axis=1) 
-        l9norm = np.linalg.norm(l9, axis=1) 
-        l10norm = np.linalg.norm(l10, axis=1)
-        l11norm = np.linalg.norm(l11, axis=1) 
-        x1norm = np.linalg.norm(x1, axis=1)
-        x2norm = np.linalg.norm(x2, axis=1)
-        x3norm = np.linalg.norm(x3, axis=1)
+        l0norm = l0/np.linalg.norm(l0, axis=1).reshape(-1,1)          
+        l1norm = l1/np.linalg.norm(l1, axis=1).reshape(-1,1)  
+        l2norm = l2/np.linalg.norm(l2, axis=1).reshape(-1,1)  
+        l3norm = l3/np.linalg.norm(l3, axis=1).reshape(-1,1)   
+        l4norm = l4/np.linalg.norm(l4, axis=1).reshape(-1,1)   
+        l5norm = l5/np.linalg.norm(l5, axis=1).reshape(-1,1)  
+        l6norm = l6/np.linalg.norm(l6, axis=1).reshape(-1,1)   
+        l7norm = l7/np.linalg.norm(l7, axis=1).reshape(-1,1)   
+        l8norm = l8/np.linalg.norm(l8, axis=1).reshape(-1,1)   
+        l9norm = l9/np.linalg.norm(l9, axis=1).reshape(-1,1)   
+        l10norm = l10/np.linalg.norm(l10, axis=1).reshape(-1,1)  
+        l11norm = l11/np.linalg.norm(l11, axis=1).reshape(-1,1)  
+        x1norm = x1/np.linalg.norm(x1, axis=1).reshape(-1,1)   
+        x2norm = x2/np.linalg.norm(x2, axis=1).reshape(-1,1)   
+        x3norm = x3/np.linalg.norm(x3, axis=1).reshape(-1,1)   
 
         # normalized jacobian matrices determinants
         alpha_1 = np.expand_dims(np.einsum('ij,ij->i', l0norm, np.cross(l3norm, l4norm, axis= 1)), axis = 0).transpose()
@@ -163,3 +179,23 @@ def hex_scaled_jacobian(vertices, hexes):
         min_el[min_el > 1.1] = -1
 
         return min_el
+    
+    
+def hex_volume(vertices, hexes):
+    
+        p0 = vertices[hexes[:,0]]
+        p1 = vertices[hexes[:,1]]
+        p2 = vertices[hexes[:,2]]
+        p3 = vertices[hexes[:,3]]
+        p4 = vertices[hexes[:,4]]
+        p5 = vertices[hexes[:,5]]
+        p6 = vertices[hexes[:,6]]
+        p7 = vertices[hexes[:,7]]
+
+        # cross-derivatives
+        x1  = (p1 - p0) + (p2 - p3) + (p5 - p4) + (p6 - p7)
+        x2  = (p3 - p0) + (p2 - p1) + (p7 - p4) + (p6 - p5)
+        x3  = (p4 - p0) + (p5 - p1) + (p6 - p2) + (p7 - p3)
+        
+        alpha8 = np.linalg.det(np.c_[x1,x2,x3].reshape(-1,3,3))
+        return alpha8/64

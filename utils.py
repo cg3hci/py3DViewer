@@ -65,7 +65,7 @@ def read_mesh(filename):
         
         tmp_vtx = np.array(tmp_vtx)
         tmp_simplices = np.array(tmp_simplices)
-        tmp_labels = np.array(tmp_labels)
+        tmp_labels = np.array(tmp_labels)+1
         
         return tmp_vtx, tmp_simplices, tmp_labels
     

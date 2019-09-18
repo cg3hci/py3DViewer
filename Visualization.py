@@ -188,7 +188,7 @@ class Viewer:
                                             value= self.listColor(int(i)),
                                             disabled=False,
                                             layout= self.invisibleLayout
-                                            ) for i in range(max(self.mesh.labels))]
+                                            ) for i in range(len(np.unique(self.mesh.labels)))]
         
         
         self.flip_x.observe(self.__slicing, names='value')
