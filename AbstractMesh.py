@@ -10,7 +10,7 @@ class AbstractMesh(object):
         self.__vtx2face          = None #npArray (NxM)
         self.__vtx2vtx           = None #npArray (Nx1)
         self.__bounding_box      = None #npArray (2x3)
-        self.simplex_metrics     = dict() #dictionary[propertyName : npArray (Nx1)]
+        self.simplex_metrics     = dict() #dictionary[propertyName : ((min, max), npArray (Nx1))]
         self.__simplex_centroids = None #npArray (Nx1)
         self.__cut            = {'min_x':None, 
                                  'max_x':None, 

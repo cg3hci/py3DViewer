@@ -178,6 +178,8 @@ class Quadmesh(AbstractMesh):
 
         self.__load_operations()
         
+        return self
+        
         
     def save_file(self, filename):
         
