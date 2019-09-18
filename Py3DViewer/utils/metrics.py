@@ -176,9 +176,9 @@ def hex_scaled_jacobian(vertices, hexes):
         alpha_ = np.concatenate((alpha_1, alpha_2, alpha_3, alpha_4, alpha_5, alpha_6, alpha_7, alpha_8, alpha_9), axis = 1)
         min_el = np.amin(alpha_, axis=1)
 
-        min_el[min_el > 1.1] = -1
+        min_el[min_el > 1.1] = 0
 
-        return ((-1., 1.), min_el)
+        return ((0., 1.), min_el)
     
     
 def hex_volume(vertices, hexes):

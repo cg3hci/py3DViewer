@@ -44,11 +44,7 @@ class Viewer:
         #titax = widgets.Label(value='Slice from axes', layout=widgets.Layout(padding='1px 1px 1px 1px', margin='1px 1px 1px 1px'))
         row_layout = {'width':'100px','padding':'1px 1px 1px 1px', 'margin':'1px 1px 1px 1px'}
         wireframe_layout = {'width':'100px','padding':'1px 1px 1px 1px', 'margin':'1px 1px 1px 1px'}
-        h_box_layout = Layout(display='flex',
-                    flex_flow='row',
-                    align_items='stretch',
-                    width='100%',
-                    height='100%')
+ 
         
         
         self.invisibleLayout = {'display':'none'}
@@ -228,12 +224,12 @@ class Viewer:
         box_rendering = widgets.HBox([self.wireSlider,self.colorWireframe])
         box_rendering01 = widgets.HBox([self.colorSurface])
         if 'Hexmesh' in str(type(self.mesh)) or 'Tetmesh' in str(type(self.mesh)):
-            box_rendering01 = widgets.HBox([self.typeColorSurface,self.colorMap, self.chosen_metric, self.colorSurface, self.colorInside] + self.itemsColorsLabel, layout=h_box_layout)
+            box_rendering01 = widgets.HBox([self.typeColorSurface,self.colorMap, self.chosen_metric, self.colorSurface, self.colorInside] + self.itemsColorsLabel)
         else:
             box_rendering01 = widgets.HBox([self.typeColorSurface,self.colorMap, self.chosen_metric, self.colorSurface] + self.itemsColorsLabel)
         #boxRendering02 = widgets.HBox(self.itemsColorsLabel)
         #boxRendering1 = widgets.HBox([boxRendering01,boxRendering02])
-        vertical_rendering = widgets.VBox([box_rendering, box_rendering01], layout=h_box_layout)
+        vertical_rendering = widgets.VBox([box_rendering, box_rendering01])
 
 
         self.accordion = widgets.Accordion(children=[vvbox, vertical_rendering])
@@ -685,7 +681,7 @@ class Viewer:
     def initialize_camera(self, center_target, width, height):
         camera_target = center_target  # the point to look at
         camera_position = [0, 10., 4.] # the camera initial position
-        key_light = DirectionalLight(color='#ffffff',position=[0,10,30], intensity=0.5)
+        key_light = DirectionalLight(color='#ffffff',position=[0,10,0], intensity=0.5)
         #key_light2 = SpotLight(position=[0, 0, 0], angle = 0.3, penumbra = 0.1, target = tetraObj,castShadow = True)
 
         camera_t = PerspectiveCamera(
