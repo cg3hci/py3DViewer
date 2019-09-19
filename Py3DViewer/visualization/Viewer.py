@@ -42,7 +42,7 @@ class Viewer:
 
         #style = {width: '50px'}
         #titax = widgets.Label(value='Slice from axes', layout=widgets.Layout(padding='1px 1px 1px 1px', margin='1px 1px 1px 1px'))
-        row_layout = {'width':'100px','padding':'1px 1px 1px 1px', 'margin':'1px 1px 1px 1px'}
+        row_layout = {'width':'100px', 'padding':'1px 1px 1px 1px', 'margin':'1px 1px 1px 1px'}
         wireframe_layout = {'width':'100px','padding':'1px 1px 1px 1px', 'margin':'1px 1px 1px 1px'}
  
         
@@ -219,17 +219,17 @@ class Viewer:
         
     
         #menu slice
-        vvbox=widgets.VBox([vbox])
+        vvbox=widgets.VBox([vbox], layout={'height': '100px'})
         #menu rendering
-        box_rendering = widgets.HBox([self.wireSlider,self.colorWireframe])
-        box_rendering01 = widgets.HBox([self.colorSurface])
+        box_rendering = widgets.HBox([self.wireSlider,self.colorWireframe], layout={'height': '100px'})
+        box_rendering01 = widgets.HBox([self.colorSurface], layout={'height': '100px'})
         if 'Hexmesh' in str(type(self.mesh)) or 'Tetmesh' in str(type(self.mesh)):
-            box_rendering01 = widgets.HBox([self.typeColorSurface,self.colorMap, self.chosen_metric, self.colorSurface, self.colorInside] + self.itemsColorsLabel)
+            box_rendering01 = widgets.HBox([self.typeColorSurface,self.colorMap, self.chosen_metric, self.colorSurface, self.colorInside] + self.itemsColorsLabel, layout={'height': '130px'})
         else:
-            box_rendering01 = widgets.HBox([self.typeColorSurface,self.colorMap, self.chosen_metric, self.colorSurface] + self.itemsColorsLabel)
+            box_rendering01 = widgets.HBox([self.typeColorSurface,self.colorMap, self.chosen_metric, self.colorSurface] + self.itemsColorsLabel, layout={'height': '100px'})
         #boxRendering02 = widgets.HBox(self.itemsColorsLabel)
         #boxRendering1 = widgets.HBox([boxRendering01,boxRendering02])
-        vertical_rendering = widgets.VBox([box_rendering, box_rendering01])
+        vertical_rendering = widgets.VBox([box_rendering, box_rendering01], layout={'height': '130px'})
 
 
         self.accordion = widgets.Accordion(children=[vvbox, vertical_rendering])
