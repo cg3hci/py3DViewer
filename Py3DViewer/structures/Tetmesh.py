@@ -6,7 +6,7 @@ from ..utils.metrics import tet_scaled_jacobian, tet_volume
 
 class Tetmesh(AbstractMesh):
     
-    def __init__(self, vertices = None, tets = None, labels = None):
+    def __init__(self, filename = None, vertices = None, tets = None, labels = None):
         
         self.tets             = None #npArray (Nx4) 
         self.labels       = None #npArray (Nx1) 
@@ -18,7 +18,11 @@ class Tetmesh(AbstractMesh):
         
         super(Tetmesh, self).__init__()
         
-        if vertices and tets:
+        if filename is not None:
+            
+            self.__load_from_file(filename)
+        
+        elif vertices and tets:
             
             self.vertices = np.array(vertices) 
             self.tets = np.array(tets)
@@ -27,6 +31,10 @@ class Tetmesh(AbstractMesh):
                 self.labels = np.array(labels)
             
             self.__load_operations()
+        
+        else:
+            
+            print('Warning: Empty Tetmesh object')
          
     
     # ==================== METHODS ==================== #
@@ -159,7 +167,7 @@ class Tetmesh(AbstractMesh):
         self.vtx2tet = np.array([np.unique(np.array(a)) for a in vtx2tet])
         
         
-    def load_from_file(self, filename):
+    def __load_from_file(self, filename):
         
         ext = filename.split('.')[-1]
         

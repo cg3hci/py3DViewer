@@ -7,7 +7,7 @@ from ..utils.metrics import hex_scaled_jacobian, hex_volume
 
 class Hexmesh(AbstractMesh):
     
-    def __init__(self, vertices = None, tets = None, labels = None):
+    def __init__(self, filename= None, vertices = None, tets = None, labels = None):
         
         self.hexes            = None #npArray (Nx4) 
         self.labels           = None #npArray (Nx1) 
@@ -19,7 +19,11 @@ class Hexmesh(AbstractMesh):
         
         super(Hexmesh, self).__init__()
         
-        if vertices and hexes:
+        if filename is not None:
+            
+            self.__load_from_file(filename)
+        
+        elif vertices is not None and hexes is not None:
             
             self.vertices = np.array(vertices) 
             self.tets = np.array(hexes)
@@ -28,6 +32,9 @@ class Hexmesh(AbstractMesh):
                 self.labels = np.array(labels)
             
             self.__load_operations()
+        
+        else:
+            print('Warning: Empty Hexmesh object')
          
     
     # ==================== METHODS ==================== #
@@ -179,7 +186,7 @@ class Hexmesh(AbstractMesh):
         self.vtx2hex = np.array([np.unique(np.array(a)) for a in vtx2hex])
         
         
-    def load_from_file(self, filename):
+    def __load_from_file(self, filename):
         
         ext = filename.split('.')[-1]
         

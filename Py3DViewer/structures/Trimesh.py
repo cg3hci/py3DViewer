@@ -6,7 +6,7 @@ from ..utils.metrics import triangle_aspect_ratio, triangle_area
 
 class Trimesh(AbstractMesh):
     
-    def __init__(self, vertices = None, faces = None, labels = None):
+    def __init__(self, filename = None, vertices = None, faces = None, labels = None):
         
         self.face_normals     = None #npArray (Nx3)
         self.labels      = None #npArray (Nx1)
@@ -14,7 +14,11 @@ class Trimesh(AbstractMesh):
         
         super(Trimesh, self).__init__()
         
-        if vertices and faces:
+        if filename is not None:
+            
+            self.__load_from_file(filename)
+        
+        elif vertices and faces:
             
             self.vertices = np.array(vertices) 
             self.faces = np.array(faces)
@@ -23,6 +27,9 @@ class Trimesh(AbstractMesh):
                 self.labels = np.array(labels)
             
             self.__load_operations()
+        
+        else:
+            print('Warning: Empty Trimesh object')
          
     
     # ==================== METHODS ==================== #    
@@ -166,7 +173,7 @@ class Trimesh(AbstractMesh):
         self.vtx_normals = self.vtx_normals / norm
         
         
-    def load_from_file(self, filename):
+    def __load_from_file(self, filename):
         
         ext = filename.split('.')[-1]
         
