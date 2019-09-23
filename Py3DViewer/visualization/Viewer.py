@@ -554,14 +554,14 @@ class Viewer:
         bonesGeometry = BufferGeometry(attributes={'position': BufferAttribute(self.skel.nodes[self.skel.bones], normalized=False)})
             
         bones = LineSegments( bonesGeometry, 
-            MeshBasicMaterial(color = '#00ffff' ))
+            MeshBasicMaterial(color = '#FF9C00' ))
             
         self.scene.add(bones)
         
         for point, radius in zip(self.skel.nodes, self.skel.radius):
             nodeGeometry = SphereGeometry(radius=radius/100)
             sphere = Mesh(nodeGeometry, 
-            MeshBasicMaterial(color = '#0000ff' ))
+            MeshBasicMaterial(color = '#ff0000' ))
             sphere.position = list(point)
             self.scene.add(sphere)
             
@@ -571,6 +571,7 @@ class Viewer:
             self.__draw_trimesh()
             self.mesh_.material.transparent = True
             self.mesh_.material.opacity = 0.05
+            self.line_.material.opacity = 0.1
             
             self.__update_draw()
     
