@@ -14,25 +14,36 @@ class Viewer:
         self.__UI = UI
         self.width = width
         self.height = height
-        if mesh_color is None:
-            self.mesh_color = np.array([[1, 212, 180],[1, 212, 180],[1, 212, 180]], dtype=np.float) / 255
-        else:
-            self.mesh_color = np.array([mesh_color,mesh_color,mesh_color])
         
-        if 'Hexmesh' in str(type(mesh)) or 'Quadmesh' in str(type(mesh)):
-            self.mesh_color = np.repeat(self.mesh_color, self.mesh.num_faces*2, axis=0)
-        else:
-            self.mesh_color = np.repeat(self.mesh_color, self.mesh.num_faces, axis=0)
+        if 'Skeleton' in str(type(mesh)):
+            self.skel = mesh
+            self.center = list(self.skel.nodes.mean(axis=0))
+            if hasattr(self.skel, 'associated_mesh'):
+                self.mesh = self.skel.associated_mesh
+           
+        if 'Skeleton' not in str(type(self.mesh)):
+            if mesh_color is None:
+                self.mesh_color = np.array([[1, 212, 180],[1, 212, 180],[1, 212, 180]], dtype=np.float) / 255
+            else:
+                self.mesh_color = np.array([mesh_color,mesh_color,mesh_color])
+
+            if 'Hexmesh' in str(type(self.mesh)) or 'Quadmesh' in str(type(self.mesh)):
+                self.mesh_color = np.repeat(self.mesh_color, self.mesh.num_faces*2, axis=0)
+            else:
+                self.mesh_color = np.repeat(self.mesh_color, self.mesh.num_faces, axis=0)
+
+
+            self.center = list(self.mesh.vertices[self.mesh.boundary()[0].flatten()].mean(axis = 0))
+
+            self.flip_x_value = False
+            self.flip_y_value = False
+            self.flip_z_value = False
+
+            if UI:
+                self.__create_UI()
+        
 
             
-        self.center = list(mesh.vertices[self.mesh.boundary()[0].flatten()].mean(axis = 0))
-        
-        self.flip_x_value = False
-        self.flip_y_value = False
-        self.flip_z_value = False
-        
-        if UI:
-            self.__create_UI()
         
                 
     def __create_UI(self):
@@ -469,13 +480,19 @@ class Viewer:
         
     def __draw(self):
         
-        if 'Trimesh' in str(type(self.mesh)) or 'Tetmesh' in str(type(self.mesh)):
+        if hasattr(self, 'skel'):
+            
+            self.__draw_skeleton()
+        
+        elif 'Trimesh' in str(type(self.mesh)) or 'Tetmesh' in str(type(self.mesh)):
             
             self.__draw_trimesh()
             
-        if 'Quadmesh' in str(type(self.mesh)) or 'Hexmesh' in str(type(self.mesh)):
+        elif 'Quadmesh' in str(type(self.mesh)) or 'Hexmesh' in str(type(self.mesh)):
             
             self.__draw_quadmesh()
+            
+        
             
     def __update_draw(self):
         
@@ -528,8 +545,34 @@ class Viewer:
         
         self.line_.geometry = wireframe
         
+    
+
+    
+    def __draw_skeleton(self):
         
+    
+        bonesGeometry = BufferGeometry(attributes={'position': BufferAttribute(self.skel.nodes[self.skel.bones], normalized=False)})
+            
+        bones = LineSegments( bonesGeometry, 
+            MeshBasicMaterial(color = '#00ffff' ))
+            
+        self.scene.add(bones)
         
+        for point, radius in zip(self.skel.nodes, self.skel.radius):
+            nodeGeometry = SphereGeometry(radius=radius/100)
+            sphere = Mesh(nodeGeometry, 
+            MeshBasicMaterial(color = '#0000ff' ))
+            sphere.position = list(point)
+            self.scene.add(sphere)
+            
+        
+        if hasattr(self.skel, 'associated_mesh'):
+            
+            self.__draw_trimesh()
+            self.mesh_.material.transparent = True
+            self.mesh_.material.opacity = 0.05
+            
+            self.__update_draw()
     
     def __draw_trimesh(self):
         
@@ -550,6 +593,8 @@ class Viewer:
                                            polygonOffsetFactor=1,
                                            polygonOffsetUnits=1,
                                            flatShading = True,
+                                           opacity = 1.,
+                                           transparent = False,
                                            side = 'FrontSide',
                                            #color = '#550000',
                                            wireframe=False,
@@ -685,7 +730,7 @@ class Viewer:
         #key_light2 = SpotLight(position=[0, 0, 0], angle = 0.3, penumbra = 0.1, target = tetraObj,castShadow = True)
 
         camera_t = PerspectiveCamera(
-            position=camera_position, lookAt=camera_target, fov=50, near=.5, far=10000, ##careful with this near clipping plane...
+            position=camera_position, lookAt=camera_target, fov=50, near=.1, far=10000, ##careful with this near clipping plane...
             children=[key_light]
         )
         self.scene = Scene(children=[camera_t, AmbientLight(color='white')], background='#ffffff')

@@ -184,4 +184,39 @@ def save_obj(mesh, filename):
             if 'Quadmesh' in str(type(mesh)):
                 f.write(f"f {face[0]+1} {face[1]+1} {face[2]+1} {face[3]+1}\n")
 
+
+                
+                
+def read_skeleton(filename):
+    
+    with open(filename) as file:
+        
+        vtx_list = []
+        edges = []
+        radius = []
+        
+        for line in file.readlines():
             
+            try:
+                
+                splitted_line = line.split()
+                idx = int(splitted_line[0])
+                x = float(splitted_line[1])
+                y = float(splitted_line[2])
+                z = float(splitted_line[3])
+                rad = float(splitted_line[4])
+                num_neighbors = int(splitted_line[5])
+                
+                vtx_list.append([x,y,z])
+                radius.append(rad)
+                
+                for i in range(num_neighbors):
+                    
+                    neighbor = int(splitted_line[6+i])
+                    edges.append([idx, neighbor])
+                    
+                
+            except Exception:
+                continue
+                
+        return np.array(vtx_list), np.array(radius), np.array(edges)
