@@ -135,12 +135,12 @@ def read_obj(filename):
         for line in f.readlines():
             if line[0:2] == 'v ':
                 vtx = line.split()
-                tmpVtx.append([float(vtx[1]), float(vtx[2]), float(vtx[3])])
-            
+                tmpVtx.append([float(vtx[1].split("/")[0]), float(vtx[2].split("/")[0]), float(vtx[3].split("/")[0])])
+                #The slashes after the split up here are temporary, we need to improve this parser
             if line[0:2] == 'f ':
                 face = line.split()
                 
-                tmpFaces.append([int(f) -1 for f in face[1:]])
+                tmpFaces.append([int(f.split("/")[0]) -1 for f in face[1:]]) #Same here with the forward slash
             
             
 #            if line[0:2] == 'vn':
