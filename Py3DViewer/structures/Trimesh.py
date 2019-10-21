@@ -224,6 +224,9 @@ class Trimesh(AbstractMesh):
     def face2face(self):
         return self.__face2face
 
+    @property
+    def visibleFaces(self):
+        return self.boundary[0]
         
     @property
     def simplex_centroids(self):
