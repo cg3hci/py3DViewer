@@ -25,10 +25,10 @@ class Viewer(object):
     def __initialize_scene(self):
         scene = three.Scene(children=[self.camera, three.AmbientLight(color='white')])
         scene.add(self.drawable.drawable_mesh)
+        scene.add(self.drawable.wireframe)
         return scene
     
     def __initialize_renderer(self, width, height):
-        
         controls = three.OrbitControls(controlling=self.camera)
         controls.enableDamping = False
         controls.damping = 0.01 ##TODO: Check if this is a typo
