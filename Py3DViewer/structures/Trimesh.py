@@ -5,6 +5,20 @@ from ..utils import IO
 from ..utils.metrics import triangle_aspect_ratio, triangle_area
 
 class Trimesh(AbstractMesh):
+
+    """
+    This class represent a mesh composed of triangles. It is possible to load the mesh from a file (.obj) or
+    from raw geometry and topology data.
+
+    Parameters:
+
+        filename (string): The name of the file to load 
+        vertices (Array (Nx3) type=float): The list of vertices of the mesh
+        faces (Array (Nx3) type=int): The list of faces of the mesh
+        labels (Array (Nx1) type=int): The list of labels of the mesh (Optional)
+
+    
+    """
     
     def __init__(self, filename = None, vertices = None, faces = None, labels = None):
         
@@ -41,11 +55,29 @@ class Trimesh(AbstractMesh):
 
 
     def add_face(self,face_id0, face_id1, face_id2):
-        
+        """
+        Add a new face to the current mesh. It affects the mesh topology. 
+
+        Parameters:
+
+            face_id0 (int): The index of the first vertex composing the new face
+            face_id1 (int): The index of the second vertex composing the new face
+            face_id2 (int): The index of the third vertex composing the new face
+    
+        """
         self.add_faces([face_id0, face_id1, face_id2])
         
         
     def add_faces(self, new_faces):
+        
+        """
+        Add a list of new faces to the current mesh. It affects the mesh topology. 
+
+        Parameters:
+
+            new_faces (Array (Nx3) type=int): List of faces to add. Each face is in the form [int,int,int]
+    
+        """
             
         new_faces = np.array(new_faces)
         new_faces.shape = (-1,3)
@@ -60,11 +92,29 @@ class Trimesh(AbstractMesh):
         
     
     def remove_face(self,face_id):
-        
+
+        """
+        Remove a face from the current mesh. It affects the mesh topology. 
+
+        Parameters:
+
+            face_id (int): The index of the face to remove 
+    
+        """
+
         self.remove_faces([face_id])
         
         
     def remove_faces(self, face_ids):
+
+        """
+        Remove a list of faces from the current mesh. It affects the mesh topology. 
+
+        Parameters:
+
+            face_ids (Array (Nx1 / 1xN) type=int): List of faces to remove. Each face is in the form [int]
+    
+        """
         
         face_ids = np.array(face_ids)
         mask = np.ones(self.num_faces)
@@ -76,12 +126,28 @@ class Trimesh(AbstractMesh):
         
     
     def remove_vertex(self,vtx_id):
+
+        """
+        Remove a vertex from the current mesh. It affects the mesh geometry. 
+
+        Parameters:
+
+            vtx_id (int): The index of the vertex to remove 
+    
+        """
         
         self.remove_vertices([vtx_id])
     
     
     def remove_vertices(self, vtx_ids):
-        
+        """
+        Remove a list of indices from the current mesh. It affects the mesh geoemtry. 
+
+        Parameters:
+
+            vtx_ids (Array (Nx1 / 1xN) type=int): List of vertices to remove. Each vertex is in the form [int]
+    
+        """ 
         vtx_ids = np.array(vtx_ids)
         
         for v_id in vtx_ids:
@@ -189,6 +255,15 @@ class Trimesh(AbstractMesh):
         
     
     def save_file(self, filename):
+
+        """
+        Save the current mesh in a file. Currently it supports the .obj extension. 
+
+        Parameters:
+
+            filename (string): The name of the file
+    
+        """
         
         ext = filename.split('.')[-1]
         
@@ -203,7 +278,18 @@ class Trimesh(AbstractMesh):
         
     
     def boundary(self, flip_x = False, flip_y = False, flip_z = False):
-        
+        """
+        Compute the boundary of the current mesh. It only returns the faces that respect
+        the cut and the flip conditions.
+
+        Parameters:
+
+            flip_x (bool): Flip the cut condition for the x axis
+            flip_y (bool): Flip the cut condition for the y axis
+            flip_z (bool): Flip the cut condition for the z axis
+    
+        """
+
         min_x = self.cut['min_x']
         max_x = self.cut['max_x']
         min_y = self.cut['min_y']

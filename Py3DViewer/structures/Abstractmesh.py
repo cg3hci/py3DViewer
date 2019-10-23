@@ -3,6 +3,11 @@ from ..visualization.Viewer import Viewer
 
 
 class AbstractMesh(object):
+
+    """
+    This class represents a generic mesh. It must be estended by a specific mesh class. It stores all the information
+    shared among the different kind of supported meshes.
+    """
     
     def __init__(self):
         
@@ -28,6 +33,21 @@ class AbstractMesh(object):
     
         
     def show(self, UI = False, width = 700, height = 700, mesh_color = None):
+
+        """
+        Show the mesh within the current cell. It is possible to manipulate the mesh through the UI.
+
+        Parameters:
+
+            UI (bool): Show or not show the graphic user interface of the viewer
+            width (int): The width of the canvas
+            height (int): The height of thne canvas
+        
+        Return:
+
+            Viewer: The viewer object
+        """
+
         view = Viewer(self, UI=UI, mesh_color=mesh_color, width = width, height = height).show()
         return view
         
@@ -41,7 +61,19 @@ class AbstractMesh(object):
     def set_cut(self, min_x = None, max_x = None, 
                       min_y = None, max_y = None, 
                       min_z = None, max_z = None):
-        
+        """
+        Cut the mesh along x, y and z axes. It doesn't affect the geometry of the mesh.
+
+        Parameters:
+
+            min_x (float): The minimum value of x
+            max_x (float): The maximum value of x
+            min_y (float): The minimum value of y
+            max_y (float): The maximum value of y
+            min_z (float): The minimum value of z
+            max_z (float): The maximum value of z
+    
+        """
         if min_x is not None:
             self.__cut['min_x'] = min_x
         if max_x is not None:
@@ -56,6 +88,10 @@ class AbstractMesh(object):
             self.__cut['max_z'] = max_z
             
     def reset_cut(self):
+
+        """
+        Set the cuts to the bounding box in order to show the whole mesh.
+        """        
         
         self.set_cut(min_x = self.bbox[0,0], max_x = self.bbox[1,0], 
                      min_y = self.bbox[0,1], max_y = self.bbox[1,1],
@@ -73,7 +109,18 @@ class AbstractMesh(object):
 
 
     def get_metric(self, property_name, id_element):
-        
+        """
+        Get a specific metric element from the dictionary of metrics 'simplex_metrics'.
+
+        Parameters:
+
+            property_name (string): The name of the wanted metric
+            id_element (int): The index of a specific element of the metric
+
+        Returns:
+            object: The specific metric element. The return type depends on the metric
+    
+        """
         return self.simplex_metrics[property_name][id_element]
     
     @property
@@ -94,6 +141,17 @@ class AbstractMesh(object):
         
     def add_vertex(self, x, y, z): 
         
+        """
+        Add a new vertex to the current mesh. It affects the mesh geometry. 
+
+        Parameters:
+
+            x (float): The x coordinate of the new vertex
+            y (float): The y coordinate of the new vertex
+            z (float): The z coordinate of the new vertex
+    
+        """
+        
         new_vertex = np.array([x,y,z], dtype=np.float)
         new_vertex.shape = (1,3)
         
@@ -101,6 +159,15 @@ class AbstractMesh(object):
     
     
     def add_vertices(self, new_vertices):
+
+        """
+        Add a list of new vertices to the current mesh. It affects the mesh geometry. 
+
+        Parameters:
+
+            new_vertices (Array (Nx3) type=float): List of vertices to add. Each vertex is in the form [float,float,float]
+    
+        """
         
         new_vertices = np.array(new_vertices)
         self.vertices = np.concatenate([self.vertices, new_vertices])

@@ -133,11 +133,17 @@ class Tetmesh(AbstractMesh):
         map_ = dict()
         adjs = np.zeros((self.num_tets, 4), dtype=np.int)-1
         vtx2tet = [[] for i in range(self.num_vertices)]
+        vtx2vtx = [[] for i in range(self.num_vertices)]
         tets_idx = np.repeat(np.array(range(self.num_tets)), 4)
         self.tet2face = np.array(range(self.num_faces)).reshape(-1,4)
         
         for f, t in zip(self.faces, tets_idx):
-            
+
+            vtx2vtx[f[0]].append(f[1])
+            vtx2vtx[f[0]].append(f[2])
+
+
+
             vtx2tet[f[0]].append(t)
             vtx2tet[f[1]].append(t)
             vtx2tet[f[2]].append(t)
@@ -164,7 +170,8 @@ class Tetmesh(AbstractMesh):
                 adjs[map_[f]][idx_to_append2] = t
         
         self.tet2tet = adjs#np.array([np.array(a) for a in adjs])
-        self.vtx2tet = np.array([np.unique(np.array(a)) for a in vtx2tet])
+        self.vtx2tet = np.array([np.unique(np.array(a)) for a in vtx2tet]) 
+        self._AbstractMesh__vtx2vtx = np.array([np.array(a) for a in vtx2vtx])
         
         
     def __load_from_file(self, filename):
