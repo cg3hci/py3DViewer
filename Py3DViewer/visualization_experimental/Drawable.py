@@ -63,3 +63,12 @@ class Drawable(object):
             material=material,
             position=[0, 0, 0]
         ), drawable_geometry
+
+    
+    @property
+    def center(self):
+        return self.geometry.center
+    
+    @property
+    def scale(self):
+        return self.geometry.scale

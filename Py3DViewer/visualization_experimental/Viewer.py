@@ -13,9 +13,10 @@ class Viewer(object):
         self.renderer = self.__initialize_renderer(width, height)
     
     def __initialize_camera(self, width, height):
-        camera_target = [0, 0, 0]
-        camera_position = [0, 10., 4.] 
-        directional_light = three.DirectionalLight(color = '#ffffff', position = [0,10,0], intensity = 0.5)
+        print(self.drawable.center)
+        camera_target = self.drawable.center
+        camera_position = tuple(camera_target + [0, 0, self.drawable.scale])
+        directional_light = three.DirectionalLight(color = '#ffffff', position = [0, 10, 0], intensity = 0.5)
         camera = three.PerspectiveCamera(
             position=camera_position, aspect=width/height, lookAt=camera_target, fov=50, near=.1, far=10000,
             children=[directional_light]
@@ -23,9 +24,10 @@ class Viewer(object):
         return camera
     
     def __initialize_scene(self):
-        scene = three.Scene(children=[self.camera, three.AmbientLight(color='white')])
-        scene.add(self.drawable.drawable_mesh)
-        scene.add(self.drawable.wireframe)
+        scene = three.Scene(children=[three.AmbientLight(color='white'),
+                                      self.camera,
+                                      self.drawable.drawable_mesh,
+                                      self.drawable.wireframe])
         return scene
     
     def __initialize_renderer(self, width, height):
@@ -34,9 +36,9 @@ class Viewer(object):
         controls.damping = 0.01 ##TODO: Check if this is a typo
         controls.dampingFactor = 0.1 #friction
         controls.rotateSpeed = 0.5 #mouse sensitivity
-        controls.target = [0, 0, 0] # centro dell'oggetto
+        controls.target = tuple(self.drawable.center) # centro dell'oggetto
         controls.zoomSpeed = 0.5
-
+        controls.exec_three_obj_method("update")
         return three.Renderer(camera = self.camera, background_opacity=1,
                         scene = self.scene, controls=[controls], width=width, height=height,
                         antialias=True)

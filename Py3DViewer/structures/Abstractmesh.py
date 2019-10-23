@@ -129,6 +129,19 @@ class AbstractMesh(object):
         
         return self.vertices.shape[0]
     
+    @property
+    def center(self):
+        
+        x1, x2 = self.__bounding_box[0][0], self.__bounding_box[1][0]
+        y1, y2 = self.__bounding_box[0][1], self.__bounding_box[1][1]
+        z1, z2 = self.__bounding_box[0][2], self.__bounding_box[1][2]
+    
+        return np.array([(x1+x2)/2, (y1+y2)/2, (z1+z2)/2])
+    
+    @property
+    def scale(self):
+        
+        return np.linalg.norm(self.__bounding_box[0]-self.__bounding_box[1])
     
     def __update_bounding_box(self):
         
@@ -141,8 +154,6 @@ class AbstractMesh(object):
         
         self.__bounding_box = np.array([[min_x_coord, min_y_coord, min_z_coord],
                                         [max_x_coord, max_y_coord, max_z_coord]])
-        
-        
        
     def __repr__(self):
         self.show()
