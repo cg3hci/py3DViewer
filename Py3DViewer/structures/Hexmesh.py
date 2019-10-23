@@ -7,9 +7,23 @@ from ..utils.metrics import hex_scaled_jacobian, hex_volume
 
 class Hexmesh(AbstractMesh):
     
-    def __init__(self, filename= None, vertices = None, tets = None, labels = None):
+    """
+    This class represent a volumetric mesh composed of hexahedra. It is possible to load the mesh from a file (.mesh) or
+    from raw geometry and topology data.
+
+    Parameters:
+
+        filename (string): The name of the file to load 
+        vertices (Array (Nx3) type=float): The list of vertices of the mesh
+        hexes (Array (Nx8) type=int): The list of hexahedra of the mesh
+        labels (Array (Nx1) type=int): The list of labels of the mesh (Optional)
+
+    
+    """
+    
+    def __init__(self, filename= None, vertices = None, hexes = None, labels = None):
         
-        self.hexes            = None #npArray (Nx4) 
+        self.hexes            = None #npArray (Nx8) 
         self.labels           = None #npArray (Nx1) 
         self.hex2hex          = None #npArray (Nx4?) 
         self.face2hex         = None #npArray (Nx2?)
@@ -26,7 +40,7 @@ class Hexmesh(AbstractMesh):
         elif vertices is not None and hexes is not None:
             
             self.vertices = np.array(vertices) 
-            self.tets = np.array(hexes)
+            self.hexes = np.array(hexes)
             
             if labels:
                 self.labels = np.array(labels)
@@ -50,15 +64,38 @@ class Hexmesh(AbstractMesh):
         
         return self.hexes.shape[0]
 
-    def add_hex(self, tet_id0, tet_id1, tet_id2, tet_id3, tet_id4, tet_id5, tet_id6, tet_id7):
+    def add_hex(self, hex_id0, hex_id1, hex_id2, hex_id3, hex_id4, hex_id5, hex_id6, hex_id7):
+        """
+        Add a new hexahedron to the current mesh. It affects the mesh topology. 
+
+        Parameters:
+
+            hex_id0 (int): The index of the first vertex composing the new hexahedron
+            hex_id1 (int): The index of the second vertex composing the new hexahedron
+            hex_id2 (int): The index of the third vertex composing the new hexahedron
+            hex_id3 (int): The index of the fourth vertex composing the new hexahedron
+            hex_id4 (int): The index of the fifth vertex composing the new hexahedron
+            hex_id5 (int): The index of the sixth vertex composing the new hexahedron
+            hex_id6 (int): The index of the seventh vertex composing the new hexahedron
+            hex_id7 (int): The index of the eighth vertex composing the new hexahedron
+            
+        """
         
-        self.add_tets([tet_id0, tet_id1, tet_id2, tet_id3, tet_id4, tet_id5, tet_id6, tet_id7])
+        self.add_hexes([hex_id0, hex_id1, hex_id2, hex_id3, hex_id4, hex_id5, hex_id6, hex_id7])
         
         
     def add_hexes(self, new_hexes):
+        """
+        Add a list of new hexahedra to the current mesh. It affects the mesh topology. 
+
+        Parameters:
+
+            new_hexes (Array (Nx8) type=int): List of hexahedra to add. Each hexahedron is in the form [int,int,int,int,int,int,int,int]
+    
+        """
             
         new_hexes = np.array(new_hexes)
-        new_hexes.shape = (-1,3)
+        new_hexes.shape = (-1,8)
                 
         if new_hexes[(new_hexes[:,0] > self.num_vertices) | 
                      (new_hexes[:,1] > self.num_vertices) | 
@@ -70,16 +107,32 @@ class Hexmesh(AbstractMesh):
                      (new_hexes[:,7] > self.num_vertices)].shape[0] > self.num_vertices:
             raise Exception('The ID of a vertex must be less than the number of vertices')
 
-        self.tets = np.concatenate([self.tets, new_hexes])
+        self.hexes = np.concatenate([self.hexes, new_hexes])
         self.__load_operations()
         
     
-    def remove_tet(self, hex_id):
+    def remove_hex(self, hex_id):
+        """
+        Remove a hexahedron from the current mesh. It affects the mesh topology. 
+
+        Parameters:
+
+            hex_id (int): The index of the hexahedron to remove 
+    
+        """
         
-        self.remove_tets([hex_id])
+        self.remove_hexes([hex_id])
         
         
-    def remove_tets(self, hex_ids):
+    def remove_hexes(self, hex_ids):
+        """
+        Remove a list of hexahedra from the current mesh. It affects the mesh topology. 
+
+        Parameters:
+
+            hex_ids (Array (Nx1 / 1xN) type=int): List of hexahedra to remove. Each hexahedron is in the form [int]
+    
+        """
         
         hex_ids = np.array(hex_ids)
         mask = np.ones(self.num_hexes)
@@ -90,12 +143,28 @@ class Hexmesh(AbstractMesh):
         self.__load_operations()
         
     
-    def remove_vertex(self,vtx_id):
+    def remove_vertex(self, vtx_id):
+        """
+        Remove a vertex from the current mesh. It affects the mesh geometry. 
+
+        Parameters:
+
+            vtx_id (int): The index of the vertex to remove 
+    
+        """
         
         self.remove_vertices([vtx_id])
     
     
     def remove_vertices(self, vtx_ids):
+        """
+        Remove a list of vertices from the current mesh. It affects the mesh geoemtry. 
+
+        Parameters:
+
+            vtx_ids (Array (Nx1 / 1xN) type=int): List of vertices to remove. Each vertex is in the form [int]
+    
+        """ 
         
         vtx_ids = np.array(vtx_ids)
         
@@ -202,6 +271,14 @@ class Hexmesh(AbstractMesh):
         
     
     def save_file(self, filename):
+        """
+        Save the current mesh in a file. Currently it supports the .mesh extension. 
+
+        Parameters:
+
+            filename (string): The name of the file
+    
+        """
         
         ext = filename.split('.')[-1]
         
@@ -223,6 +300,17 @@ class Hexmesh(AbstractMesh):
         
     
     def boundary(self, flip_x = False, flip_y = False, flip_z = False):
+        """
+        Compute the boundary of the current mesh. It only returns the faces that respect
+        the cut and the flip conditions.
+
+        Parameters:
+
+            flip_x (bool): Flip the cut condition for the x axis
+            flip_y (bool): Flip the cut condition for the y axis
+            flip_z (bool): Flip the cut condition for the z axis
+    
+        """
         
         min_x = self.cut['min_x']
         max_x = self.cut['max_x']

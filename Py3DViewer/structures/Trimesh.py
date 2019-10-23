@@ -141,7 +141,7 @@ class Trimesh(AbstractMesh):
     
     def remove_vertices(self, vtx_ids):
         """
-        Remove a list of indices from the current mesh. It affects the mesh geoemtry. 
+        Remove a list of vertices from the current mesh. It affects the mesh geoemtry. 
 
         Parameters:
 

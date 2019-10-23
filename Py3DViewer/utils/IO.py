@@ -188,6 +188,19 @@ def save_obj(mesh, filename):
                 
                 
 def read_skeleton(filename):
+    """
+    Imports the data from the given OBJ file
+    
+    Parameters
+    ----------
+    filename : str
+        name of the file
+    
+    Returns
+    -------
+    (Array,Array,Array)
+        the skeleton vertices, radius and the edges arrays
+    """
     
     with open(filename) as file:
         

@@ -6,10 +6,24 @@ from ..utils.metrics import tet_scaled_jacobian, tet_volume
 
 class Tetmesh(AbstractMesh):
     
+    """
+    This class represent a volumetric mesh composed of tetrahedra. It is possible to load the mesh from a file (.mesh) or
+    from raw geometry and topology data.
+
+    Parameters:
+
+        filename (string): The name of the file to load 
+        vertices (Array (Nx3) type=float): The list of vertices of the mesh
+        tets (Array (Nx4) type=int): The list of tetrahedra of the mesh
+        labels (Array (Nx1) type=int): The list of labels of the mesh (Optional)
+
+    
+    """
+    
     def __init__(self, filename = None, vertices = None, tets = None, labels = None):
         
         self.tets             = None #npArray (Nx4) 
-        self.labels       = None #npArray (Nx1) 
+        self.labels           = None #npArray (Nx1) 
         self.tet2tet          = None #npArray (Nx4?) 
         self.face2tet         = None #npArray (Nx2?)
         self.tet2face         = None #npArray (Nx4)
@@ -50,14 +64,33 @@ class Tetmesh(AbstractMesh):
         return self.tets.shape[0]
 
     def add_tet(self, tet_id0, tet_id1, tet_id2, tet_id3):
+        """
+        Add a new tetrahedron to the current mesh. It affects the mesh topology. 
+
+        Parameters:
+
+            tet_id0 (int): The index of the first vertex composing the new tetrahedron
+            tet_id1 (int): The index of the second vertex composing the new tetrahedron
+            tet_id2 (int): The index of the third vertex composing the new tetrahedron
+            tet_id3 (int): The index of the fourth vertex composing the new tetrahedron
+            
+        """
         
         self.add_tets([tet_id0, tet_id1, tet_id2, tet_id3])
         
         
     def add_tets(self, new_tets):
+        """
+        Add a list of new tetrahedra to the current mesh. It affects the mesh topology. 
+
+        Parameters:
+
+            new_tets (Array (Nx4) type=int): List of tetrahedra to add. Each tetrahedron is in the form [int,int,int,int]
+    
+        """
             
         new_tets = np.array(new_tets)
-        new_tets.shape = (-1,3)
+        new_tets.shape = (-1,4)
                 
         if new_tets[(new_tets[:,0] > self.num_vertices) | 
                      (new_tets[:,1] > self.num_vertices) | 
@@ -70,11 +103,27 @@ class Tetmesh(AbstractMesh):
         
     
     def remove_tet(self, tet_id):
+        """
+        Remove a tetrahedron from the current mesh. It affects the mesh topology. 
+
+        Parameters:
+
+            tet_id (int): The index of the tetrahedron to remove 
+    
+        """
         
         self.remove_tets([tet_id])
         
         
     def remove_tets(self, tet_ids):
+        """
+        Remove a list of tetrahedra from the current mesh. It affects the mesh topology. 
+
+        Parameters:
+
+            tet_ids (Array (Nx1 / 1xN) type=int): List of tethrahedra to remove. Each tetrahedron is in the form [int]
+    
+        """
         
         tet_ids = np.array(tet_ids)
         mask = np.ones(self.num_tets)
@@ -86,11 +135,27 @@ class Tetmesh(AbstractMesh):
         
     
     def remove_vertex(self,vtx_id):
+        """
+        Remove a vertex from the current mesh. It affects the mesh geometry. 
+
+        Parameters:
+
+            vtx_id (int): The index of the vertex to remove 
+    
+        """
         
         self.remove_vertices([vtx_id])
     
     
     def remove_vertices(self, vtx_ids):
+        """
+        Remove a list of vertices from the current mesh. It affects the mesh geoemtry. 
+
+        Parameters:
+
+            vtx_ids (Array (Nx1 / 1xN) type=int): List of vertices to remove. Each vertex is in the form [int]
+    
+        """ 
         
         vtx_ids = np.array(vtx_ids)
         
@@ -190,6 +255,14 @@ class Tetmesh(AbstractMesh):
         return self
     
     def save_file(self, filename):
+        """
+        Save the current mesh in a file. Currently it supports the .mesh extension. 
+
+        Parameters:
+
+            filename (string): The name of the file
+    
+        """
         
         ext = filename.split('.')[-1]
         
@@ -211,6 +284,17 @@ class Tetmesh(AbstractMesh):
         
     
     def boundary(self, flip_x = False, flip_y = False, flip_z = False):
+        """
+        Compute the boundary of the current mesh. It only returns the faces that respect
+        the cut and the flip conditions.
+
+        Parameters:
+
+            flip_x (bool): Flip the cut condition for the x axis
+            flip_y (bool): Flip the cut condition for the y axis
+            flip_z (bool): Flip the cut condition for the z axis
+    
+        """
         
         min_x = self.cut['min_x']
         max_x = self.cut['max_x']
@@ -223,14 +307,6 @@ class Tetmesh(AbstractMesh):
         y_range = np.logical_xor(flip_y,((self.simplex_centroids[:,1] >= min_y) & (self.simplex_centroids[:,1] <= max_y)))
         z_range = np.logical_xor(flip_z,((self.simplex_centroids[:,2] >= min_z) & (self.simplex_centroids[:,2] <= max_z)))
                 
-        
-        #naive
-        #for id_tet in np.nonzero(cut_range)[0]: 
-        #    if self.tet2tet[id_tet].shape[0] == 4: # se ha quattro adiacenti vuol dire che è un tet interno
-        #        if np.count_nonzero(cut_range[self.tet2tet[id_tet]]) == 4: # se tutti i tet adiacenti sono nel cut range vuol dire che è un tet interno
-        #            cut_range[id_tet] = False
-                            
-        #tets = self.tets[ cut_range ]
         
         cut_range = x_range & y_range & z_range
         indices = np.where(self.internals)[0]
