@@ -20,7 +20,7 @@ m.show()
 
 ## Installation
 
-If you have never used Jupyter, then the first step is to install and configure Jupyer on your computer. You can follow this [guide](https://jupyter.org/install.html) to do it.
+If you have never used Jupyter, then the first step is to install and configure Jupyter on your computer. You can follow this [guide](https://jupyter.org/install.html) to do it.
 
 Py3DViewer can be easily installed with pip:
 
