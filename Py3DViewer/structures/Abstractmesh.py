@@ -1,8 +1,32 @@
 import numpy as np
 from ..visualization.Viewer import Viewer
+from ..utils import Subject 
 
+class Clipping(object):
+            
+    class __Flip(object):
+        def __init__(self):
+            self.x = False
+            self.y = False
+            self.z = False
 
-class AbstractMesh(object):
+    def __init__(self):
+        self.min_x = None
+        self.max_x = None
+        self.min_y = None
+        self.max_y = None
+        self.min_z = None
+        self.max_z = None
+        self.flip = self.__Flip()
+        super(Clipping, self).__init__()
+        
+    def __repr__(self):
+        return ("Clipping:\n" +
+                f"min_x: {self.min_x} \tmax_x: {self.max_x} \t{('flipped' if self.flip.x else '')}\n" +
+                f"min_y: {self.min_y} \tmax_y: {self.max_y} \t{('flipped' if self.flip.y else '')}\n" +
+                f"min_z: {self.min_z} \tmax_z: {self.max_z} \t{('flipped' if self.flip.z else '')}\n")
+
+class AbstractMesh(Subject):
 
     """
     This class represents a generic mesh. It must be estended by a specific mesh class. It stores all the information
@@ -19,12 +43,7 @@ class AbstractMesh(object):
         self.__bounding_box      = None #npArray (2x3)
         self.simplex_metrics     = dict() #dictionary[propertyName : ((min, max), npArray (Nx1))]
         self.__simplex_centroids = None #npArray (Nx1)
-        self.__cut            = {'min_x':None, 
-                                 'max_x':None, 
-                                 'min_y':None, 
-                                 'max_y':None, 
-                                 'min_z':None, 
-                                 'max_z':None}  #dictionary
+        self.__clipping          = Clipping()
         
         super(AbstractMesh, self).__init__()
         
@@ -53,16 +72,17 @@ class AbstractMesh(object):
         
     
     @property
-    def cut(self):
+    def clipping(self):
         
-        return self.__cut
+        return self.__clipping
     
     
-    def set_cut(self, min_x = None, max_x = None, 
+    def set_clipping(self, min_x = None, max_x = None, 
                       min_y = None, max_y = None, 
-                      min_z = None, max_z = None):
+                      min_z = None, max_z = None,
+                      flip_x = None, flip_y = None, flip_z = None):
         """
-        Cut the mesh along x, y and z axes. It doesn't affect the geometry of the mesh.
+        clipping the mesh along x, y and z axes. It doesn't affect the geometry of the mesh.
 
         Parameters:
 
@@ -75,28 +95,37 @@ class AbstractMesh(object):
     
         """
         if min_x is not None:
-            self.__cut['min_x'] = min_x
+            self.__clipping.min_x = min_x
         if max_x is not None:
-            self.__cut['max_x'] = max_x
+            self.__clipping.max_x = max_x
         if min_y is not None:
-            self.__cut['min_y'] = min_y
+            self.__clipping.min_y = min_y
         if max_y is not None:
-            self.__cut['max_y'] = max_y
+            self.__clipping.max_y = max_y
         if min_z is not None:
-            self.__cut['min_z'] = min_z
+            self.__clipping.min_z = min_z
         if max_z is not None:
-            self.__cut['max_z'] = max_z
+            self.__clipping.max_z = max_z
+        if flip_x is not None:
+            self.__clipping.flip.x = flip_x
+        if flip_y is not None:
+            self.__clipping.flip.y = flip_y
+        if flip_z is not None:
+            self.__clipping.flip.z = flip_z
             
-    def reset_cut(self):
+        self._notify()
+        
+    def reset_clipping(self):
 
         """
-        Set the cuts to the bounding box in order to show the whole mesh.
+        Set the clippings to the bounding box in order to show the whole mesh.
         """        
         
-        self.set_cut(min_x = self.bbox[0,0], max_x = self.bbox[1,0], 
+        self.set_clipping(min_x = self.bbox[0,0], max_x = self.bbox[1,0], 
                      min_y = self.bbox[0,1], max_y = self.bbox[1,1],
                      min_z = self.bbox[0,2], max_z = self.bbox[1,2])
-           
+        
+        self._notify()
 
     def load_from_file(filename):
         
@@ -134,9 +163,29 @@ class AbstractMesh(object):
         raise NotImplementedError('This method must be implemented in the subclasses')
         
         
-    def boundary(self, flip_x = None, flip_y = None, flip_z = None):
+    def boundary(self):
         
-        raise NotImplementedError('This method must be implemented in the subclasses')
+        """
+        Compute the boundary of the current mesh. It only returns the faces that are inside the clipping
+        """
+
+        min_x = self.clipping.min_x
+        max_x = self.clipping.max_x
+        min_y = self.clipping.min_y
+        max_y = self.clipping.max_y
+        min_z = self.clipping.min_z
+        max_z = self.clipping.max_z
+        flip_x = self.clipping.flip.x
+        flip_y = self.clipping.flip.y
+        flip_z = self.clipping.flip.z
+            
+        x_range = np.logical_xor(flip_x,((self.simplex_centroids[:,0] >= min_x) & (self.simplex_centroids[:,0] <= max_x)))
+        y_range = np.logical_xor(flip_y,((self.simplex_centroids[:,1] >= min_y) & (self.simplex_centroids[:,1] <= max_y)))
+        z_range = np.logical_xor(flip_z,((self.simplex_centroids[:,2] >= min_z) & (self.simplex_centroids[:,2] <= max_z)))
+        
+        clipping_range = x_range & y_range & z_range
+        
+        return clipping_range
         
         
     def add_vertex(self, x, y, z): 
@@ -156,6 +205,7 @@ class AbstractMesh(object):
         new_vertex.shape = (1,3)
         
         self.vertices = np.concatenate([self.vertices, new_vertex])
+        self._notify()
     
     
     def add_vertices(self, new_vertices):
@@ -171,6 +221,7 @@ class AbstractMesh(object):
         
         new_vertices = np.array(new_vertices)
         self.vertices = np.concatenate([self.vertices, new_vertices])
+        self._notify()
         
         
     @property

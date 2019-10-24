@@ -312,22 +312,12 @@ class Hexmesh(AbstractMesh):
     
         """
         
-        min_x = self.cut['min_x']
-        max_x = self.cut['max_x']
-        min_y = self.cut['min_y']
-        max_y = self.cut['max_y']
-        min_z = self.cut['min_z']
-        max_z = self.cut['max_z']
-            
-        x_range = np.logical_xor(flip_x,((self.simplex_centroids[:,0] >= min_x) & (self.simplex_centroids[:,0] <= max_x)))
-        y_range = np.logical_xor(flip_y,((self.simplex_centroids[:,1] >= min_y) & (self.simplex_centroids[:,1] <= max_y)))
-        z_range = np.logical_xor(flip_z,((self.simplex_centroids[:,2] >= min_z) & (self.simplex_centroids[:,2] <= max_z)))
-        cut_range = x_range & y_range & z_range
-        
+        clipping_range = super(Hexmesh, self).boundary()
         indices = np.where(self.internals)[0]
-        cut_range[indices[np.all(cut_range[self.hex2hex[indices]], axis=1)]] = False
-        cut_range = np.repeat(cut_range, 6)
-        return self.faces[cut_range], cut_range
+        clipping_range[indices[np.all(clipping_range[self.hex2hex[indices]], axis=1)]] = False
+        clipping_range = np.repeat(clipping_range, 6)
+        
+        return self.faces[clipping_range], clipping_range
         
 
         

@@ -5,9 +5,9 @@ from .Drawable import Drawable
 
 class Viewer(object):
 
-    def __init__(self, geometry, mesh_color = None, width=1000, height=700):
+    def __init__(self, geometry, mesh_color = None, width=1000, height=700, reactive=False):
         super(Viewer, self).__init__()
-        self.drawable = Drawable(geometry, mesh_color)
+        self.drawable = Drawable(geometry, mesh_color = mesh_color, reactive = reactive)
         self.camera = self.__initialize_camera(width, height)
         self.scene = self.__initialize_scene()
         self.renderer = self.__initialize_renderer(width, height)
@@ -43,8 +43,11 @@ class Viewer(object):
                         scene = self.scene, controls=[controls], width=width, height=height,
                         antialias=True)
 
+    def update(self):
+        self.drawable.update()
+    
     def show(self):
-        ipydisplay(self.renderer)        
+        ipydisplay(self.renderer)
     
     def __repr__(self):
         self.show()

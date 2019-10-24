@@ -1,12 +1,15 @@
 import pythreejs as three
 import numpy as np
 from .Colors import colors
+from ..utils import Observer
 
-class Drawable(object):
+class Drawable(Observer):
     
-    def __init__(self, geometry, mesh_color = None):
+    def __init__(self, geometry, mesh_color = None, reactive = False):
         super(Drawable, self).__init__()
         self.geometry = geometry
+        if reactive:
+            self.geometry.attach(self)
         self.geometry_color = self.__initialize_geometry_color(mesh_color)
         self.drawable_mesh, self.__buffer_geometry = self.__initialize_drawable_mesh()
         self.wireframe = self.__initialize_wireframe()
@@ -38,7 +41,7 @@ class Drawable(object):
             position=[0, 0, 0]   
         )
         
-    def __initialize_drawable_mesh(self):
+    def __get_drawable_from_boundary(self):
         boundaries = self.geometry.boundary()[0]
         geometry_attributes = {
             'position': three.BufferAttribute(self.geometry.vertices[boundaries.flatten()], normalized=False),
@@ -46,6 +49,10 @@ class Drawable(object):
             }
         drawable_geometry = three.BufferGeometry(attributes = geometry_attributes)
         drawable_geometry.exec_three_obj_method('computeVertexNormals')
+        return drawable_geometry
+    
+    def __initialize_drawable_mesh(self):
+        drawable_geometry = self.__get_drawable_from_boundary()
         material = three.MeshLambertMaterial(
                                            polygonOffset=True,
                                            polygonOffsetFactor=1,
@@ -64,6 +71,10 @@ class Drawable(object):
             position=[0, 0, 0]
         ), drawable_geometry
 
+    def update(self):
+        new_drawable_geometry = self.__get_drawable_from_boundary()
+        self.drawable_mesh.geometry = new_drawable_geometry
+        self.wireframe.geometry = new_drawable_geometry
     
     @property
     def center(self):
