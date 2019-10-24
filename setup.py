@@ -7,7 +7,7 @@ install_requires = ['numpy', 'pythreejs', 'ipywidgets']
 
 setuptools.setup(
     name="Py3DViewer",
-    version="1.0.0",
+    version="1.0.1",
     author="CG3HCI Lab",
     author_email="luca.pitzalis94@unica.it",
     description="A Python Library for fast prototyping in geometry processing",
