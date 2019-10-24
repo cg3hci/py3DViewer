@@ -53,13 +53,15 @@ def read_mesh(filename):
         if "Tetrahedra" in line:
             for i in range(num_simplices):
                 line = f.readline()
-                a, b, c, d, label = list(map(lambda x : int(x)-1, line.split()))
+                a, b, c, d = list(map(lambda x : int(x)-1, line.split()[:-1]))
+                label = float(line.split()[-1])
                 tmp_simplices += [(a, b, c, d)]
                 tmp_labels += [label]
         else:
             for i in range(num_simplices):
                 line = f.readline()
-                a, b, c, d, e, f_, g, h, label = list(map(lambda x : int(x)-1, line.split()))
+                a, b, c, d, e, f_, g, h = list(map(lambda x : int(x)-1, line.split()[:-1]))
+                label = float(line.split()[-1])
                 tmp_simplices += [(a, b, c, d, e, f_, g, h)]
                 tmp_labels += [label]
 
@@ -99,25 +101,24 @@ def save_mesh(mesh, filename):
         f.write('Vertices\n')
         f.write(f'{mesh.num_vertices}\n')
         
-        for v in mesh.vertices:
+        for v in np.asarray(mesh.vertices):
             f.write(f'{v[0]} {v[1]} {v[2]} 0\n')
         
         if mesh.tets.shape[1] == 4:
             f.write('Tetrahedra\n')
             f.write(f'{mesh.num_tets}\n')
-            for idx, t in enumerate(mesh.tets):
-                f.write(f'{t[0]+1} {t[1]+1} {t[2]+1} {t[3]+1} {mesh.labels[idx]}\n')
+            for idx, t in enumerate(np.asarray(mesh.tets)):
+                f.write(f'{t[0]+1} {t[1]+1} {t[2]+1} {t[3]+1} {np.asarray(mesh.labels)[idx]}\n')
         
         else:
             f.write('Hexahedra\n')
             f.write(f'{mesh.num_hexes}\n')
-            for idx, h in enumerate(mesh.hexes):
-                f.write(f'{h[0]+1} {h[1]+1} {h[2]+1} {h[3]+1} {h[4]+1} {h[5]+1} {h[6]+1} {h[7]+1} {mesh.labels[idx]}\n')
+            for idx, h in enumerate(np.asarray(mesh.hexes)):
+                f.write(f'{h[0]+1} {h[1]+1} {h[2]+1} {h[3]+1} {h[4]+1} {h[5]+1} {h[6]+1} {h[7]+1} {np.asarray(mesh.labels)[idx]}\n')
         
         f.write('End')
-
- 
-
+        
+        
 def read_obj(filename):
     """
     Imports the data from the given OBJ file

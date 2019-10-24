@@ -20,18 +20,18 @@ class Drawable(Observer):
     def __initialize_geometry_color(self, mesh_color):
         if mesh_color is None:
             mesh_type = type(self.geometry)
-            if mesh_type == Trimesh:
+            if mesh_type == Trimesh or mesh_type == Tetmesh:
                 return np.repeat(colors.teal,
                                  self.geometry.num_faces,
                                  axis=0)
-            elif mesh_type == Quadmesh:
+            elif mesh_type == Quadmesh or mesh_type == Hexmesh:
                 return np.repeat(colors.teal,
                                  self.geometry.num_faces * 2,
                                  axis=0)
 
     def __initialize_wireframe(self):
         mesh_type = type(self.geometry)
-        if mesh_type == Trimesh:
+        if mesh_type == Trimesh or mesh_type == Tetmesh:
             edges_material = three.MeshBasicMaterial(color='#686868',
                                                  side='FrontSide',
                                                  polygonOffset=True,
@@ -48,7 +48,7 @@ class Drawable(Observer):
                 material=edges_material,
                 position=[0, 0, 0]   
             )
-        elif mesh_type == Quadmesh:
+        elif mesh_type == Quadmesh or mesh_type == Hexmesh:
             edges_material = three.LineBasicMaterial(color='#686868', 
                                                         linewidth = 1, 
                                                         depthTest=True, 
@@ -61,13 +61,11 @@ class Drawable(Observer):
             return three.LineSegments(wireframe, material = edges_material, type = 'LinePieces')
 
 
-
-
     def __get_drawable_from_boundary(self):
         mesh_type = type(self.geometry)     
         boundaries = self.geometry.boundary()[0]
         n_vertices_per_simplex = 3
-        if mesh_type == Quadmesh:
+        if mesh_type == Quadmesh or mesh_type == Hexmesh:
             boundaries = np.c_[boundaries[:,:3], boundaries[:,2:], boundaries[:,0]]
             boundaries.shape = (-1, 3)
             n_vertices_per_simplex = 6

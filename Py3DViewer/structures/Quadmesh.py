@@ -32,12 +32,18 @@ class Quadmesh(AbstractMesh):
             self.__load_from_file(filename)
         
         elif vertices and faces:
-            self.vertices = np.array(vertices)
-            self.faces = np.array(faces)
-            
-                
-            if(labels):
-                self.labels = np.array(labels)
+            self.vertices = ObservableArray(vertices.shape)
+            self.vertices[:] = vertices
+            self.vertices.attach(self)
+            self.faces = ObservableArray(faces.shape, dtype=np.int)
+            self.faces[:] = faces
+            self.faces.attach(self)
+            self.__load_operations()
+        
+            if labels:
+                self.labels = ObservableArray(labels.shape)
+                self.labels[:] = labels
+                self.labels.attach(self)
                             
             self.__load_operations()
         
@@ -245,7 +251,10 @@ class Quadmesh(AbstractMesh):
         
         if ext == 'obj':
             self.vertices, self.faces, self.face_normals = IO.read_obj(filename)
-
+            self.vertices.attach(self)
+            self.faces.attach(self)
+            self.face_normals.attach(self)
+            
         self.__load_operations()
         
         return self
@@ -297,7 +306,7 @@ class Quadmesh(AbstractMesh):
     def simplex_centroids(self):
         
         if self._AbstractMesh__simplex_centroids is None:
-            self._AbstractMesh__simplex_centroids = self.vertices[self.faces].mean(axis = 1)
+            self._AbstractMesh__simplex_centroids = np.asarray(self.vertices[self.faces].mean(axis = 1))
         
         return self._AbstractMesh__simplex_centroids
     

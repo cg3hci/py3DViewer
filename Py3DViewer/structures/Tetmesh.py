@@ -1,7 +1,7 @@
 from .Abstractmesh import AbstractMesh
 from ..visualization.Viewer import Viewer
 import numpy as np
-from ..utils import IO
+from ..utils import IO, ObservableArray
 from ..utils.metrics import tet_scaled_jacobian, tet_volume
 
 class Tetmesh(AbstractMesh):
@@ -38,14 +38,18 @@ class Tetmesh(AbstractMesh):
         
         elif vertices and tets:
             
-            self.vertices = np.array(vertices) 
-            self.tets = np.array(tets)
-            
-            if labels:
-                self.labels = np.array(labels)
-            
+            self.vertices = ObservableArray(vertices.shape)
+            self.vertices[:] = vertices
+            self.vertices.attach(self)
+            self.tets = ObservableArray(tets.shape, dtype=np.int)
+            self.tets[:] = tets
+            self.tets.attach(self)
             self.__load_operations()
         
+            if labels:
+                self.labels = ObservableArray(labels.shape)
+                self.labels[:] = labels
+                self.labels.attach(self)
         else:
             
             print('Warning: Empty Tetmesh object')
@@ -182,7 +186,7 @@ class Tetmesh(AbstractMesh):
         self.__compute_faces()
         self.__compute_adjacencies()
         self._AbstractMesh__update_bounding_box()
-        self.set_cut(self.bbox[0,0], self.bbox[1,0], 
+        self.set_clipping(self.bbox[0,0], self.bbox[1,0], 
                      self.bbox[0,1], self.bbox[1,1], 
                      self.bbox[0,2], self.bbox[1,2])
         self.__compute_metrics()
@@ -192,6 +196,10 @@ class Tetmesh(AbstractMesh):
                            self.tets[:,0], self.tets[:,1], self.tets[:,3],
                            self.tets[:,1], self.tets[:,2], self.tets[:,3],
                            self.tets[:,0], self.tets[:,3], self.tets[:,2]].reshape(-1,3)
+        tmp = ObservableArray(self.faces.shape, dtype=np.int)
+        tmp[:] = self.faces
+        self.faces = tmp
+        self.faces.attach(self)
     
     def __compute_adjacencies(self):
         
@@ -202,7 +210,7 @@ class Tetmesh(AbstractMesh):
         tets_idx = np.repeat(np.array(range(self.num_tets)), 4)
         self.tet2face = np.array(range(self.num_faces)).reshape(-1,4)
         
-        for f, t in zip(self.faces, tets_idx):
+        for f, t in zip(np.asarray(self.faces), tets_idx):
 
             vtx2vtx[f[0]].append(f[1])
             vtx2vtx[f[0]].append(f[2])
@@ -246,6 +254,10 @@ class Tetmesh(AbstractMesh):
         
         if ext == 'mesh':
             self.vertices, self.tets, self.labels = IO.read_mesh(filename)
+            self.vertices.attach(self)
+            self.tets.attach(self)
+            self.labels.attach(self)
+            
         else:
             raise Exception("File Extension unknown")
         
@@ -283,7 +295,7 @@ class Tetmesh(AbstractMesh):
         return self.__internal_tets
         
     
-    def boundary(self, flip_x = False, flip_y = False, flip_z = False):
+    def boundary(self):
         """
         Compute the boundary of the current mesh. It only returns the faces that respect
         the clipping.
@@ -304,7 +316,7 @@ class Tetmesh(AbstractMesh):
     def simplex_centroids(self):
         
         if self._AbstractMesh__simplex_centroids is None:
-            self._AbstractMesh__simplex_centroids = self.vertices[self.tets].mean(axis = 1)
+            self._AbstractMesh__simplex_centroids = np.asarray(self.vertices[self.tets].mean(axis = 1))
         
         return self._AbstractMesh__simplex_centroids
 

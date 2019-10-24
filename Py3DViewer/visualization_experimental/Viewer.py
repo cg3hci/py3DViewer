@@ -10,10 +10,11 @@ class Viewer(object):
         self.drawable = Drawable(geometry, mesh_color = mesh_color, reactive = reactive)
         self.camera = self.__initialize_camera(width, height)
         self.scene = self.__initialize_scene()
+        self.controls = self.__initialize_controls()
         self.renderer = self.__initialize_renderer(width, height)
+        self.controls.exec_three_obj_method("update")
     
     def __initialize_camera(self, width, height):
-        print(self.drawable.center)
         camera_target = self.drawable.center
         camera_position = tuple(camera_target + [0, 0, self.drawable.scale])
         directional_light = three.DirectionalLight(color = '#ffffff', position = [0, 10, 0], intensity = 0.5)
@@ -30,17 +31,14 @@ class Viewer(object):
                                       self.drawable.wireframe])
         return scene
     
-    def __initialize_renderer(self, width, height):
+    def __initialize_controls(self):
         controls = three.OrbitControls(controlling=self.camera)
-        controls.enableDamping = False
-        controls.damping = 0.01 ##TODO: Check if this is a typo
-        controls.dampingFactor = 0.1 #friction
-        controls.rotateSpeed = 0.5 #mouse sensitivity
         controls.target = tuple(self.drawable.center) # centro dell'oggetto
-        controls.zoomSpeed = 0.5
-        controls.exec_three_obj_method("update")
+        return controls
+        
+    def __initialize_renderer(self, width, height):
         return three.Renderer(camera = self.camera, background_opacity=1,
-                        scene = self.scene, controls=[controls], width=width, height=height,
+                        scene = self.scene, controls=[self.controls], width=width, height=height,
                         antialias=True)
 
     def update(self):

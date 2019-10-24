@@ -1,7 +1,7 @@
 from .Abstractmesh import AbstractMesh
 from ..visualization.Viewer import Viewer
 import numpy as np
-from ..utils import IO
+from ..utils import IO, ObservableArray
 from ..utils.metrics import hex_scaled_jacobian, hex_volume
 
 
@@ -39,11 +39,18 @@ class Hexmesh(AbstractMesh):
         
         elif vertices is not None and hexes is not None:
             
-            self.vertices = np.array(vertices) 
-            self.hexes = np.array(hexes)
+            self.vertices = ObservableArray(vertices.shape)
+            self.vertices[:] = vertices
+            self.vertices.attach(self)
+            self.hexes = ObservableArray(hexes.shape, dtype=np.int)
+            self.hexes[:] = hexes
+            self.hexes.attach(self)
+            self.__load_operations()
             
             if labels:
                 self.labels = np.array(labels)
+                self.labels[:] = labels
+                self.labels.attach(self)
             
             self.__load_operations()
         
@@ -199,7 +206,7 @@ class Hexmesh(AbstractMesh):
         self.__compute_faces()
         self.__compute_adjacencies()
         self._AbstractMesh__update_bounding_box()
-        self.set_cut(self.bbox[0,0], self.bbox[1,0], 
+        self.set_clipping(self.bbox[0,0], self.bbox[1,0], 
                      self.bbox[0,1], self.bbox[1,1], 
                      self.bbox[0,2], self.bbox[1,2])
         self.__compute_metrics()
@@ -211,6 +218,10 @@ class Hexmesh(AbstractMesh):
                            self.hexes[:,3], self.hexes[:,0], self.hexes[:, 4], self.hexes[:, 7], 
                            self.hexes[:,0], self.hexes[:,1], self.hexes[:, 5], self.hexes[:, 4], 
                            self.hexes[:,2], self.hexes[:,3], self.hexes[:, 7], self.hexes[:, 6]].reshape(-1,4)
+        tmp = ObservableArray(self.faces.shape, dtype=np.int)
+        tmp[:] = self.faces
+        self.faces = tmp
+        self.faces.attach(self)
     
     def __compute_adjacencies(self):
         
@@ -221,7 +232,7 @@ class Hexmesh(AbstractMesh):
         hexes_idx = np.repeat(np.array(range(self.num_hexes)), 6)
         self.hex2face = np.array(range(self.num_faces)).reshape(-1,6)
         
-        for f, t in zip(self.faces, hexes_idx):
+        for f, t in zip(np.asarray(self.faces), hexes_idx):
             
             vtx2hex[f[0]].append(t)
             vtx2hex[f[1]].append(t)
@@ -261,6 +272,9 @@ class Hexmesh(AbstractMesh):
         
         if ext == 'mesh':
             self.vertices, self.hexes, self.labels = IO.read_mesh(filename)
+            self.vertices.attach(self)
+            self.hexes.attach(self)
+            self.labels.attach(self)
         else:
             raise Exception("File Extension unknown")
     
@@ -299,17 +313,10 @@ class Hexmesh(AbstractMesh):
         return self.__internal_hexes
         
     
-    def boundary(self, flip_x = False, flip_y = False, flip_z = False):
+    def boundary(self):
         """
         Compute the boundary of the current mesh. It only returns the faces that respect
         the cut and the flip conditions.
-
-        Parameters:
-
-            flip_x (bool): Flip the cut condition for the x axis
-            flip_y (bool): Flip the cut condition for the y axis
-            flip_z (bool): Flip the cut condition for the z axis
-    
         """
         if (self._AbstractMesh__boundary_needs_update):
             clipping_range = super(Hexmesh, self).boundary()
@@ -318,7 +325,7 @@ class Hexmesh(AbstractMesh):
             clipping_range = np.repeat(clipping_range, 6)
             self._AbstractMesh__boundary_cached = clipping_range
             self._AbstractMesh__boundary_needs_update = False
-        
+            
         return self.faces[self._AbstractMesh__boundary_cached], self._AbstractMesh__boundary_cached
         
 
@@ -327,6 +334,6 @@ class Hexmesh(AbstractMesh):
     def simplex_centroids(self):
         
         if self._AbstractMesh__simplex_centroids is None:
-            self._AbstractMesh__simplex_centroids = self.vertices[self.hexes].mean(axis = 1)
+            self._AbstractMesh__simplex_centroids = np.asarray(self.vertices[self.hexes].mean(axis = 1))
         
         return self._AbstractMesh__simplex_centroids

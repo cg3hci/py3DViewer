@@ -289,7 +289,6 @@ class Trimesh(AbstractMesh):
         Compute the boundary of the current mesh. It only returns the faces that are inside the clipping
         """
         if (self._AbstractMesh__boundary_needs_update):
-            print("Calculating new boundary")
             clipping_range = super(Trimesh, self).boundary()
             self._AbstractMesh__boundary_cached = clipping_range
             self._AbstractMesh__boundary_needs_update = False
@@ -309,8 +308,7 @@ class Trimesh(AbstractMesh):
     def simplex_centroids(self):
         
         if self._AbstractMesh__simplex_centroids is None:
-            self._AbstractMesh__simplex_centroids = self.vertices[self.faces].mean(axis = 1)
-            self._AbstractMesh__simplex_centroids._observers = self.vertices._observers
+            self._AbstractMesh__simplex_centroids = np.asarray(self.vertices[self.faces].mean(axis = 1))
         return self._AbstractMesh__simplex_centroids
     
     @property
