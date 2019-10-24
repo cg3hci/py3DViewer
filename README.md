@@ -25,7 +25,7 @@ If you have never used Jupyter, then the first step is to install and configure 
 Py3DViewer can be easily installed with pip:
 
 ```
-pip install py3dviewer
+pip install Py3DViewer
 ```
 
 Then, install the extension for jupyter notebooks:
