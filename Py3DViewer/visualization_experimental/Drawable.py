@@ -19,12 +19,20 @@ class Drawable(Observer):
 
     def __initialize_geometry_color(self, mesh_color):
         if mesh_color is None:
-            return np.repeat(colors.teal,
-                             self.geometry.num_faces,
-                             axis=0)
+            mesh_type = type(self.geometry)
+            if mesh_type == Trimesh:
+                return np.repeat(colors.teal,
+                                 self.geometry.num_faces,
+                                 axis=0)
+            elif mesh_type == Quadmesh:
+                return np.repeat(colors.teal,
+                                 self.geometry.num_faces * 2,
+                                 axis=0)
 
     def __initialize_wireframe(self):
-        edges_material = three.MeshBasicMaterial(color='#686868',
+        mesh_type = type(self.geometry)
+        if mesh_type == Trimesh:
+            edges_material = three.MeshBasicMaterial(color='#686868',
                                                  side='FrontSide',
                                                  polygonOffset=True,
                                                  polygonOffsetFactor=1,
@@ -35,25 +43,38 @@ class Drawable(Observer):
                                                  opacity=0.2,
                                                  depthTest=True,
                                                  transparent=True)
-        mesh_type = type(self.geometry)
-        if mesh_type == Trimesh:
             return three.Mesh(
                 geometry=self.__buffer_geometry,
                 material=edges_material,
                 position=[0, 0, 0]   
             )
         elif mesh_type == Quadmesh:
+            edges_material = three.LineBasicMaterial(color='#686868', 
+                                                        linewidth = 1, 
+                                                        depthTest=True, 
+                                                        opacity=.2,
+                                                        transparent=True)
             boundaries = self.geometry.boundary()[0]
             edges = np.c_[boundaries[:,:2], boundaries[:,1:3], boundaries[:,2:4], boundaries[:,3], boundaries[:,0]].flatten()
-            surface_wireframe = self.mesh.vertices[edges].tolist()
-            wireframe = BufferGeometry(attributes={'position': BufferAttribute(surface_wireframe, normalized=False)})
+            surface_wireframe = self.geometry.vertices[edges].tolist()
+            wireframe = three.BufferGeometry(attributes={'position': three.BufferAttribute(surface_wireframe, normalized=False)})
+            return three.LineSegments(wireframe, material = edges_material, type = 'LinePieces')
+
+
+
 
     def __get_drawable_from_boundary(self):
+        mesh_type = type(self.geometry)     
         boundaries = self.geometry.boundary()[0]
+        n_vertices_per_simplex = 3
+        if mesh_type == Quadmesh:
+            boundaries = np.c_[boundaries[:,:3], boundaries[:,2:], boundaries[:,0]]
+            boundaries.shape = (-1, 3)
+            n_vertices_per_simplex = 6
+            
         geometry_attributes = {
             'position': three.BufferAttribute(self.geometry.vertices[boundaries.flatten()], normalized=False),
-            'color': three.BufferAttribute(self.geometry_color[np.repeat(self.geometry.boundary()[1], 3)], normalized=False),
-            }
+            'color': three.BufferAttribute(self.geometry_color[np.repeat(self.geometry.boundary()[1], n_vertices_per_simplex)], normalized=False),}
         drawable_geometry = three.BufferGeometry(attributes = geometry_attributes)
         drawable_geometry.exec_three_obj_method("computeVertexNormals")
         return drawable_geometry
@@ -82,7 +103,6 @@ class Drawable(Observer):
     def update(self):
         #current_time = time()
         #if (current_time - self.__last_update_time) > 1/10:
-        print("Updating mesh...")
         new_drawable_geometry = self.__get_drawable_from_boundary()
         self.drawable_mesh.geometry = new_drawable_geometry
         self.wireframe.geometry = new_drawable_geometry

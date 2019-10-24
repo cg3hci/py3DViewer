@@ -189,9 +189,10 @@ class AbstractMesh(Observer, Subject):
         flip_x = self.clipping.flip.x
         flip_y = self.clipping.flip.y
         flip_z = self.clipping.flip.z
-        x_range = np.logical_xor(flip_x,((self.simplex_centroids[:,0] >= min_x) & (self.simplex_centroids[:,0] <= max_x)))
-        y_range = np.logical_xor(flip_y,((self.simplex_centroids[:,1] >= min_y) & (self.simplex_centroids[:,1] <= max_y)))
-        z_range = np.logical_xor(flip_z,((self.simplex_centroids[:,2] >= min_z) & (self.simplex_centroids[:,2] <= max_z)))
+        centroids = np.array(self.simplex_centroids)
+        x_range = np.logical_xor(flip_x,((centroids)[:,0] >= min_x) & (centroids[:,0] <= max_x))
+        y_range = np.logical_xor(flip_y,((centroids[:,1] >= min_y) & (centroids[:,1] <= max_y)))
+        z_range = np.logical_xor(flip_z,((centroids[:,2] >= min_z) & (centroids[:,2] <= max_z)))
         clipping_range = x_range & y_range & z_range
         return clipping_range
         
