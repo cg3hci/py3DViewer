@@ -2,17 +2,16 @@ import numpy as np
 
 def read_mesh(filename):
     """
-    Imports the data from the given MESH file
+    Imports the data from the given .mesh file
     
-    Parameters
-    ----------
-    filename : str
-        name of the file
+    Parameters:
     
-    Returns
-    -------
-    (Array,Array,Array)
-        the mesh vertex, tet and label arrays
+        filename (string): The name of the .mesh file
+    
+    Return:
+    
+        (Array, Array, Array): The mesh vertices, the mesh simplices and the mesh labels
+        
     """
     
     assert filename.split(".")[-1] == "mesh" # Maybe throw exception?
@@ -72,18 +71,13 @@ def read_mesh(filename):
 
 def save_mesh(mesh, filename):
     """
-    Writes the data from the given mesh object to a file
+    Writes the data from the given mesh object to a .mesh file
     
-    Parameters
-    ----------
-    mesh : Tetmesh / Hexmesh
-        the mesh you want to serialize
-    filename : str
-        name of the file
+    Parameters : 
     
-    Returns
-    -------
-    void
+        mesh (Tetmesh / Hexmesh): The mesh to serialize to the file
+        filename (string): The name of the .mesh file
+    
     """
     
     with open(filename, 'w') as f:
@@ -108,67 +102,55 @@ def save_mesh(mesh, filename):
                 f.write(f'{h[0]+1} {h[1]+1} {h[2]+1} {h[3]+1} {h[4]+1} {h[5]+1} {h[6]+1} {h[7]+1} {mesh.labels[idx]}\n')
         
         f.write('End')
-
- 
-
+        
+        
 def read_obj(filename):
     """
-    Imports the data from the given OBJ file
+    Imports the data from the given .obj file
     
-    Parameters
-    ----------
-    filename : str
-        name of the file
+    Parameters:
     
-    Returns
-    -------
-    (Array,Array,Array,Array)
-        the mesh vertices, normals and the topology arrays
+        filename (string): The name of the .obj file
+    
+    Return:
+    
+        (Array, Array, Array): The mesh vertices, the mesh simplices and the mesh labels
+        
     """
     
     with open(filename) as f:
         
-        tmpVtx     = []
-        tmpFaces   = []
-        tmpNormals = []
+        tmp_vtx     = []
+        tmp_faces   = []
+        tmp_normals = []
         
         for line in f.readlines():
             if line[0:2] == 'v ':
                 vtx = line.split()
-                tmpVtx.append([float(vtx[1].split("/")[0]), float(vtx[2].split("/")[0]), float(vtx[3].split("/")[0])])
+                tmp_vtx.append([float(vtx[1].split("/")[0]), float(vtx[2].split("/")[0]), float(vtx[3].split("/")[0])])
                 #The slashes after the split up here are temporary, we need to improve this parser
             if line[0:2] == 'f ':
                 face = line.split()
                 
-                tmpFaces.append([int(f.split("/")[0]) -1 for f in face[1:]]) #Same here with the forward slash
-            
-            
-#            if line[0:2] == 'vn':
-#                    face_normal = line.split()
-#                    tmpNormals.append([float(face_normal[1]), float(face_normal[2]), float(face_normals[3])])
+                tmp_faces.append([int(f.split("/")[0]) -1 for f in face[1:]]) #Same here with the forward slash
                     
-        tmpVtx = np.array(tmpVtx)
-        tmpFaces = np.array(tmpFaces)
-        tmpNormals = np.array(tmpNormals)
+        tmp_vtx = np.array(tmp_vtx)
+        tmp_faces = np.array(tmp_faces)
+        tmp_normals = np.array(tmp_normals)
             
-        return tmpVtx, tmpFaces, tmpNormals
+        return tmp_vtx, tmp_faces, tmp_normals
     
     
     
 def save_obj(mesh, filename):
     """
-    Writes the data from the given mesh object to a file
+    Writes the data from the given mesh object to a .obj file
     
-    Parameters
-    ----------
-    mesh : Trimesh / Quadmesh
-        the mesh you want to serialize
-    filename : str
-        name of the file
+    Parameters : 
     
-    Returns
-    -------
-    void
+        mesh (Trimesh / Quadmesh): The mesh to serialize to the file
+        filename (string): the name of the .obj file
+    
     """
     
     with open(filename, 'w') as f:
@@ -189,23 +171,22 @@ def save_obj(mesh, filename):
                 
 def read_skeleton(filename):
     """
-    Imports the data from the given OBJ file
+    Imports the data from the given .skel file
     
-    Parameters
-    ----------
-    filename : str
-        name of the file
+    Parameters:
     
-    Returns
-    -------
-    (Array,Array,Array)
-        the skeleton vertices, radius and the edges arrays
+        filename (string): The name of the .skel file
+    
+    Return:
+    
+        (Array, Array, Array): The skeleton joints, the joints radius and the skeleton bones
+        
     """
     
     with open(filename) as file:
         
-        vtx_list = []
-        edges = []
+        joint_list = []
+        bones = []
         radius = []
         
         for line in file.readlines():
@@ -220,16 +201,16 @@ def read_skeleton(filename):
                 rad = float(splitted_line[4])
                 num_neighbors = int(splitted_line[5])
                 
-                vtx_list.append([x,y,z])
+                joint_list.append([x,y,z])
                 radius.append(rad)
                 
                 for i in range(num_neighbors):
                     
                     neighbor = int(splitted_line[6+i])
-                    edges.append([idx, neighbor])
+                    bones.append([idx, neighbor])
                     
                 
             except Exception:
                 continue
                 
-        return np.array(vtx_list), np.array(radius), np.array(edges)
+        return np.array(joint_list), np.array(radius), np.array(bones)
