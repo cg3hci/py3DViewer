@@ -750,5 +750,6 @@ class Viewer:
     def __repr__(self):
         
         self.show()
+        return "Displaying Mesh"
     
     
