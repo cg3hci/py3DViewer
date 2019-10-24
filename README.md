@@ -20,7 +20,7 @@ m.show()
 
 ## Installation
 
-If you have never used Jupyter, then the first step is to install and configure Jupyer on your computer. You can follow this [guide](https://jupyter.org/install.html) to do it.
+If you have never used Jupyter, then the first step is to install and configure Jupyter on your computer. You can follow this [guide](https://jupyter.org/install.html) to do it.
 
 Py3DViewer can be easily installed with pip:
 
@@ -42,12 +42,17 @@ jupyter labextension install @jupyter-widgets/jupyterlab-manager
 jupyter labextension install jupyter-threejs
 ```
 
-Finally, you need to install the Jupyter widgets extension: 
+Finally, you need to install the Jupyter widgets extension for notebooks: 
 
 ```
-pip install ipywidgets
 jupyter nbextension enable --py widgetsnbextension
 ```
+
+Or for jupyter lab:
+```
+jupyter labextension install @jupyter-widgets/jupyterlab-manager
+```
+
 ## Documentation
 
 You can find the complete documentation of the library [here]()!
