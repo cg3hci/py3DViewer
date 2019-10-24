@@ -1,11 +1,17 @@
-# The Py3DViewer project
-G. Cherchi, L. Pitzalis, G. L. Frongia and R. Scateni
+![Py3DViewer Logo](https://github.com/cg3hci/py3DViewer/blob/master/docs/source/logo.png)
 
-University of Cagliari (Italy)
 
 Fast research and prototyping, nowadays, is shifting towards languages that allow interactive execution and quick changes. Python is very widely used for rapid prototyping. Py3DViewer is a new Python library that allows researchers to quickly prototype geometry processing algorithms by interactively editing and viewing meshes. Polygonal and polyhedral meshes are both supported. The library is designed to be used in conjunction with [Jupyter environments](https://jupyter.org), which allow interactive Python code execution and data visualization in a browser, thus opening up the possibility of viewing a mesh while editing the underlying geometry and topology.
 
-**[Documentation]()** | **[Paper]()** | **[Examples]()**
+- [Fast prototyping](#fast-prototyping) 
+- [Installation](#installation)
+- [Documentation](#documentation)
+- [Deployment](#deployment)
+- [Authors](#authors)
+- [Contributing](#contributing)
+- [Cite us](#cite-us)
+- [License](#license)
+- [More informations](#more-information)
 
 --------------------------------------------------------------------------------
 
@@ -69,16 +75,22 @@ More generally, the library will continously improve in its documentation and ex
 
 One of the most important features we will implement in the near future, is a complete PyTorch support for the data structures and algorithms for the underlying representation, instead of [Numpy](https://numpy.org), if the user so chooses. This feature will allow the library to seamlessly run its algorithms on the GPU, to speed up parallel computations and to allow researchers to easily and efficiently prototype Geometry Processing algorithms and Deep Learning networks.
 
+## Authors
+
+Gianmarco Cherchi, Luca Pitzalis, Giovanni Laerte Frongia and Riccardo Scateni
+
+University of Cagliari (Italy)
+
 ### Other contributors
 
 Giampaolo Perelli (University of Cagliari).
 
-### Contributing
+## Contributing
 
 Pull requests are welcome! 
 For major changes, please open an issue first to discuss what you would like to change. 
 
-## Cite
+## Cite us
 
 Please cite our [paper]() if you use the Py3DViewer in your own work:
 
@@ -96,6 +108,6 @@ Please cite our [paper]() if you use the Py3DViewer in your own work:
 
 This project is licensed under the MIT License - see the [LICENSE.md](https://github.com/cg3hci/py3DViewer/blob/master/LICENSE) file for details.
 
-## Information
+## More information
 
 For other information you can contact one of the main developers of the library: G. Cherchi (g.cherchi@unica.it), L. Pitzalis (luca.pitzalis94@unica.it) and G. L. Frongia (giovannil.frongia@unica.it).
