@@ -1,7 +1,7 @@
 from .Abstractmesh import AbstractMesh
 from ..visualization.Viewer import Viewer
 import numpy as np
-from ..utils import IO
+from ..utils import IO, ObservableArray
 from ..utils.metrics import triangle_aspect_ratio, triangle_area
 
 class Trimesh(AbstractMesh):
@@ -34,20 +34,25 @@ class Trimesh(AbstractMesh):
         
         elif vertices and faces:
             
-            self.vertices = np.array(vertices) 
-            self.faces = np.array(faces)
-            
-            if labels:
-                self.labels = np.array(labels)
-            
+            self.vertices = ObservableArray(vertices.shape)
+            self.vertices[:] = vertices
+            self.vertices.attach(self)
+            self.faces = ObservableArray(faces.shape, dtype=np.int)
+            self.faces[:] = faces
+            self.faces.attach(self)
             self.__load_operations()
         
+            if labels:
+                self.labels = ObservableArray(labels.shape)
+                self.labels[:] = labels
+                self.labels.attach(self)
+            
         else:
             print('Warning: Empty Trimesh object')
          
     
     # ==================== METHODS ==================== #    
-    
+        
     @property
     def num_faces(self):
         
@@ -243,7 +248,10 @@ class Trimesh(AbstractMesh):
         
         if ext == 'obj':
             self.vertices, self.faces, self.face_normals = IO.read_obj(filename)
-        
+            self.vertices.attach(self)
+            self.faces.attach(self)
+            self.face_normals.attach(self)
+            
         else:
             raise Exception("Only .obj files are supported")
             
@@ -280,8 +288,13 @@ class Trimesh(AbstractMesh):
         """
         Compute the boundary of the current mesh. It only returns the faces that are inside the clipping
         """
-        clipping_range = super(Trimesh, self).boundary()
-        return self.faces[clipping_range], clipping_range
+        if (self._AbstractMesh__boundary_needs_update):
+            print("Calculating new boundary")
+            clipping_range = super(Trimesh, self).boundary()
+            self._AbstractMesh__boundary_cached = clipping_range
+            self._AbstractMesh__boundary_needs_update = False
+        
+        return self.faces[self._AbstractMesh__boundary_cached], self._AbstractMesh__boundary_cached
     
         
     @property
@@ -297,7 +310,7 @@ class Trimesh(AbstractMesh):
         
         if self._AbstractMesh__simplex_centroids is None:
             self._AbstractMesh__simplex_centroids = self.vertices[self.faces].mean(axis = 1)
-        
+            self._AbstractMesh__simplex_centroids._observers = self.vertices._observers
         return self._AbstractMesh__simplex_centroids
     
     @property

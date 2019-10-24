@@ -1,7 +1,9 @@
 import pythreejs as three
 import numpy as np
+from time import time
 from .Colors import colors
 from ..utils import Observer
+from ..structures import *
 
 class Drawable(Observer):
     
@@ -13,7 +15,7 @@ class Drawable(Observer):
         self.geometry_color = self.__initialize_geometry_color(mesh_color)
         self.drawable_mesh, self.__buffer_geometry = self.__initialize_drawable_mesh()
         self.wireframe = self.__initialize_wireframe()
-        
+        self.__last_update_time = time()
 
     def __initialize_geometry_color(self, mesh_color):
         if mesh_color is None:
@@ -22,7 +24,6 @@ class Drawable(Observer):
                              axis=0)
 
     def __initialize_wireframe(self):
-        
         edges_material = three.MeshBasicMaterial(color='#686868',
                                                  side='FrontSide',
                                                  polygonOffset=True,
@@ -34,13 +35,19 @@ class Drawable(Observer):
                                                  opacity=0.2,
                                                  depthTest=True,
                                                  transparent=True)
-                
-        return three.Mesh(
-            geometry=self.__buffer_geometry,
-            material=edges_material,
-            position=[0, 0, 0]   
-        )
-        
+        mesh_type = type(self.geometry)
+        if mesh_type == Trimesh:
+            return three.Mesh(
+                geometry=self.__buffer_geometry,
+                material=edges_material,
+                position=[0, 0, 0]   
+            )
+        elif mesh_type == Quadmesh:
+            boundaries = self.geometry.boundary()[0]
+            edges = np.c_[boundaries[:,:2], boundaries[:,1:3], boundaries[:,2:4], boundaries[:,3], boundaries[:,0]].flatten()
+            surface_wireframe = self.mesh.vertices[edges].tolist()
+            wireframe = BufferGeometry(attributes={'position': BufferAttribute(surface_wireframe, normalized=False)})
+
     def __get_drawable_from_boundary(self):
         boundaries = self.geometry.boundary()[0]
         geometry_attributes = {
@@ -48,8 +55,9 @@ class Drawable(Observer):
             'color': three.BufferAttribute(self.geometry_color[np.repeat(self.geometry.boundary()[1], 3)], normalized=False),
             }
         drawable_geometry = three.BufferGeometry(attributes = geometry_attributes)
-        drawable_geometry.exec_three_obj_method('computeVertexNormals')
+        drawable_geometry.exec_three_obj_method("computeVertexNormals")
         return drawable_geometry
+    
     
     def __initialize_drawable_mesh(self):
         drawable_geometry = self.__get_drawable_from_boundary()
@@ -72,10 +80,14 @@ class Drawable(Observer):
         ), drawable_geometry
 
     def update(self):
+        #current_time = time()
+        #if (current_time - self.__last_update_time) > 1/10:
+        print("Updating mesh...")
         new_drawable_geometry = self.__get_drawable_from_boundary()
         self.drawable_mesh.geometry = new_drawable_geometry
         self.wireframe.geometry = new_drawable_geometry
-    
+        #self.__last_update_time = current_time
+        
     @property
     def center(self):
         return self.geometry.center

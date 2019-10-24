@@ -1,6 +1,6 @@
 import numpy as np
 from ..visualization.Viewer import Viewer
-from ..utils import Subject 
+from ..utils import Subject, Observer
 
 class Clipping(object):
             
@@ -26,7 +26,7 @@ class Clipping(object):
                 f"min_y: {self.min_y} \tmax_y: {self.max_y} \t{('flipped' if self.flip.y else '')}\n" +
                 f"min_z: {self.min_z} \tmax_z: {self.max_z} \t{('flipped' if self.flip.z else '')}\n")
 
-class AbstractMesh(Subject):
+class AbstractMesh(Observer, Subject):
 
     """
     This class represents a generic mesh. It must be estended by a specific mesh class. It stores all the information
@@ -44,12 +44,20 @@ class AbstractMesh(Subject):
         self.simplex_metrics     = dict() #dictionary[propertyName : ((min, max), npArray (Nx1))]
         self.__simplex_centroids = None #npArray (Nx1)
         self.__clipping          = Clipping()
+        self.__boundary_needs_update = True
+        self.__boundary_cached = None
         
-        super(AbstractMesh, self).__init__()
+        Observer.__init__(self)
+        Subject.__init__(self)
         
      
     # ==================== METHODS ==================== #
     
+        
+
+    def update(self):
+        self.__boundary_needs_update = True
+        self._notify()
         
     def show(self, UI = False, width = 700, height = 700, mesh_color = None):
 
@@ -70,7 +78,6 @@ class AbstractMesh(Subject):
         view = Viewer(self, UI=UI, mesh_color=mesh_color, width = width, height = height).show()
         return view
         
-    
     @property
     def clipping(self):
         
@@ -112,7 +119,8 @@ class AbstractMesh(Subject):
             self.__clipping.flip.y = flip_y
         if flip_z is not None:
             self.__clipping.flip.z = flip_z
-            
+        
+        self.__boundary_needs_update = True
         self._notify()
         
     def reset_clipping(self):
@@ -124,13 +132,17 @@ class AbstractMesh(Subject):
         self.set_clipping(min_x = self.bbox[0,0], max_x = self.bbox[1,0], 
                      min_y = self.bbox[0,1], max_y = self.bbox[1,1],
                      min_z = self.bbox[0,2], max_z = self.bbox[1,2])
-        
+        self.__boundary_needs_update = True
         self._notify()
 
     def load_from_file(filename):
         
         raise NotImplementedError('This method must be implemented in the subclasses')
+            
+    def __compute_adjacencies(self):
         
+        raise NotImplementedError('This method must be implemented in the subclasses')
+
     
     def save_file(self, filename):
         
@@ -168,7 +180,6 @@ class AbstractMesh(Subject):
         """
         Compute the boundary of the current mesh. It only returns the faces that are inside the clipping
         """
-
         min_x = self.clipping.min_x
         max_x = self.clipping.max_x
         min_y = self.clipping.min_y
@@ -178,13 +189,10 @@ class AbstractMesh(Subject):
         flip_x = self.clipping.flip.x
         flip_y = self.clipping.flip.y
         flip_z = self.clipping.flip.z
-            
         x_range = np.logical_xor(flip_x,((self.simplex_centroids[:,0] >= min_x) & (self.simplex_centroids[:,0] <= max_x)))
         y_range = np.logical_xor(flip_y,((self.simplex_centroids[:,1] >= min_y) & (self.simplex_centroids[:,1] <= max_y)))
         z_range = np.logical_xor(flip_z,((self.simplex_centroids[:,2] >= min_z) & (self.simplex_centroids[:,2] <= max_z)))
-        
         clipping_range = x_range & y_range & z_range
-        
         return clipping_range
         
         

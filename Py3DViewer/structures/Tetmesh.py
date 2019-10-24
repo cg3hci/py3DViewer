@@ -289,12 +289,15 @@ class Tetmesh(AbstractMesh):
         the clipping.
 
         """
-        clipping_range = super(Tetmesh, self).boundary()
-        indices = np.where(self.internals)[0]
-        clipping_range[indices[np.all(clipping_range[self.tet2tet[indices]], axis=1)]] = False
-        clipping_range = np.repeat(clipping_range, 4)
+        if (self._AbstractMesh__boundary_needs_update):
+            clipping_range = super(Tetmesh, self).boundary()
+            indices = np.where(self.internals)[0]
+            clipping_range[indices[np.all(clipping_range[self.tet2tet[indices]], axis=1)]] = False
+            clipping_range = np.repeat(clipping_range, 4)
+            self._AbstractMesh__boundary_cached = clipping_range
+            self._AbstractMesh__boundary_needs_update = False
         
-        return self.faces[clipping_range], clipping_range
+        return self.faces[self._AbstractMesh__boundary_cached], self._AbstractMesh__boundary_cached
 
         
     @property

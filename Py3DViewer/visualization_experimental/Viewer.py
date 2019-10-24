@@ -51,4 +51,4 @@ class Viewer(object):
     
     def __repr__(self):
         self.show()
-        return "Drawing Mesh"
+        return ""

@@ -279,9 +279,13 @@ class Quadmesh(AbstractMesh):
         """
         Compute the boundary of the current mesh. It only returns the faces that are inside the clipping
         """
-        clipping_range = super(Quadmesh, self).boundary()
-        return self.faces[clipping_range], clipping_range
-    
+        if (self._AbstractMesh__boundary_needs_update):
+            clipping_range = super(Quadmesh, self).boundary()
+            self._AbstractMesh__boundary_cached = clipping_range
+            self._AbstractMesh__boundary_needs_update = False
+        
+        return self.faces[self._AbstractMesh__boundary_cached], self._AbstractMesh__boundary_cached
+
     
     @property
     def face2face(self):

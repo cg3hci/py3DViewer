@@ -1,4 +1,5 @@
 import numpy as np
+from .ObservableArray import *
 
 def read_mesh(filename):
     """
@@ -62,12 +63,18 @@ def read_mesh(filename):
                 tmp_simplices += [(a, b, c, d, e, f_, g, h)]
                 tmp_labels += [label]
 
-        
         tmp_vtx = np.array(tmp_vtx)
         tmp_simplices = np.array(tmp_simplices)
-        tmp_labels = np.array(tmp_labels)+1
+        tmp_labels = np.array(tmp_labels)
         
-        return tmp_vtx, tmp_simplices, tmp_labels
+        vtx = ObservableArray(tmp_vtx.shape)
+        vtx[:] = tmp_vtx
+        simplices = ObservableArray(tmp_simplices.shape, dtype=np.int)
+        simplices[:] = tmp_simplices
+        labels = ObservableArray(tmp_labels.shape)
+        labels[:] = tmp_labels
+        
+        return vtx, simplices, labels
     
 
 def save_mesh(mesh, filename):
@@ -150,8 +157,15 @@ def read_obj(filename):
         tmpVtx = np.array(tmpVtx)
         tmpFaces = np.array(tmpFaces)
         tmpNormals = np.array(tmpNormals)
+    
+        vtx = ObservableArray(tmpVtx.shape)
+        vtx[:] = tmpVtx
+        faces = ObservableArray(tmpFaces.shape, dtype=np.int)
+        faces[:] = tmpFaces
+        normals = ObservableArray(tmpNormals.shape)
+        normals[:] = normals
             
-        return tmpVtx, tmpFaces, tmpNormals
+        return vtx, faces, normals
     
     
     
@@ -232,4 +246,4 @@ def read_skeleton(filename):
             except Exception:
                 continue
                 
-        return np.array(vtx_list), np.array(radius), np.array(edges)
+        return ObservableArray(vtx_list), ObservableArray(radius), ObservableArray(edges)

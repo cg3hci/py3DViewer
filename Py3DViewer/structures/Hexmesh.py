@@ -311,13 +311,15 @@ class Hexmesh(AbstractMesh):
             flip_z (bool): Flip the cut condition for the z axis
     
         """
+        if (self._AbstractMesh__boundary_needs_update):
+            clipping_range = super(Hexmesh, self).boundary()
+            indices = np.where(self.internals)[0]
+            clipping_range[indices[np.all(clipping_range[self.hex2hex[indices]], axis=1)]] = False
+            clipping_range = np.repeat(clipping_range, 6)
+            self._AbstractMesh__boundary_cached = clipping_range
+            self._AbstractMesh__boundary_needs_update = False
         
-        clipping_range = super(Hexmesh, self).boundary()
-        indices = np.where(self.internals)[0]
-        clipping_range[indices[np.all(clipping_range[self.hex2hex[indices]], axis=1)]] = False
-        clipping_range = np.repeat(clipping_range, 6)
-        
-        return self.faces[clipping_range], clipping_range
+        return self.faces[self._AbstractMesh__boundary_cached], self._AbstractMesh__boundary_cached
         
 
         
