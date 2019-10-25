@@ -295,7 +295,10 @@ class Trimesh(AbstractMesh):
         return self.faces[self._AbstractMesh__boundary_cached], self._AbstractMesh__boundary_cached
     
     def as_edges_flat(self):
-        return self.vertices[self.boundary()[0].flatten()].tolist()
+        boundaries = self.boundary()[0]
+        edges = np.c_[boundaries[:,:2], boundaries[:,1:], boundaries[:,2], boundaries[:,0]].flatten()
+        edges_flat = self.vertices[edges].tolist()
+        return edges_flat
     
     def as_triangles_flat(self):
         return self.vertices[self.boundary()[0].flatten()].tolist()

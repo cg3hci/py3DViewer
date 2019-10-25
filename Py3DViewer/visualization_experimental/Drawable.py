@@ -37,7 +37,7 @@ class Drawable(Observer):
     def __get_drawable_from_boundary(self):
         geometry_attributes = {
             'position': three.BufferAttribute(self.geometry.as_triangles_flat(), normalized = False),
-            'color': three.BufferAttribute(self.geometry._as_threejs_colors(), normalized = False)}
+            'color': three.BufferAttribute(self.geometry_color[self.geometry._as_threejs_colors()], normalized = False)}
         drawable_geometry = three.BufferGeometry(attributes = geometry_attributes)
         drawable_geometry.exec_three_obj_method("computeVertexNormals")
         return drawable_geometry
