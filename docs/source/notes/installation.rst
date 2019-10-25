@@ -13,6 +13,7 @@ Then, install the extension for jupyter notebooks:
 
 
 .. code-block:: none
+        
         jupyter nbextension install --py --symlink --sys-prefix pythreejs
         jupyter nbextension enable --py --sys-prefix pythreejs
 
@@ -20,6 +21,7 @@ Or for jupyter lab:
 
 
 .. code-block:: none
+        
         jupyter labextension install @jupyter-widgets/jupyterlab-manager
         jupyter labextension install jupyter-threejs
 
@@ -27,9 +29,11 @@ Finally, you need to install the Jupyter widgets extension for notebooks:
 
 
 .. code-block:: none
+        
         jupyter nbextension enable --py widgetsnbextension
 
 Or for jupyter lab:
 
 .. code-block:: none
+        
         jupyter labextension install @jupyter-widgets/jupyterlab-manager
