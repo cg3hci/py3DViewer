@@ -3,24 +3,33 @@ Installation
 
 If you have never used Jupyter, then the first step is to install and configure Jupyter on your computer. You can follow this `guide <https://jupyter.org/install.html>`_ to do it.
 
-Py3DViewer can be easily installed with pip::
+Py3DViewer can be easily installed with pip:
 
-pip install git+https://github.com/cg3hci/py3DViewer
+.. code_blocks:: bash
 
-Then, install the extension for jupyter notebooks::
+        pip install git+https://github.com/cg3hci/py3DViewer
 
-jupyter nbextension install --py --symlink --sys-prefix pythreejs
-jupyter nbextension enable --py --sys-prefix pythreejs
+Then, install the extension for jupyter notebooks:
 
-Or for jupyter lab::
 
-jupyter labextension install @jupyter-widgets/jupyterlab-manager
-jupyter labextension install jupyter-threejs
+.. code_blocks:: bash
+        jupyter nbextension install --py --symlink --sys-prefix pythreejs
+        jupyter nbextension enable --py --sys-prefix pythreejs
 
-Finally, you need to install the Jupyter widgets extension for notebooks::
+Or for jupyter lab:
 
-jupyter nbextension enable --py widgetsnbextension
 
-Or for jupyter lab::
+.. code_blocks:: bash
+        jupyter labextension install @jupyter-widgets/jupyterlab-manager
+        jupyter labextension install jupyter-threejs
 
-jupyter labextension install @jupyter-widgets/jupyterlab-manager
+Finally, you need to install the Jupyter widgets extension for notebooks:
+
+
+.. code_blocks:: bash
+        jupyter nbextension enable --py widgetsnbextension
+
+Or for jupyter lab:
+
+.. code_blocks:: bash
+        jupyter labextension install @jupyter-widgets/jupyterlab-manager
