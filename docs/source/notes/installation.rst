@@ -5,31 +5,31 @@ If you have never used Jupyter, then the first step is to install and configure 
 
 Py3DViewer can be easily installed with pip:
 
-.. code_blocks:: bash
+.. code_blocks:: console
 
         pip install git+https://github.com/cg3hci/py3DViewer
 
 Then, install the extension for jupyter notebooks:
 
 
-.. code_blocks:: bash
+.. code_blocks:: console
         jupyter nbextension install --py --symlink --sys-prefix pythreejs
         jupyter nbextension enable --py --sys-prefix pythreejs
 
 Or for jupyter lab:
 
 
-.. code_blocks:: bash
+.. code_blocks:: console
         jupyter labextension install @jupyter-widgets/jupyterlab-manager
         jupyter labextension install jupyter-threejs
 
 Finally, you need to install the Jupyter widgets extension for notebooks:
 
 
-.. code_blocks:: bash
+.. code_blocks:: console
         jupyter nbextension enable --py widgetsnbextension
 
 Or for jupyter lab:
 
-.. code_blocks:: bash
+.. code_blocks:: console
         jupyter labextension install @jupyter-widgets/jupyterlab-manager
