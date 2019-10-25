@@ -259,17 +259,7 @@ class Viewer:
         
     
     def listColor(self,n):
-        """based on value n return a color
-
-        Parameter:
-        ---
-            n: int
-                number for color
-        Return
-        ----
-            return a color based a number
-        """
-
+       
         if n == 0:
             color = '#ff0000'
         elif n == 1:
@@ -366,13 +356,6 @@ class Viewer:
         
 
     def change_side_view(self,change=None):
-        """Check button pressed
-
-        Parameter
-        ----
-            change: widget value
-                value of option toggle buttons 
-        """
         if change.new == 'Front':
             self.view_fromt_side()
         elif change.new == 'Back':
@@ -424,12 +407,7 @@ class Viewer:
 
         
     def change_type_color(self,change=None):
-        """Check buttons on interface to select color
-        Paramenter
-        -----
-            change: not used
-
-        """ 
+        
         if self.typeColorSurface.value==1:
             self.colorSurface.layout = self.invisibleLayout
             self.colorInside.layout = self.invisibleLayout
@@ -705,13 +683,7 @@ class Viewer:
 
 
     def __slicing(self,change):
-        """Update visible mesh based on value of cut
-
-        Parameter
-        ----
-            change: not used
-        """
-        
+               
         self.mesh.set_cut(self.percXp.value[0], self.percXp.value[1], 
                           self.percYp.value[0], self.percYp.value[1],
                           self.percZp.value[0], self.percZp.value[1])
