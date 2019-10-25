@@ -1,9 +1,7 @@
 from .Abstractmesh import AbstractMesh
-from ..visualization.Viewer import Viewer
 import numpy as np
 from ..utils import IO, ObservableArray
 from ..utils.metrics import hex_scaled_jacobian, hex_volume
-
 
 class Hexmesh(AbstractMesh):
     
@@ -327,9 +325,26 @@ class Hexmesh(AbstractMesh):
             self._AbstractMesh__boundary_needs_update = False
             
         return self.faces[self._AbstractMesh__boundary_cached], self._AbstractMesh__boundary_cached
-        
-
-        
+    
+    def as_edges_flat(self):
+        boundaries = self.boundary()[0]
+        edges = np.c_[boundaries[:,:2], boundaries[:,1:3], boundaries[:,2:4], boundaries[:,3], boundaries[:,0]].flatten()
+        edges_flat = self.vertices[edges].tolist()
+        return edges_flat
+    
+    def as_triangles_flat(self):
+        boundaries = self.boundary()[0]
+        boundaries = np.c_[boundaries[:,:3], boundaries[:,2:], boundaries[:,0]]
+        boundaries.shape = (-1, 3)
+        return self.vertices[boundaries.flatten()]
+    
+    def _as_threejs_colors(self):
+        return np.repeat(self.boundary()[1], 6)
+    
+    @property
+    def num_triangles(self):
+        return self.num_faces*2
+    
     @property
     def simplex_centroids(self):
         

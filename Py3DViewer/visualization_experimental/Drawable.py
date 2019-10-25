@@ -3,7 +3,6 @@ import numpy as np
 from time import time
 from .Colors import colors
 from ..utils import Observer
-from ..structures import *
 
 class Drawable(Observer):
     
@@ -13,66 +12,32 @@ class Drawable(Observer):
         if reactive:
             self.geometry.attach(self)
         self.geometry_color = self.__initialize_geometry_color(mesh_color)
-        self.drawable_mesh, self.__buffer_geometry = self.__initialize_drawable_mesh()
+        self.drawable_mesh = self.__initialize_drawable_mesh()
         self.wireframe = self.__initialize_wireframe()
         self.__last_update_time = time()
 
     def __initialize_geometry_color(self, mesh_color):
         if mesh_color is None:
-            mesh_type = type(self.geometry)
-            if mesh_type == Trimesh or mesh_type == Tetmesh:
-                return np.repeat(colors.teal,
-                                 self.geometry.num_faces,
-                                 axis=0)
-            elif mesh_type == Quadmesh or mesh_type == Hexmesh:
-                return np.repeat(colors.teal,
-                                 self.geometry.num_faces * 2,
-                                 axis=0)
+            return np.repeat(colors.teal,
+                             self.geometry.num_triangles,
+                             axis=0)
 
     def __initialize_wireframe(self):
-        mesh_type = type(self.geometry)
-        if mesh_type == Trimesh or mesh_type == Tetmesh:
-            edges_material = three.MeshBasicMaterial(color='#686868',
-                                                 side='FrontSide',
-                                                 polygonOffset=True,
-                                                 polygonOffsetFactor=1,
-                                                 polygonOffsetUnits=1,
-                                                 #shininess=0.5,
-                                                 wireframe=True,
-                                                 linewidth = 1,
-                                                 opacity=0.2,
-                                                 depthTest=True,
-                                                 transparent=True)
-            return three.Mesh(
-                geometry=self.__buffer_geometry,
-                material=edges_material,
-                position=[0, 0, 0]   
-            )
-        elif mesh_type == Quadmesh or mesh_type == Hexmesh:
             edges_material = three.LineBasicMaterial(color='#686868', 
                                                         linewidth = 1, 
                                                         depthTest=True, 
                                                         opacity=.2,
                                                         transparent=True)
-            boundaries = self.geometry.boundary()[0]
-            edges = np.c_[boundaries[:,:2], boundaries[:,1:3], boundaries[:,2:4], boundaries[:,3], boundaries[:,0]].flatten()
-            surface_wireframe = self.geometry.vertices[edges].tolist()
-            wireframe = three.BufferGeometry(attributes={'position': three.BufferAttribute(surface_wireframe, normalized=False)})
+            surface_wireframe = self.geometry.as_edges_flat()
+            buffer_wireframe = three.BufferAttribute(surface_wireframe, normalized=False)
+            wireframe = three.BufferGeometry(attributes={'position': buffer_wireframe})
             return three.LineSegments(wireframe, material = edges_material, type = 'LinePieces')
 
 
     def __get_drawable_from_boundary(self):
-        mesh_type = type(self.geometry)     
-        boundaries = self.geometry.boundary()[0]
-        n_vertices_per_simplex = 3
-        if mesh_type == Quadmesh or mesh_type == Hexmesh:
-            boundaries = np.c_[boundaries[:,:3], boundaries[:,2:], boundaries[:,0]]
-            boundaries.shape = (-1, 3)
-            n_vertices_per_simplex = 6
-            
         geometry_attributes = {
-            'position': three.BufferAttribute(self.geometry.vertices[boundaries.flatten()], normalized=False),
-            'color': three.BufferAttribute(self.geometry_color[np.repeat(self.geometry.boundary()[1], n_vertices_per_simplex)], normalized=False),}
+            'position': three.BufferAttribute(self.geometry.as_triangles_flat(), normalized = False),
+            'color': three.BufferAttribute(self.geometry._as_threejs_colors(), normalized = False)}
         drawable_geometry = three.BufferGeometry(attributes = geometry_attributes)
         drawable_geometry.exec_three_obj_method("computeVertexNormals")
         return drawable_geometry
@@ -96,14 +61,27 @@ class Drawable(Observer):
             geometry=drawable_geometry,
             material=material,
             position=[0, 0, 0]
-        ), drawable_geometry
+        )
 
+    def __dispose_buffers(self, buffer_dict):
+        for key in buffer_dict.keys():
+            item = buffer_dict[key]
+            item.array = np.zeros(0)
+            del item
+    
     def update(self):
         #current_time = time()
         #if (current_time - self.__last_update_time) > 1/10:
         new_drawable_geometry = self.__get_drawable_from_boundary()
+        old_geometry = self.drawable_mesh.geometry
         self.drawable_mesh.geometry = new_drawable_geometry
+        self.__dispose_buffers(old_geometry.attributes)
+        old_geometry.exec_three_obj_method("dispose")
+        
+        old_wireframe_geometry = self.wireframe.geometry
         self.wireframe.geometry = new_drawable_geometry
+        self.__dispose_buffers(old_wireframe_geometry.attributes)
+        old_wireframe_geometry.exec_three_obj_method("dispose")
         #self.__last_update_time = current_time
         
     @property

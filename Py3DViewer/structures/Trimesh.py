@@ -1,5 +1,4 @@
 from .Abstractmesh import AbstractMesh
-from ..visualization.Viewer import Viewer
 import numpy as np
 from ..utils import IO, ObservableArray
 from ..utils.metrics import triangle_aspect_ratio, triangle_area
@@ -295,7 +294,19 @@ class Trimesh(AbstractMesh):
         
         return self.faces[self._AbstractMesh__boundary_cached], self._AbstractMesh__boundary_cached
     
-        
+    def as_edges_flat(self):
+        return self.vertices[self.boundary()[0].flatten()].tolist()
+    
+    def as_triangles_flat(self):
+        return self.vertices[self.boundary()[0].flatten()].tolist()
+    
+    def _as_threejs_colors(self):
+        return np.repeat(self.boundary()[1], 3)
+    
+    @property
+    def num_triangles(self):
+        return self.num_faces
+
     @property
     def face2face(self):
         return self.__face2face

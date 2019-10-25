@@ -1,5 +1,5 @@
 import numpy as np
-from ..visualization.Viewer import Viewer
+from ..visualization_experimental import Viewer
 from ..utils import Subject, Observer
 
 class Clipping(object):
@@ -59,7 +59,7 @@ class AbstractMesh(Observer, Subject):
         self.__boundary_needs_update = True
         self._notify()
         
-    def show(self, UI = False, width = 700, height = 700, mesh_color = None):
+    def show(self, width = 700, height = 700, mesh_color = None, reactive = True):
 
         """
         Show the mesh within the current cell. It is possible to manipulate the mesh through the UI.
@@ -75,7 +75,7 @@ class AbstractMesh(Observer, Subject):
             Viewer: The viewer object
         """
 
-        view = Viewer(self, UI=UI, mesh_color=mesh_color, width = width, height = height).show()
+        view = Viewer(self, mesh_color=mesh_color, width = width, height = height, reactive=True).show()
         return view
         
     @property
@@ -174,6 +174,22 @@ class AbstractMesh(Observer, Subject):
         
         raise NotImplementedError('This method must be implemented in the subclasses')
         
+    def as_triangles_flat(self):
+        
+        raise NotImplementedError('This method must be implemented in the subclasses')
+        
+    def as_edges_flat(self):
+        
+        raise NotImplementedError('This method must be implemented in the subclasses')
+        
+    def _as_threejs_colors(self):
+        
+        raise NotImplementedError('This method must be implemented in the subclasses')
+        
+    @property
+    def num_triangles(self):
+    
+        raise NotImplementedError('This method must be implemented in the subclasses')
         
     def boundary(self):
         
