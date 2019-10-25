@@ -277,19 +277,19 @@ def hex_volume(vertices, hexes):
     
     """
     
-        p0 = vertices[hexes[:,0]]
-        p1 = vertices[hexes[:,1]]
-        p2 = vertices[hexes[:,2]]
-        p3 = vertices[hexes[:,3]]
-        p4 = vertices[hexes[:,4]]
-        p5 = vertices[hexes[:,5]]
-        p6 = vertices[hexes[:,6]]
-        p7 = vertices[hexes[:,7]]
+    p0 = vertices[hexes[:,0]]
+    p1 = vertices[hexes[:,1]]
+    p2 = vertices[hexes[:,2]]
+    p3 = vertices[hexes[:,3]]
+    p4 = vertices[hexes[:,4]]
+    p5 = vertices[hexes[:,5]]
+    p6 = vertices[hexes[:,6]]
+    p7 = vertices[hexes[:,7]]
 
-        # cross-derivatives
-        x1  = (p1 - p0) + (p2 - p3) + (p5 - p4) + (p6 - p7)
-        x2  = (p3 - p0) + (p2 - p1) + (p7 - p4) + (p6 - p5)
-        x3  = (p4 - p0) + (p5 - p1) + (p6 - p2) + (p7 - p3)
+    # cross-derivatives
+    x1  = (p1 - p0) + (p2 - p3) + (p5 - p4) + (p6 - p7)
+    x2  = (p3 - p0) + (p2 - p1) + (p7 - p4) + (p6 - p5)
+    x3  = (p4 - p0) + (p5 - p1) + (p6 - p2) + (p7 - p3)
         
-        alpha8 = np.linalg.det(np.c_[x1,x2,x3].reshape(-1,3,3))
-        return ((None, None), alpha8/64)
+    alpha8 = np.linalg.det(np.c_[x1,x2,x3].reshape(-1,3,3))
+    return ((None, None), alpha8/64)
