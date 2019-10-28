@@ -1,5 +1,5 @@
 import numpy as np
-from ..visualization_experimental import Viewer
+from ..visualization import Viewer
 from ..utils import Subject, Observer
 
 class Clipping(object):
