@@ -91,7 +91,7 @@ class Viewer:
                 layout=row_layout
             )
         
-        self.percXp = widgets.FloatRangeSlider(
+        self.clipping_slider_x = widgets.FloatRangeSlider(
             value=[self.round_down(self.mesh.cut['min_x'],3)-0.001, self.round_up(self.mesh.cut['max_x'],3)+0.001],
             min=self.round_down(self.mesh.cut['min_x'],3)-0.001,
             max=self.round_up(self.mesh.cut['max_x'],3)+0.001,
@@ -107,7 +107,7 @@ class Viewer:
         )
 
 
-        self.percYp = widgets.FloatRangeSlider(
+        self.clipping_slider_y = widgets.FloatRangeSlider(
             value=[self.round_down(self.mesh.cut['min_y'],3)-0.001, self.round_up(self.mesh.cut['max_y'],3)+0.001],
             min=self.round_down(self.mesh.cut['min_y'],3)-0.001,
             max=self.round_up(self.mesh.cut['max_y'],3)+0.001,
@@ -121,7 +121,7 @@ class Viewer:
             layout=widgets.Layout(width='30%')
         )
 
-        self.percZp = widgets.FloatRangeSlider(
+        self.clipping_slider_z = widgets.FloatRangeSlider(
             value=[self.round_down(self.mesh.cut['min_z'],3)-0.001,self.round_up(self.mesh.cut['max_z'],3)+0.001],
             min=self.round_down(self.mesh.cut['min_z'],3)-0.001,
             max=self.round_up(self.mesh.cut['max_z'],3)+0.001,
@@ -135,7 +135,7 @@ class Viewer:
             layout=widgets.Layout(width='30%')
         )
         
-        self.singleColorSurface = widgets.ColorPicker(
+        self.external_color = widgets.ColorPicker(
             concise=True,
             description='Pick a color',
             value='blue',
@@ -148,7 +148,7 @@ class Viewer:
         vbox=widgets.VBox([hbox1,hbox2,hbox3],
                      layout=widgets.Layout(width='100%'))
         
-        self.wireSlider = widgets.FloatSlider(
+        self.wireframe_thickness_slider = widgets.FloatSlider(
                         value=0.2,
                         min=0.,
                         max=1.,
@@ -160,48 +160,41 @@ class Viewer:
                         disable = False,
                 )
 
-        self.colorWireframe = widgets.ColorPicker(
+        self.wireframe_color_picker = widgets.ColorPicker(
                             concise=True,
                             description='Color',
                             value='#686868',
                             disabled=False,
                         )
         
-        self.colorMap = widgets.Dropdown(
+        self.color_map = widgets.Dropdown(
             options=[(i, idx) for idx, i in enumerate(ColorMap.color_maps.keys())],
             value=0,
             description='Color-Map:',
             layout=self.invisibleLayout
         )
 
-        self.typeColorSurface = widgets.Dropdown(
+        self.coloring_type_menu = widgets.Dropdown(
             options=[('Default', 0), ('Simplex Quality', 1), ('Label',2)],
             value=0,
             description='Type Color:',
         )
         
-        self.chosen_metric = widgets.Dropdown(
+        self.metric_menu = widgets.Dropdown(
             options= [(i, idx) for idx, i in enumerate(self.mesh.simplex_metrics.keys())],
             value=0,
             description='Metric:',
             layout=self.invisibleLayout
         )
         
-        self.colorSurface = widgets.ColorPicker(
-                            concise=True,
-                            description='Color surface',
-                            value='#01D4B4',
-                            disabled=False,
-                        )
-        
-        self.colorInside = widgets.ColorPicker(
+        self.color_internal = widgets.ColorPicker(
                             concise=True,
                             description='Color inside',
                             value='#FF9C00',
                             disabled=False,
                         )
         
-        self.itemsColorsLabel = [widgets.ColorPicker(
+        self.color_label_pickers = [widgets.ColorPicker(
                                             concise=True,
                                             description='Label ' + str(i),
                                             value= self.listColor(int(i)),

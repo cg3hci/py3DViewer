@@ -2,18 +2,24 @@ import pythreejs as three
 import ipywidgets as widgets
 from IPython.display import display as ipydisplay
 from .Drawable import Drawable
+from .GUI import GUI
 
 class Viewer(object):
 
-    def __init__(self, geometry, mesh_color = None, width=1000, height=700, reactive=False):
+    def __init__(self, geometry, mesh_color = None, width=1000, height=700, reactive=False, with_gui=False):
         super(Viewer, self).__init__()
         self.drawable = Drawable(geometry, mesh_color = mesh_color, reactive = reactive)
         self.camera = self.__initialize_camera(width, height)
         self.scene = self.__initialize_scene()
         self.controls = self.__initialize_controls()
         self.renderer = self.__initialize_renderer(width, height)
+        if with_gui:
+            self.UI = self.__initialize_GUI(self.drawable)
         self.controls.exec_three_obj_method("update")
-    
+        
+    def __initialize_GUI(self, geometry):
+        return GUI(geometry)
+        
     def __initialize_camera(self, width, height):
         camera_target = self.drawable.center
         camera_position = tuple(camera_target + [0, 0, self.drawable.scale])

@@ -143,7 +143,7 @@ def read_obj(filename):
                 
                 tmp_faces.append([int(f.split("/")[0]) -1 for f in face[1:]]) #Same here with the forward slash
                     
-        tmp_vtx = np.array(tmpVtx)
+        tmp_vtx = np.array(tmp_vtx)
         tmp_faces = np.array(tmp_faces)
         tmp_normals = np.array(tmp_normals)
     

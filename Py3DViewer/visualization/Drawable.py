@@ -10,28 +10,48 @@ class Drawable(Observer):
     
     def __init__(self, geometry, mesh_color = None, reactive = False):
         super(Drawable, self).__init__()
+        self._external_color = colors.teal
+        self._internal_color = colors.orange
         self.geometry = geometry
         self.tri_soup = geometry._three_triangle_soup
         if reactive:
             self.geometry.attach(self)
         self.geometry_color = self.__initialize_geometry_color(mesh_color)
         self.drawable_mesh = self.__initialize_drawable_mesh()
+        
         self.wireframe = self.__initialize_wireframe()
         self.updating = False
         self.queue = False
         
     def __initialize_geometry_color(self, mesh_color):
         if mesh_color is None:
-            color = np.repeat(colors.teal,
+            color = np.repeat(self._external_color,
                              self.geometry.num_triangles,
                              axis=0)
             if hasattr(self.geometry, "internals"):
                 internal_color = self.geometry.internal_triangles_idx()
-                color[internal_color] = colors.orange[0]
+                color[internal_color] = self._internal_color[0]
         
         return color
         
+    def update_internal_color(self, new_color):
+        if hasattr(self.geometry, "internals"):
+            internal_color = self.geometry.internal_triangles_idx()
+            self.geometry_color[internal_color] = new_color
+            colors = self.geometry._as_threejs_colors()
+            new_colors = self.geometry_color[colors]
+            self.drawable_mesh.geometry.attributes['color'].array = new_colors        
+
     
+    def update_external_color(self, new_color):
+        if hasattr(self.geometry, "internals"):
+            internal_color = self.geometry.internal_triangles_idx()
+            self.geometry_color[np.logical_not(internal_color)] = new_color
+        colors = self.geometry._as_threejs_colors()
+        new_colors = self.geometry_color[colors]
+        self.drawable_mesh.geometry.attributes['color'].array = new_colors        
+            
+            
     def __initialize_wireframe(self):
         edges_material = three.LineBasicMaterial(color='#686868', 
                                                         linewidth = 1, 

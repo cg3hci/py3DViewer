@@ -9,7 +9,8 @@ class ObservableArray(np.ndarray, Subject):
        
     def __getitem__(self, index):
         to_return = super(ObservableArray, self).__getitem__(index)
-        to_return._observers = self._observers
+        if hasattr(to_return, "_observers") and hasattr(self, "_observers"):
+            to_return._observers = self._observers
         return to_return
     
     def __repr__(self):
