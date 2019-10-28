@@ -166,7 +166,7 @@ class Quadmesh(AbstractMesh):
             self.faces[(self.faces[:,2] > v_id)] -= np.array([0, 0, 1, 0])
             self.faces[(self.faces[:,3] > v_id)] -= np.array([0, 0, 0, 1])
             
-            vtx_ids[vtx_ids > v_id] -= 1;
+            vtx_ids[vtx_ids > v_id] -= 1
         
         self.__load_operations()
         

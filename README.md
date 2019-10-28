@@ -1,31 +1,28 @@
-# The Py3DViewer project
-G. Cherchi, L. Pitzalis, G. L. Frongia and R. Scateni
+![Py3DViewer Logo](https://github.com/cg3hci/py3DViewer/blob/master/docs/source/logo.png)
 
-University of Cagliari (Italy)
 
 Fast research and prototyping, nowadays, is shifting towards languages that allow interactive execution and quick changes. Python is very widely used for rapid prototyping. Py3DViewer is a new Python library that allows researchers to quickly prototype geometry processing algorithms by interactively editing and viewing meshes. Polygonal and polyhedral meshes are both supported. The library is designed to be used in conjunction with [Jupyter environments](https://jupyter.org), which allow interactive Python code execution and data visualization in a browser, thus opening up the possibility of viewing a mesh while editing the underlying geometry and topology.
 
-**[Documentation]()** | **[Paper]()** | **[Examples]()**
+- [Installation](#installation)
+- [Getting Started](#getting-started) 
+- [Documentation](#documentation)
+- [Deployment](#deployment)
+- [Authors](#authors)
+- [Contributing](#contributing)
+- [Cite Us](#cite-us)
+- [License](#license)
+- [More Informations](#more-information)
 
 --------------------------------------------------------------------------------
 
-## Fast prototyping
-The library is designed to be easy and quick to use in the context of fast prototyping. In the example below it is shown how a mesh can be loaded from a file and drawn in a canvas with just a few linesof code.
-
-```python
-from Py3DViewer import Trimesh
-m = Trimesh('data/goyle.obj')
-m.show()
-```
-
 ## Installation
 
-If you have never used Jupyter, then the first step is to install and configure Jupyer on your computer. You can follow this [guide](https://jupyter.org/install.html) to do it.
+If you have never used Jupyter, then the first step is to install and configure Jupyter on your computer. You can follow this [guide](https://jupyter.org/install.html) to do it.
 
 Py3DViewer can be easily installed with pip:
 
 ```
-pip install py3dviewer
+pip install git+https://github.com/cg3hci/py3DViewer
 ```
 
 Then, install the extension for jupyter notebooks:
@@ -42,15 +39,32 @@ jupyter labextension install @jupyter-widgets/jupyterlab-manager
 jupyter labextension install jupyter-threejs
 ```
 
-Finally, you need to install the Jupyter widgets extension: 
+Finally, you need to install the Jupyter widgets extension for notebooks: 
 
 ```
-pip install ipywidgets
 jupyter nbextension enable --py widgetsnbextension
 ```
+
+Or for jupyter lab:
+```
+jupyter labextension install @jupyter-widgets/jupyterlab-manager
+```
+
+## Getting Started
+
+The library is designed to be easy and quick to use in the context of fast prototyping. In the example below it is shown how a mesh can be loaded from a file and drawn in a canvas with just a few linesof code.
+
+```python
+from Py3DViewer import Trimesh
+m = Trimesh('data/goyle.obj')
+m.show()
+```
+
+More examples are available [here](https://py3dviewer.readthedocs.io/en/latest/notes/getting_started.html)!
+
 ## Documentation
 
-You can find the complete documentation of the library [here]()!
+You can find the complete documentation of the library [here](https://py3dviewer.readthedocs.io)!
 
 ## Deployment
 
@@ -64,20 +78,26 @@ More generally, the library will continously improve in its documentation and ex
 
 One of the most important features we will implement in the near future, is a complete PyTorch support for the data structures and algorithms for the underlying representation, instead of [Numpy](https://numpy.org), if the user so chooses. This feature will allow the library to seamlessly run its algorithms on the GPU, to speed up parallel computations and to allow researchers to easily and efficiently prototype Geometry Processing algorithms and Deep Learning networks.
 
-### Other contributors
+## Authors
+
+Gianmarco Cherchi, Luca Pitzalis, Giovanni Laerte Frongia and Riccardo Scateni
+
+University of Cagliari (Italy)
+
+### Other Contributors
 
 Giampaolo Perelli (University of Cagliari).
 
-### Contributing
+## Contributing
 
 Pull requests are welcome! 
 For major changes, please open an issue first to discuss what you would like to change. 
 
-## Cite
+## Cite Us
 
 Please cite our [paper]() if you use the Py3DViewer in your own work:
 
-```
+```bibtex
 @inproceedings{py3dviewer2019,
   title={{The Py3DViewer project}: a Python library for fast prototyping in geometry processing},
   author={Cherchi, Gianmarco and Pitzalis, Luca and Frogia, Giovanni L. and Scateni, Riccardo},
@@ -91,6 +111,6 @@ Please cite our [paper]() if you use the Py3DViewer in your own work:
 
 This project is licensed under the MIT License - see the [LICENSE.md](https://github.com/cg3hci/py3DViewer/blob/master/LICENSE) file for details.
 
-## Information
+## More Information
 
 For other information you can contact one of the main developers of the library: G. Cherchi (g.cherchi@unica.it), L. Pitzalis (luca.pitzalis94@unica.it) and G. L. Frongia (giovannil.frongia@unica.it).

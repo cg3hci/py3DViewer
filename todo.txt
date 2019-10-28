@@ -1,8 +1,0 @@
-BUGS:
-
-- Nel viewer, non appare la geometria finché non viene cliccato almeno una volta. Controllare bene la creazione della scena e la posizione iniziale della camera.
-- Nelle tetmesh, nel calcolo del boundary, l'implementazione naive del cut dei tet interni sembra funzionare solo parzialmente, levando molta geometria ma lasciandone altra. Meglio controllare.
-- Rendere asincrono il calcolo delle adiacenze che non sono simplex2simplex
-- Provare a migliorare la performance del calcolo delle adiacenze
-- Quando si passa la geometria a threejs, cercare di normalizzare la scala della mesh, per consistenza
-- Fixare la rotazione

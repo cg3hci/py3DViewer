@@ -16,9 +16,7 @@ mesh cutting along an axis, color selection, quality visualization and more.
    :caption: Notes
 
    notes/installation
-   notes/introduction
-   notes/work_with_files
-   notes/work_with_raw_data
+   notes/getting_started
 
 .. toctree::
    :glob:

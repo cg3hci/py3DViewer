@@ -1,0 +1,5 @@
+numpy
+pythreejs
+ipywidgets
+sphinx
+sphinx_rtd_theme
