@@ -45,9 +45,6 @@ class Trimesh(AbstractMesh):
                 self.labels = ObservableArray(labels.shape)
                 self.labels[:] = labels
                 self.labels.attach(self)
-            
-        else:
-            print('Warning: Empty Trimesh object')
          
     
     # ==================== METHODS ==================== #    

@@ -46,10 +46,6 @@ class Quadmesh(AbstractMesh):
                             
             self.__load_operations()
         
-        else:
-            
-            print('Warning: Empty Quadmesh object')
-            
         
 # ==================== METHODS ==================== #     
     

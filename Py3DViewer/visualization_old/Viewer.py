@@ -12,7 +12,7 @@ class Viewer:
         self.mesh = mesh
         self.scene = None
         self.__UI = UI
-        self.width = width
+        self.width = widt
         self.height = height
         
         if 'Skeleton' in str(type(mesh)):

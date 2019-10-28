@@ -38,6 +38,7 @@ class AbstractMesh(Observer, Subject):
         self.vertices            = None #npArray (Nx3)
         self.vtx_normals         = None #npArray (Nx3) ## Is this used by volumetric meshes? Consider moving it inside surface meshes only
         self.faces               = None #npArray (NxM)
+        self._three_triangle_soup = False
         self.__vtx2face          = None #npArray (NxM)
         self.__vtx2vtx           = None #npArray (Nx1)
         self.__bounding_box      = None #npArray (2x3)
@@ -54,7 +55,15 @@ class AbstractMesh(Observer, Subject):
     # ==================== METHODS ==================== #
     
         
-
+    def copy(self):
+        """
+        Remember to add that this doesn't copy observer, and this is a value copy"""
+        copy = type(self)()
+        for key in self.__dict__.keys():
+            if "observer" not in key:
+                setattr(copy, key, getattr(self, key))
+        return copy
+        
     def update(self):
         self.__boundary_needs_update = True
         self._notify()

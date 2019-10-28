@@ -30,6 +30,7 @@ class Hexmesh(AbstractMesh):
         self.__internal_hexes = None
         
         super(Hexmesh, self).__init__()
+        self._three_triangle_soup = True
         
         if filename is not None:
             
@@ -52,9 +53,6 @@ class Hexmesh(AbstractMesh):
             
             self.__load_operations()
         
-        else:
-            print('Warning: Empty Hexmesh object')
-         
     
     # ==================== METHODS ==================== #
     
@@ -343,6 +341,10 @@ class Hexmesh(AbstractMesh):
         boundaries = np.c_[boundaries[:,:3], boundaries[:,2:], boundaries[:,0]]
         boundaries.shape = (-1, 3)
         return boundaries.astype("uint32").flatten()
+    
+    def internal_triangles_idx(self):
+        internal_triangles = np.repeat(self.internals, 12*3, axis=0)
+        return internal_triangles
     
     def _as_threejs_colors(self):
         return np.repeat(self.boundary()[1], 6)
