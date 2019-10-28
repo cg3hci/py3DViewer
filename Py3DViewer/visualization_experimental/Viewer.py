@@ -43,6 +43,7 @@ class Viewer(object):
 
     def update(self):
         self.drawable.update()
+        self.renderer.render()
     
     def show(self):
         ipydisplay(self.renderer)

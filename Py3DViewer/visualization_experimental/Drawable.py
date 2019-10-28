@@ -26,13 +26,13 @@ class Drawable(Observer):
                              axis=0)
 
     def __initialize_wireframe(self):
-            edges_material = three.LineBasicMaterial(color='#686868', 
+        edges_material = three.LineBasicMaterial(color='#686868', 
                                                         linewidth = 1, 
                                                         depthTest=True, 
                                                         opacity=.2,
-                                                        transparent=True)
-            wireframe = self.__get_wireframe_from_boundary()
-            return three.LineSegments(wireframe, material = edges_material, type = 'LinePieces')
+                                                        transparent=False)
+        wireframe = self.__get_wireframe_from_boundary()
+        return three.LineSegments(wireframe, material = edges_material)
 
 
     def __get_wireframe_from_boundary(self): 
@@ -43,7 +43,9 @@ class Drawable(Observer):
         
     def __get_drawable_from_boundary(self):
         geometry_attributes = {
-            'position': three.BufferAttribute(self.geometry.as_triangles_flat(), normalized = False, dynamic=True),
+            #'position': three.BufferAttribute(self.geometry.as_triangles_flat(), normalized = False, dynamic=True),
+            'position': three.BufferAttribute(self.geometry.vertices, normalized = False, dynamic = True),
+            'index' : three.BufferAttribute(self.geometry.as_triangles(), normalized = False, dynamic = True),
             'color': three.BufferAttribute(self.geometry_color[self.geometry._as_threejs_colors()], normalized = False, dynamic=True)}
         drawable_geometry = three.BufferGeometry(attributes = geometry_attributes)
         drawable_geometry.exec_three_obj_method("computeVertexNormals")
@@ -57,11 +59,11 @@ class Drawable(Observer):
                                            polygonOffsetFactor=1,
                                            polygonOffsetUnits=1,
                                            flatShading = True,
-                                           color = "white",
-                                           opacity = 1.,
-                                           transparent = False,
-                                           side = 'FrontSide',
-                                           wireframe=False,
+                                           #color = "white",
+                                           #opacity = 1.,
+                                           #transparent = False,
+                                           side = 'DoubleSide',
+                                           #wireframe=False,
                                            vertexColors = 'FaceColors',
                                           )
         return three.Mesh(
@@ -70,18 +72,14 @@ class Drawable(Observer):
             position=[0, 0, 0]
         )
 
-    def __dispose_buffers(self, buffer_dict):
-        keys = list(buffer_dict.keys())
-        length = len(keys)
-        for i in range(length-5):
-            el = buffer_dict.pop(keys[i])
-            print(el)
-            
     def run(self):
-        self.wireframe.geometry.attributes['position'].array = self.geometry.as_edges_flat()
-        self.drawable_mesh.geometry.attributes['color'] .array = self.geometry_color[self.geometry._as_threejs_colors()]
-        self.drawable_mesh.geometry.attributes['position'] .array = self.geometry.as_triangles_flat()
-        self.drawable_mesh.geometry.exec_three_obj_method("computeVertexNormals")
+        edges = self.geometry.as_edges_flat()
+        tris = self.geometry.as_triangles()
+        colors = self.geometry._as_threejs_colors()
+        self.wireframe.geometry.attributes['position'].array = edges
+        self.drawable_mesh.geometry.attributes['color'].array = self.geometry_color[colors]
+        self.drawable_mesh.geometry.attributes['index'].array = tris
+        #self.drawable_mesh.geometry.exec_three_obj_method("computeVertexNormals") Why does this cause index attribute to disappear!?
         if self.queue:
             self.queue = False
             self.updating = False
@@ -91,11 +89,10 @@ class Drawable(Observer):
         
     def update(self):
         if (not self.updating):
-            self.geometry.boundary() #Why will this line make everything work?
             self.updating=True
             thread = threading.Thread(target=self.run, args=())
-            thread.daemon = True                            # Daemonize thread
-            thread.start()                                  # Start the execution
+            thread.daemon = True
+            thread.start()
         else:
             self.queue = True
         
