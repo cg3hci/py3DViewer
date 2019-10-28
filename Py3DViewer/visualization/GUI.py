@@ -87,7 +87,7 @@ class GUI(Observer):
         )
         self.widgets += [self.clipping_slider_z]
         
-        
+        """
         self.wireframe_thickness_slider = widgets.FloatSlider(
                         value=0.2,
                         min=0.,
@@ -99,14 +99,15 @@ class GUI(Observer):
                         disable = False,
                 )
         self.widgets += [self.wireframe_thickness_slider]
+        """
 
-        self.wireframe_color_picker = widgets.ColorPicker(
+        self.color_wireframe = widgets.ColorPicker(
                             concise=True,
                             description='Wireframe Color',
-                            value='#686868',
+                            value=self.drawable.wireframe.material.color,
                             disabled=False,
                         )
-        self.widgets += [self.wireframe_color_picker]
+        self.widgets += [self.color_wireframe]
         
         self.color_map = widgets.Dropdown(
             options=[(i, idx) for idx, i in enumerate(ColorMap.color_maps.keys())],
@@ -164,10 +165,15 @@ class GUI(Observer):
         self.clipping_slider_z.observe(self.__update_clipping, names='value')
         self.color_internal.observe(self.__update_internal_color, names='value')
         self.color_external.observe(self.__update_external_color, names='value')
+        self.color_wireframe.observe(self.__update_wireframe_color, names='value')
+        #self.wireframe_thickness_slider.observe(self.__update_wireframe_thickness, names='value')
         
         for widget in self.widgets:
             ipydisplay(widget)
             
+            
+    def __update_wireframe_color(self, change): 
+        self.drawable.update_wireframe_color(self.color_wireframe.value)
             
     def __update_internal_color(self, change): 
         self.drawable.update_internal_color(colors.hex2rgb(self.color_internal.value))

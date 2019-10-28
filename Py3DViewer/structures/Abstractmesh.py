@@ -1,6 +1,7 @@
 import numpy as np
 from ..visualization import Viewer
 from ..utils import Subject, Observer
+import copy
 
 class Clipping(object):
             
@@ -58,11 +59,11 @@ class AbstractMesh(Observer, Subject):
     def copy(self):
         """
         Remember to add that this doesn't copy observer, and this is a value copy"""
-        copy = type(self)()
+        new = type(self)()
         for key in self.__dict__.keys():
             if "observer" not in key:
-                setattr(copy, key, getattr(self, key))
-        return copy
+                setattr(new, key, copy.deepcopy(getattr(self, key)))
+        return new
         
     def update(self):
         self.__boundary_needs_update = True
