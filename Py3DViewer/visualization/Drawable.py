@@ -37,47 +37,61 @@ class Drawable(Observer):
     def update_wireframe_color(self, new_color):
         self.wireframe.material.color = new_color
         
+    def update_wireframe_opacity(self, new_opacity):
+        self.wireframe.material.opacity = new_opacity
+        
     def update_internal_color(self, new_color):
         if hasattr(self.geometry, "internals"):
             internal_color = self.geometry.internal_triangles_idx()
             self.geometry_color[internal_color] = new_color
             colors = self.geometry._as_threejs_colors()
             new_colors = self.geometry_color[colors]
-            self.drawable_mesh.geometry.attributes['color'].array = new_colors        
+            if (self.tri_soup):
+                interleaved = np.concatenate((self.geometry.as_triangles_flat(), new_colors), axis=1)
+                self.drawable_mesh.geometry.attributes['color'].data.array = interleaved
+            else:
+                self.drawable_mesh.geometry.attributes['color'].array = new_colors        
 
-    
     def update_external_color(self, new_color):
         if hasattr(self.geometry, "internals"):
             internal_color = self.geometry.internal_triangles_idx()
             self.geometry_color[np.logical_not(internal_color)] = new_color
         colors = self.geometry._as_threejs_colors()
         new_colors = self.geometry_color[colors]
-        self.drawable_mesh.geometry.attributes['color'].array = new_colors        
-            
+        if (self.tri_soup):
+            interleaved = np.concatenate((self.geometry.as_triangles_flat(), new_colors), axis=1)
+            self.drawable_mesh.geometry.attributes['color'].data.array = interleaved
+        else:
+            self.drawable_mesh.geometry.attributes['color'].array = new_colors        
             
     def __initialize_wireframe(self):
         edges_material = three.LineBasicMaterial(color='#686868', 
                                                         linewidth = 1, 
                                                         depthTest=True, 
                                                         opacity=.2,
-                                                        transparent=False)
+                                                        transparent=True)
         wireframe = self.__get_wireframe_from_boundary()
         return three.LineSegments(wireframe, material = edges_material)
 
     def __get_drawable_from_boundary(self):
         geometry_attributes = {}
         if (self.tri_soup):
-            geometry_attributes['position'] = self.__as_buffer_attr(self.geometry.as_triangles_flat())
+            tris = self.geometry.as_triangles_flat().astype(np.float32)
+            new_colors = self.geometry_color[self.geometry._as_threejs_colors()].astype(np.float32)
+            interleaved_array = np.concatenate((tris, new_colors), axis=1)
+            buffer = three.InterleavedBuffer(array = interleaved_array, stride = 3)
+            geometry_attributes['position'] = three.InterleavedBufferAttribute(data=buffer, itemSize=3, dynamic = True)
+            geometry_attributes['color'] = three.InterleavedBufferAttribute(data=buffer, itemSize=3, offset=3, dynamic=True)
+            drawable_geometry = three.BufferGeometry(attributes = geometry_attributes)
+            #drawable_geometry.exec_three_obj_method("computeVertexNormals")
+            return drawable_geometry
         else:
             geometry_attributes['position'] = self.__as_buffer_attr(self.geometry.vertices)
             geometry_attributes['index'] = self.__as_buffer_attr(self.geometry.as_triangles())
             geometry_attributes['normal'] = self.__as_buffer_attr(self.geometry.vtx_normals)
-        if (self.geometry.vtx_normals is not None and self.geometry.vtx_normals.size > 0):
-            geometry_attributes['normal'] = self.__as_buffer_attr(self.geometry.vtx_normals)
-        geometry_attributes['color'] = self.__as_buffer_attr(self.geometry_color[self.geometry._as_threejs_colors()])
-        drawable_geometry = three.BufferGeometry(attributes = geometry_attributes)
-        if (self.tri_soup):
-            drawable_geometry.exec_three_obj_method("computeVertexNormals")
+            geometry_attributes['color'] = self.__as_buffer_attr(self.geometry_color[self.geometry._as_threejs_colors()])
+            drawable_geometry = three.BufferGeometry(attributes = geometry_attributes)
+            return drawable_geometry
             
         return drawable_geometry
     
@@ -117,13 +131,14 @@ class Drawable(Observer):
         self.wireframe.geometry.attributes['position'].array = edges
         if (self.tri_soup):
             tris = geometry.as_triangles_flat()
-            self.drawable_mesh.geometry.attributes['position'].array = tris
-            self.drawable_mesh.geometry.exec_three_obj_method("computeVertexNormals") 
+            interleaved_array = np.concatenate((tris, new_colors), axis=1)
+            self.drawable_mesh.geometry.attributes['position'].data.array = interleaved_array
+            #self.drawable_mesh.geometry.exec_three_obj_method("computeVertexNormals") 
         else:
             tris = geometry.as_triangles()
             self.drawable_mesh.geometry.attributes['index'].array = tris
+            self.drawable_mesh.geometry.attributes['color'].array = new_colors
             #self.drawable_mesh.geometry.exec_three_obj_method("computeVertexNormals") #Why does this cause index attribute to disappear!?
-        self.drawable_mesh.geometry.attributes['color'].array = new_colors
         if self.queue:
             self.queue = False
             self.updating = False

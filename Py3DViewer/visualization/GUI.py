@@ -87,19 +87,17 @@ class GUI(Observer):
         )
         self.widgets += [self.clipping_slider_z]
         
-        """
-        self.wireframe_thickness_slider = widgets.FloatSlider(
+        self.wireframe_opacity_slider = widgets.FloatSlider(
                         value=0.2,
                         min=0.,
                         max=1.,
                         step=0.1,
                         continuous_update=True,
                         readout_format=".1f",
-                        description = 'Wireframe',
+                        description = 'Wireframe Opacity',
                         disable = False,
                 )
-        self.widgets += [self.wireframe_thickness_slider]
-        """
+        self.widgets += [self.wireframe_opacity_slider]
 
         self.color_wireframe = widgets.ColorPicker(
                             concise=True,
@@ -166,6 +164,7 @@ class GUI(Observer):
         self.color_internal.observe(self.__update_internal_color, names='value')
         self.color_external.observe(self.__update_external_color, names='value')
         self.color_wireframe.observe(self.__update_wireframe_color, names='value')
+        self.wireframe_opacity_slider.observe(self.__update_wireframe_opacity, names='value')
         #self.wireframe_thickness_slider.observe(self.__update_wireframe_thickness, names='value')
         
         for widget in self.widgets:
@@ -175,6 +174,9 @@ class GUI(Observer):
     def __update_wireframe_color(self, change): 
         self.drawable.update_wireframe_color(self.color_wireframe.value)
             
+    def __update_wireframe_opacity(self, change): 
+        self.drawable.update_wireframe_opacity(self.wireframe_opacity_slider.value)
+        
     def __update_internal_color(self, change): 
         self.drawable.update_internal_color(colors.hex2rgb(self.color_internal.value))
             

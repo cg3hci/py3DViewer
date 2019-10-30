@@ -23,7 +23,7 @@ class Viewer(object):
     def __initialize_camera(self, width, height):
         camera_target = self.drawable.center
         camera_position = tuple(camera_target + [0, 0, self.drawable.scale])
-        directional_light = three.DirectionalLight(color = '#ffffff', position = [0, 10, 0], intensity = 0.5)
+        directional_light = three.DirectionalLight(color = '#ffffff', position = [0, 10, 0], intensity = 1)
         camera = three.PerspectiveCamera(
             position=camera_position, aspect=width/height, lookAt=camera_target, fov=50, near=.1, far=10000,
             children=[directional_light]
@@ -31,7 +31,7 @@ class Viewer(object):
         return camera
     
     def __initialize_scene(self):
-        scene = three.Scene(children=[three.AmbientLight(color='white'),
+        scene = three.Scene(children=[three.AmbientLight(color='white', intensity=1),
                                       self.camera,
                                       self.drawable.drawable_mesh,
                                       self.drawable.wireframe])
