@@ -8,8 +8,13 @@ class ObservableArray(np.ndarray, Subject):
         np.ndarray.__init__(self)
        
     def _notify(self, to_return):
+        """
         if hasattr(to_return, "_observers") and hasattr(self, "_observers"):
             Subject._notify()
+        else:
+            print("Error! No observers found")
+        """
+        Subject._notify(self)
         
     def __getitem__(self, index):
         to_return = super(ObservableArray, self).__getitem__(index)

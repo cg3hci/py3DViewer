@@ -50,12 +50,14 @@ class Drawable(Observer):
                 interleaved = np.concatenate((self.geometry.as_triangles_flat(), new_colors), axis=1)
                 self.drawable_mesh.geometry.attributes['color'].data.array = interleaved
             else:
-                self.drawable_mesh.geometry.attributes['color'].array = new_colors        
+                self.drawable_mesh.geometry.attributes['color'].array = new_colors
 
     def update_external_color(self, new_color):
         if hasattr(self.geometry, "internals"):
             internal_color = self.geometry.internal_triangles_idx()
             self.geometry_color[np.logical_not(internal_color)] = new_color
+        else:
+            self.geometry_color[:] = new_color
         colors = self.geometry._as_threejs_colors()
         new_colors = self.geometry_color[colors]
         if (self.tri_soup):
@@ -114,7 +116,7 @@ class Drawable(Observer):
                                            color = "white",
                                            opacity = 1.,
                                            transparent = False,
-                                           side = 'DoubleSide',
+                                           side = 'FrontSide',
                                            wireframe=False,
                                            vertexColors = 'FaceColors',
                                           )
