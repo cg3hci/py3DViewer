@@ -1,6 +1,8 @@
 from .Abstractmesh import AbstractMesh
 import numpy as np
 from ..utils import IO
+from ..utils.load_operations import compute_surface_mesh_adjs as compute_adjacencies
+from ..utils.load_operations import compute_vertex_normals, compute_face_normals
 from ..utils.metrics import quad_area, quad_aspect_ratio
 
 class Quadmesh(AbstractMesh):
@@ -171,73 +173,23 @@ class Quadmesh(AbstractMesh):
         self.__load_operations()
         
 
+        
+    
     def __load_operations(self):
         
-        self.__compute_adjacencies()
-        self._AbstractMesh__update_bounding_box()        
-        self.reset_clipping()
-        self.__compute_face_normals()
-        self.__compute_vertex_normals()
-        self.__compute_metrics()
-        
-        
-    def __compute_adjacencies(self):
-        
-        map_ = dict()
-        adjs =  np.zeros((self.num_faces, 4))-1
-        vtx2vtx = [[] for i in range(self.num_vertices)]
-        vtx2face = [[] for i in range(self.num_vertices)]
-
-
         edges = np.c_[self.faces[:,0], self.faces[:,1], 
                       self.faces[:,1], self.faces[:,2], 
                       self.faces[:,2], self.faces[:,3], 
                       self.faces[:,3], self.faces[:,0]]
         edges.shape = (-1, 2)
-        faces_idx = np.repeat(np.array(range(self.num_faces)), 4)
-
-        for e, f in zip(edges, faces_idx):
-            
-            vtx2vtx[e[0]].append(e[1])
-            vtx2face[e[0]].append(f)
-            vtx2face[e[1]].append(f)
-            e = (e[0], e[1])
-
-            try:
-                tmp = map_[e]
-            except KeyError:
-                tmp = None
-
-            if tmp is None:
-                map_[(e[1], e[0])] = f
-            else:
-                idx_to_append1 = np.where(adjs[f] == -1)[0][0]
-                idx_to_append2 = np.where(adjs[map_[e]] == -1)[0][0]
-                adjs[f][idx_to_append1] = map_[e]
-                adjs[map_[e]][idx_to_append2] = f
-
-        self.__face2face = adjs
-        self._AbstractMesh__vtx2vtx = np.array([np.array(a) for a in vtx2vtx])
-        self._AbstractMesh__vtx2face = np.array([np.unique(np.array(a)) for a in vtx2face])
-
-    
-    def __compute_face_normals(self):
         
-        e1_v = self.vertices[self.faces][:,1] - self.vertices[self.faces][:,0]
-        e2_v = self.vertices[self.faces][:,2] - self.vertices[self.faces][:,0]
+        self.__face2face, self._AbstractMesh__vtx2vtx, self._AbstractMesh__vtx2face = compute_adjacencies(edges, self.num_vertices, self.faces.shape[1])
+        self._AbstractMesh__update_bounding_box()        
+        self.reset_clipping()
+        self.face_normals = compute_face_normals(self.vertices, self.faces, quad=True)
+        self.vtx_normals  = compute_vertex_normals(self.face_normals, self.vtx2face)
+        self.__compute_metrics()   
         
-        self.face_normals = np.cross(e1_v, e2_v)
-        norm = np.linalg.norm(self.face_normals, axis=1)
-        norm.shape = (-1,1)
-        self.face_normals /= norm
-        
-        
-    def __compute_vertex_normals(self):
-        
-        self.vtx_normals = np.array([np.mean(self.face_normals[v2f], axis=0) for v2f in self.vtx2face])
-        norm = np.linalg.norm(self.vtx_normals, axis=1)
-        norm.shape = (-1,1)
-        self.vtx_normals = self.vtx_normals / norm
         
         
     def __load_from_file(self, filename):
