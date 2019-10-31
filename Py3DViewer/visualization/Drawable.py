@@ -116,7 +116,7 @@ class Drawable(Observer):
                                            color = "white",
                                            opacity = 1.,
                                            transparent = False,
-                                           side = 'FrontSide',
+                                           side = 'DoubleSide',
                                            wireframe=False,
                                            vertexColors = 'FaceColors',
                                           )
