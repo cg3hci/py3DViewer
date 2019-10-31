@@ -14,13 +14,23 @@ class ObservableArray(np.ndarray, Subject):
         else:
             print("Error! No observers found")
         """
-        Subject._notify(self)
+        if to_return is not None:
+            if (hasattr(self, "_observers")):
+                to_return._observers = self._observers
+            Subject._notify(self)
         
     def __getitem__(self, index):
         to_return = super(ObservableArray, self).__getitem__(index)
-        if hasattr(to_return, "_observers") and hasattr(self, "_observers"):
+        if hasattr(self, "_observers") and type(to_return) is not ObservableArray:
+            tmp = ObservableArray(to_return.shape)
+            tmp[:] = to_return
+            tmp._observers = self._observers
+            return tmp
+        elif hasattr(self, "_observers") and not hasattr(to_return, "_observers"):
             to_return._observers = self._observers
-        return to_return
+            return to_return
+        else:
+            return to_return
     
     def __repr__(self):
         to_return = repr(np.asarray(self))

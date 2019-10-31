@@ -82,13 +82,14 @@ class Trimesh(AbstractMesh):
     
         """
             
+        self._dont_update = True
         new_faces = np.array(new_faces)
         new_faces.shape = (-1,3)
                 
         if new_faces[(new_faces[:,0] > self.num_vertices) | 
                      (new_faces[:,1] > self.num_vertices) | 
                      (new_faces[:,2] > self.num_vertices)].shape[0] > self.num_vertices:
-            raise Exception('The Id of a vertex must be lesser than the number of vertices')
+            raise Exception('The id of a vertex must be less than the number of vertices')
 
         self.faces = np.concatenate([self.faces, new_faces])
         self.__load_operations()
@@ -118,7 +119,7 @@ class Trimesh(AbstractMesh):
             face_ids (Array (Nx1 / 1xN) type=int): List of faces to remove. Each face is in the form [int]
     
         """
-        
+        self._dont_update = True 
         face_ids = np.array(face_ids)
         mask = np.ones(self.num_faces)
         mask[face_ids] = 0
@@ -151,6 +152,7 @@ class Trimesh(AbstractMesh):
             vtx_ids (Array (Nx1 / 1xN) type=int): List of vertices to remove. Each vertex is in the form [int]
     
         """ 
+        self._dont_update = True
         vtx_ids = np.array(vtx_ids)
         
         for v_id in vtx_ids:
@@ -164,12 +166,16 @@ class Trimesh(AbstractMesh):
             self.faces[(self.faces[:,1] > v_id)] -= np.array([0, 1, 0])
             self.faces[(self.faces[:,2] > v_id)] -= np.array([0, 0, 1])
             
-            vtx_ids[vtx_ids > v_id] -= 1;
+            vtx_ids[vtx_ids > v_id] -= 1
+        
             
         self.__load_operations()
         
         
     def __load_operations(self):
+        self._dont_update = True
+        self._AbstractMesh__boundary_needs_update = True
+        self._AbstractMesh__simplex_centroids = None
         
         edges = np.c_[self.faces[:,0], self.faces[:,1], 
                       self.faces[:,1], self.faces[:,2], 
@@ -185,6 +191,8 @@ class Trimesh(AbstractMesh):
         self.vtx_normals  = compute_vertex_normals(self.face_normals, self.vtx2face)
         self.__compute_metrics()
     
+        self._dont_update = False
+        self.update()
     
        
         
@@ -235,6 +243,7 @@ class Trimesh(AbstractMesh):
         Compute the boundary of the current mesh. It only returns the faces that are inside the clipping
         """
         if (self._AbstractMesh__boundary_needs_update):
+            print("Recalculating boundary")
             clipping_range = super(Trimesh, self).boundary()
             self._AbstractMesh__boundary_cached = clipping_range
             self._AbstractMesh__boundary_needs_update = False
@@ -266,7 +275,7 @@ class Trimesh(AbstractMesh):
 
     @property
     def visibleFaces(self):
-        return self.boundary[0]
+        return self.boundary()[0]
         
     @property
     def simplex_centroids(self):

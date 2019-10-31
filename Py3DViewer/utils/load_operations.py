@@ -4,7 +4,7 @@ from numba.types import Tuple, ListType as LT
 import numpy as np
 
 
-@njit(Tuple((int64[:,::1],LT(LT(int64)),LT(LT(int64))))(int64[:,::1], int64, int64))
+@njit(Tuple((int64[:,::1],LT(LT(int64)),LT(LT(int64))))(int64[:,::1], int64, int64), cache=True)
 def compute_surface_mesh_adjs(edges, num_vertices, edges_per_face):
         
     num_faces = edges.shape[0]//edges_per_face
@@ -56,7 +56,7 @@ def compute_surface_mesh_adjs(edges, num_vertices, edges_per_face):
     return adjs, vtx2vtx, vtx2face 
 
 
-@njit(Tuple((int64[:,::1],LT(LT(int64)),LT(LT(int64))))(int64[:,::1], int64))
+@njit(Tuple((int64[:,::1],LT(LT(int64)),LT(LT(int64))))(int64[:,::1], int64), cache=True)
 def compute_tet_mesh_adjs(faces, num_vertices):
         
     num_poly = faces.shape[0]//4
@@ -145,7 +145,7 @@ def compute_tet_mesh_adjs(faces, num_vertices):
        
     return adjs, vtx2vtx, vtx2poly   
 
-@njit(Tuple((int64[:,::1],LT(LT(int64)),LT(LT(int64))))(int64[:,::1], int64))
+@njit(Tuple((int64[:,::1],LT(LT(int64)),LT(LT(int64))))(int64[:,::1], int64), cache=True)
 def compute_hex_mesh_adjs(faces, num_vertices):
         
     num_poly = faces.shape[0]//6
@@ -250,7 +250,7 @@ def compute_hex_mesh_adjs(faces, num_vertices):
     return adjs, vtx2vtx, vtx2poly   
 
 
-@njit(Tuple((int64[:,::1],LT(LT(int64)),LT(LT(int64))))(int64[:,::1], int64))
+@njit(Tuple((int64[:,::1],LT(LT(int64)),LT(LT(int64))))(int64[:,::1], int64), cache=True)
 def compute_hex_mesh_adjs(faces, num_vertices):
         
     num_poly = faces.shape[0]//6
@@ -370,7 +370,7 @@ def compute_face_normals(vertices, faces, quad=False):
 
 
 
-@njit(float64[:,::1](float64[:,::1], LT(LT(int64))))
+@njit(float64[:,::1](float64[:,::1], LT(LT(int64))), cache=True)
 def compute_vertex_normals(face_normals, vtx2face):
 
     mean = np.zeros((1, 3), dtype=np.float64)

@@ -23,14 +23,19 @@ class Drawable(Observer):
         self.updating = False
         self.queue = False
         
-    def __initialize_geometry_color(self, mesh_color):
+    def __initialize_geometry_color(self, mesh_color, geometry = None):
+        if geometry is None:
+            geometry = self.geometry
         if mesh_color is None:
-            color = np.repeat(self._external_color,
-                             self.geometry.num_triangles,
-                             axis=0)
-            if hasattr(self.geometry, "internals"):
-                internal_color = self.geometry.internal_triangles_idx()
-                color[internal_color] = self._internal_color[0]
+            if (self.tri_soup):
+                color = np.repeat(self._external_color.reshape(1, 3),
+                             geometry.num_triangles*3, axis=0
+                             )
+                if hasattr(self.geometry, "internals"):
+                    internal_color = geometry.internal_triangles_idx()
+                    color[internal_color] = self._internal_color
+            else:
+                color = np.repeat(self._external_color.reshape(1, 3), geometry.num_vertices, axis=0)
         
         return color
         
@@ -40,31 +45,44 @@ class Drawable(Observer):
     def update_wireframe_opacity(self, new_opacity):
         self.wireframe.material.opacity = new_opacity
         
-    def update_internal_color(self, new_color):
-        if hasattr(self.geometry, "internals"):
-            internal_color = self.geometry.internal_triangles_idx()
-            self.geometry_color[internal_color] = new_color
-            colors = self.geometry._as_threejs_colors()
+    def update_internal_color(self, new_color, geometry = None):
+        if geometry is None:
+            geometry = self.geometry
+        self._internal_color = np.array(new_color)
+        if (self.tri_soup):
+            if hasattr(geometry, "internals"):
+                internal_color = geometry.internal_triangles_idx()
+                self.geometry_color[internal_color] = new_color
+                colors = geometry._as_threejs_colors()
+                new_colors = self.geometry_color[colors]
+                if (self.tri_soup):
+                    interleaved = np.concatenate((geometry.as_triangles_flat(), new_colors), axis=1)
+                    self.drawable_mesh.geometry.attributes['color'].data.array = interleaved
+                else:
+                    self.drawable_mesh.geometry.attributes['color'].array = new_colors
+
+
+    def update_external_color(self, new_color, geometry = None):
+        if geometry is None:
+            geometry = self.geometry
+        self._external_color = np.array(new_color)
+        if (self.tri_soup):
+            if hasattr(geometry, "internals"):
+                internal_color = geometry.internal_triangles_idx()
+                self.geometry_color[np.logical_not(internal_color)] = new_color
+            else:
+                self.geometry_color[:] = new_color
+            colors = geometry._as_threejs_colors()
             new_colors = self.geometry_color[colors]
             if (self.tri_soup):
-                interleaved = np.concatenate((self.geometry.as_triangles_flat(), new_colors), axis=1)
+                interleaved = np.concatenate((geometry.as_triangles_flat(), new_colors), axis=1)
                 self.drawable_mesh.geometry.attributes['color'].data.array = interleaved
             else:
-                self.drawable_mesh.geometry.attributes['color'].array = new_colors
-
-    def update_external_color(self, new_color):
-        if hasattr(self.geometry, "internals"):
-            internal_color = self.geometry.internal_triangles_idx()
-            self.geometry_color[np.logical_not(internal_color)] = new_color
+                self.drawable_mesh.geometry.attributes['color'].array = new_colors        
         else:
             self.geometry_color[:] = new_color
-        colors = self.geometry._as_threejs_colors()
-        new_colors = self.geometry_color[colors]
-        if (self.tri_soup):
-            interleaved = np.concatenate((self.geometry.as_triangles_flat(), new_colors), axis=1)
-            self.drawable_mesh.geometry.attributes['color'].data.array = interleaved
-        else:
-            self.drawable_mesh.geometry.attributes['color'].array = new_colors        
+            self.drawable_mesh.geometry.attributes['color'].array = self.geometry_color
+            
             
     def __initialize_wireframe(self):
         edges_material = three.LineBasicMaterial(color='#686868', 
@@ -91,7 +109,7 @@ class Drawable(Observer):
             geometry_attributes['position'] = self.__as_buffer_attr(self.geometry.vertices)
             geometry_attributes['index'] = self.__as_buffer_attr(self.geometry.as_triangles())
             geometry_attributes['normal'] = self.__as_buffer_attr(self.geometry.vtx_normals)
-            geometry_attributes['color'] = self.__as_buffer_attr(self.geometry_color[self.geometry._as_threejs_colors()])
+            geometry_attributes['color'] = self.__as_buffer_attr(self.geometry_color)
             drawable_geometry = three.BufferGeometry(attributes = geometry_attributes)
             return drawable_geometry
             
@@ -128,18 +146,19 @@ class Drawable(Observer):
 
     def run(self, geometry):
         edges = geometry.as_edges_flat()
-        colors = geometry._as_threejs_colors()
-        new_colors = self.geometry_color[colors]
         self.wireframe.geometry.attributes['position'].array = edges
+        self.geometry_color = self.__initialize_geometry_color(None, geometry)
         if (self.tri_soup):
-            tris = geometry.as_triangles_flat()
-            interleaved_array = np.concatenate((tris, new_colors), axis=1)
-            self.drawable_mesh.geometry.attributes['position'].data.array = interleaved_array
-            #self.drawable_mesh.geometry.exec_three_obj_method("computeVertexNormals") 
+            self.update_internal_color(self._internal_color, geometry)
+            self.update_external_color(self._external_color, geometry)
+            #self.drawable_mesh.geometry.exec_three_obj_method("computeVertexNormals")
         else:
             tris = geometry.as_triangles()
+            self.drawable_mesh.geometry.attributes['position'].array = geometry.vertices
+            self.drawable_mesh.geometry.attributes['normal'].array = geometry.vtx_normals
             self.drawable_mesh.geometry.attributes['index'].array = tris
-            self.drawable_mesh.geometry.attributes['color'].array = new_colors
+            self.update_internal_color(self._internal_color, geometry)
+            self.update_external_color(self._external_color, geometry)
             #self.drawable_mesh.geometry.exec_three_obj_method("computeVertexNormals") #Why does this cause index attribute to disappear!?
         if self.queue:
             self.queue = False

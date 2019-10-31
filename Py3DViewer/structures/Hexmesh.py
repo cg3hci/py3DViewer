@@ -97,7 +97,7 @@ class Hexmesh(AbstractMesh):
             new_hexes (Array (Nx8) type=int): List of hexahedra to add. Each hexahedron is in the form [int,int,int,int,int,int,int,int]
     
         """
-            
+        self._dont_update = True
         new_hexes = np.array(new_hexes)
         new_hexes.shape = (-1,8)
                 
@@ -137,7 +137,8 @@ class Hexmesh(AbstractMesh):
             hex_ids (Array (Nx1 / 1xN) type=int): List of hexahedra to remove. Each hexahedron is in the form [int]
     
         """
-        
+       
+        self._dont_update = True
         hex_ids = np.array(hex_ids)
         mask = np.ones(self.num_hexes)
         mask[hex_ids] = 0
@@ -170,6 +171,7 @@ class Hexmesh(AbstractMesh):
     
         """ 
         
+        self._dont_update = True
         vtx_ids = np.array(vtx_ids)
         
         for v_id in vtx_ids:
@@ -199,6 +201,10 @@ class Hexmesh(AbstractMesh):
         
         
     def __load_operations(self):
+        self._dont_update = True
+        self._AbstractMesh__boundary_needs_update = True
+        self._AbstractMesh__simplex_centroids = None
+        self.__internal_hexes = None
         
         self.__compute_faces()
         self.__hex2hex, self._AbstractMesh__vtx2vtx, self.__vtx2hex = compute_adjacencies(self.faces, self.num_vertices)
@@ -207,6 +213,10 @@ class Hexmesh(AbstractMesh):
                      self.bbox[0,1], self.bbox[1,1], 
                      self.bbox[0,2], self.bbox[1,2])
         self.__compute_metrics()
+        
+        self._dont_update = False
+        self.update()
+
     
     def __compute_faces(self):
         self.faces = np.c_[self.hexes[:,0], self.hexes[:,3], self.hexes[:, 2], self.hexes[:, 1], 

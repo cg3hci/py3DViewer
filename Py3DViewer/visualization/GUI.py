@@ -131,7 +131,7 @@ class GUI(Observer):
         self.color_internal = widgets.ColorPicker(
                             concise=True,
                             description='Internal Color',
-                            value=colors.rgb2hex(self.drawable._internal_color[0]),
+                            value=colors.rgb2hex(self.drawable._internal_color),
                             disabled=False,
         )
         self.widgets += [self.color_internal]
@@ -139,7 +139,7 @@ class GUI(Observer):
         self.color_external = widgets.ColorPicker(
             concise=True,
             description='External Color',
-            value=colors.rgb2hex(self.drawable._external_color[0]),
+            value=colors.rgb2hex(self.drawable._external_color),
             disabled=False
         )
         self.widgets += [self.color_external]

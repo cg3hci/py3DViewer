@@ -90,7 +90,7 @@ class Tetmesh(AbstractMesh):
             new_tets (Array (Nx4) type=int): List of tetrahedra to add. Each tetrahedron is in the form [int,int,int,int]
     
         """
-            
+        self._dont_update = True
         new_tets = np.array(new_tets)
         new_tets.shape = (-1,4)
                 
@@ -126,7 +126,7 @@ class Tetmesh(AbstractMesh):
             tet_ids (Array (Nx1 / 1xN) type=int): List of tethrahedra to remove. Each tetrahedron is in the form [int]
     
         """
-        
+        self._dont_update = True
         tet_ids = np.array(tet_ids)
         mask = np.ones(self.num_tets)
         mask[tet_ids] = 0
@@ -158,7 +158,7 @@ class Tetmesh(AbstractMesh):
             vtx_ids (Array (Nx1 / 1xN) type=int): List of vertices to remove. Each vertex is in the form [int]
     
         """ 
-        
+        self._dont_update = True
         vtx_ids = np.array(vtx_ids)
         
         for v_id in vtx_ids:
@@ -180,12 +180,20 @@ class Tetmesh(AbstractMesh):
         
         
     def __load_operations(self):
-        
+        self._dont_update = True
+        self._AbstractMesh__boundary_needs_update = True
+        self._AbstractMesh__simplex_centroids = None
+        self.__internal_tets = None
+
         self.__compute_faces()
         self.__tet2tet, self._AbstractMesh__vtx2vtx, self.__vtx2tet = compute_adjacencies(self.faces, self.num_vertices)
         self._AbstractMesh__update_bounding_box()
         self.reset_clipping()
         self.__compute_metrics()
+            
+        self._dont_update = False
+        self.update()
+
     
     def __compute_faces(self):
         self.faces = np.c_[self.tets[:,0], self.tets[:,2], self.tets[:, 1], 

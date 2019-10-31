@@ -40,6 +40,7 @@ class AbstractMesh(Observer, Subject):
         self.vtx_normals         = None #npArray (Nx3) ## Is this used by volumetric meshes? Consider moving it inside surface meshes only
         self.faces               = None #npArray (NxM)
         self._three_triangle_soup = False
+        self._dont_update = False
         self.__vtx2face          = None #npArray (NxM)
         self.__vtx2vtx           = None #npArray (Nx1)
         self.__bounding_box      = None #npArray (2x3)
@@ -48,7 +49,6 @@ class AbstractMesh(Observer, Subject):
         self.__clipping          = Clipping()
         self.__boundary_needs_update = True
         self.__boundary_cached = None
-        
         Observer.__init__(self)
         Subject.__init__(self)
         
@@ -67,7 +67,8 @@ class AbstractMesh(Observer, Subject):
         
     def update(self):
         self.__boundary_needs_update = True
-        self._notify()
+        if (not self._dont_update):
+            self._notify()
         
     def show(self, width = 700, height = 700, mesh_color = None, reactive = True):
 
@@ -85,7 +86,8 @@ class AbstractMesh(Observer, Subject):
             Viewer: The viewer object
         """
 
-        view = Viewer(self, mesh_color=mesh_color, width = width, height = height, reactive=True).show()
+        view = Viewer(self, mesh_color=mesh_color, width = width, height = height, reactive=True)
+        view.show()
         return view
         
     @property
@@ -131,7 +133,7 @@ class AbstractMesh(Observer, Subject):
             self.__clipping.flip.z = flip_z
         
         self.__boundary_needs_update = True
-        self._notify()
+        self.update()
         
     def reset_clipping(self):
 
@@ -143,7 +145,7 @@ class AbstractMesh(Observer, Subject):
                      min_y = self.bbox[0,1], max_y = self.bbox[1,1],
                      min_z = self.bbox[0,2], max_z = self.bbox[1,2])
         self.__boundary_needs_update = True
-        self._notify()
+        self.update()
 
     def load_from_file(filename):
         
@@ -235,12 +237,13 @@ class AbstractMesh(Observer, Subject):
             z (float): The z coordinate of the new vertex
     
         """
-        
+        self._dont_update = True
         new_vertex = np.array([x,y,z], dtype=np.float)
         new_vertex.shape = (1,3)
         
         self.vertices = np.concatenate([self.vertices, new_vertex])
-        self._notify()
+        self._dont_update = False
+        self.update()
     
     
     def add_vertices(self, new_vertices):
@@ -254,9 +257,11 @@ class AbstractMesh(Observer, Subject):
     
         """
         
+        self._dont_update = True
         new_vertices = np.array(new_vertices)
         self.vertices = np.concatenate([self.vertices, new_vertices])
-        self._notify()
+        self._dont_update = False
+        self.update()
         
         
     @property

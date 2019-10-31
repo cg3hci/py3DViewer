@@ -81,7 +81,7 @@ class Quadmesh(AbstractMesh):
             new_faces (Array (Nx4) type=int): List of faces to add. Each face is in the form [int,int,int, int]
     
         """
-        
+        self._dont_update = True 
         new_faces = np.array(new_faces)
         new_faces.shape = (-1,4)
         
@@ -119,7 +119,7 @@ class Quadmesh(AbstractMesh):
             face_ids (Array (Nx1 / 1xN) type=int): List of faces to remove. Each face is in the form [int]
     
         """
-        
+        self._dont_update = True
         face_ids = np.array(face_ids)
         mask = np.ones(self.num_faces)
         mask[face_ids] = 0
@@ -152,7 +152,7 @@ class Quadmesh(AbstractMesh):
             vtx_ids (Array (Nx1 / 1xN) type=int): List of vertices to remove. Each vertex is in the form [int]
     
         """ 
-        
+        self._dont_update = True 
         vtx_ids = np.array(vtx_ids)
         
         for v_id in vtx_ids:
@@ -177,6 +177,9 @@ class Quadmesh(AbstractMesh):
     
     def __load_operations(self):
         
+        self._dont_update = True
+        self._AbstractMesh__boundary_needs_update = True
+        self._AbstractMesh__simplex_centroids = None
         edges = np.c_[self.faces[:,0], self.faces[:,1], 
                       self.faces[:,1], self.faces[:,2], 
                       self.faces[:,2], self.faces[:,3], 
@@ -189,6 +192,8 @@ class Quadmesh(AbstractMesh):
         self.face_normals = compute_face_normals(self.vertices, self.faces, quad=True)
         self.vtx_normals  = compute_vertex_normals(self.face_normals, self.vtx2face)
         self.__compute_metrics()   
+        self._dont_update = False
+        self.update()
         
         
         
