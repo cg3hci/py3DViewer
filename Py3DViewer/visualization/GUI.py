@@ -88,8 +88,8 @@ class GUI(Observer):
         self.widgets += [self.clipping_slider_z]
         
         self.wireframe_opacity_slider = widgets.FloatSlider(
-                        value=0.2,
-                        min=0.,
+                        value=0.4,
+                        min=0.2,
                         max=1.,
                         step=0.1,
                         continuous_update=True,
