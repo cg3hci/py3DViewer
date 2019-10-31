@@ -1,6 +1,7 @@
 from .Abstractmesh import AbstractMesh
 import numpy as np
 from ..utils import IO, ObservableArray
+from ..utils.load_operations import compute_tet_mesh_adjs as compute_adjacencies
 from ..utils.metrics import tet_scaled_jacobian, tet_volume
 
 class Tetmesh(AbstractMesh):
@@ -23,10 +24,10 @@ class Tetmesh(AbstractMesh):
         
         self.tets             = None #npArray (Nx4) 
         self.labels           = None #npArray (Nx1) 
-        self.tet2tet          = None #npArray (Nx4?) 
+        self.__tet2tet          = None #npArray (Nx4?) 
         self.face2tet         = None #npArray (Nx2?)
         self.tet2face         = None #npArray (Nx4)
-        self.vtx2tet          = None #npArray (NxM)
+        self.__vtx2tet          = None #npArray (NxM)
         self.__internal_tets = None
         
         super(Tetmesh, self).__init__()
@@ -181,11 +182,9 @@ class Tetmesh(AbstractMesh):
     def __load_operations(self):
         
         self.__compute_faces()
-        self.__compute_adjacencies()
+        self.__tet2tet, self._AbstractMesh__vtx2vtx, self.__vtx2tet = compute_adjacencies(self.faces, self.num_vertices)
         self._AbstractMesh__update_bounding_box()
-        self.set_clipping(self.bbox[0,0], self.bbox[1,0], 
-                     self.bbox[0,1], self.bbox[1,1], 
-                     self.bbox[0,2], self.bbox[1,2])
+        self.reset_clipping()
         self.__compute_metrics()
     
     def __compute_faces(self):
@@ -198,50 +197,7 @@ class Tetmesh(AbstractMesh):
         self.faces = tmp
         self.faces.attach(self)
     
-    def __compute_adjacencies(self):
-        
-        map_ = dict()
-        adjs = np.zeros((self.num_tets, 4), dtype=np.int)-1
-        vtx2tet = [[] for i in range(self.num_vertices)]
-        vtx2vtx = [[] for i in range(self.num_vertices)]
-        tets_idx = np.repeat(np.array(range(self.num_tets)), 4)
-        self.tet2face = np.array(range(self.num_faces)).reshape(-1,4)
-        
-        for f, t in zip(np.asarray(self.faces), tets_idx):
-
-            vtx2vtx[f[0]].append(f[1])
-            vtx2vtx[f[0]].append(f[2])
-
-
-
-            vtx2tet[f[0]].append(t)
-            vtx2tet[f[1]].append(t)
-            vtx2tet[f[2]].append(t)
-            
-            f =  (f[0], f[1], f[2])
-            f1 = (f[2], f[1], f[0])
-            f2 = (f[0], f[2], f[1])
-            f3 = (f[1], f[0], f[2])
-
-            try:
-                tmp = map_[f]
-            except KeyError:
-                tmp = None
-
-            if tmp is None:
-                map_[f1] = t
-                map_[f2] = t
-                map_[f3] = t
-            else:
-                
-                idx_to_append1 = np.where(adjs[t] == -1)[0][0]
-                idx_to_append2 = np.where(adjs[map_[f]] == -1)[0][0]
-                adjs[t][idx_to_append1] = map_[f]
-                adjs[map_[f]][idx_to_append2] = t
-        
-        self.tet2tet = adjs#np.array([np.array(a) for a in adjs])
-        self.vtx2tet = np.array([np.unique(np.array(a)) for a in vtx2tet]) 
-        self._AbstractMesh__vtx2vtx = np.array([np.array(a) for a in vtx2vtx])
+    
         
         
     def __load_from_file(self, filename):
@@ -287,7 +243,7 @@ class Tetmesh(AbstractMesh):
     def internals(self):
         
         if self.__internal_tets is None:
-            self.__internal_tets = np.all(self.tet2tet != -1, axis = 1)
+            self.__internal_tets = np.all(self.__tet2tet != -1, axis = 1)
         
         return self.__internal_tets
         
@@ -301,7 +257,7 @@ class Tetmesh(AbstractMesh):
         if (self._AbstractMesh__boundary_needs_update):
             clipping_range = super(Tetmesh, self).boundary()
             indices = np.where(self.internals)[0]
-            clipping_range[indices[np.all(clipping_range[self.tet2tet[indices]], axis=1)]] = False
+            clipping_range[indices[np.all(clipping_range[self.__tet2tet[indices]], axis=1)]] = False
             clipping_range = np.repeat(clipping_range, 4)
             self._AbstractMesh__boundary_cached = clipping_range
             self._AbstractMesh__boundary_needs_update = False
@@ -339,4 +295,13 @@ class Tetmesh(AbstractMesh):
             self._AbstractMesh__simplex_centroids = np.asarray(self.vertices[self.tets].mean(axis = 1))
         
         return self._AbstractMesh__simplex_centroids
-
+    
+    @property
+    def tet2tet(self):
+        
+        return self.__tet2tet
+    
+    @property
+    def vxt2tet(self):
+        
+        return self.__vtx2tet

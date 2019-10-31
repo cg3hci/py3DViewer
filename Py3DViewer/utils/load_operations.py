@@ -53,7 +53,306 @@ def compute_surface_mesh_adjs(edges, num_vertices, edges_per_face):
             adjs[map_[e]][idx_to_append2] = f
                 
        
-    return adjs, vtx2vtx, vtx2face   
+    return adjs, vtx2vtx, vtx2face 
+
+
+@njit(Tuple((int64[:,::1],LT(LT(int64)),LT(LT(int64))))(int64[:,::1], int64))
+def compute_tet_mesh_adjs(faces, num_vertices):
+        
+    num_poly = faces.shape[0]//4
+    adjs =  np.zeros((num_poly, 4), dtype=np.int64)-1
+    vtx2vtx = L()
+    vtx2poly = L()
+        
+    for k in range(num_vertices):
+        tmp1 = L()
+        tmp2 = L()
+        tmp1.append(-1)
+        tmp2.append(-1)
+        vtx2vtx.append(tmp1)
+        vtx2poly.append(tmp2)
+        
+    tmp = np.arange(num_poly)
+    poly_idx = np.repeat(tmp, 4)
+        
+    map_ = dict()
+    support_set = set()
+    map_[(-1,-1,-1)] = -1
+    support_set.add((-1,-1,-1))
+        
+    for i in range(faces.shape[0]):
+        
+        f1 = (faces[i][0], faces[i][1], faces[i][2])
+        f2 = (faces[i][2], faces[i][1], faces[i][0])
+        f3 = (faces[i][0], faces[i][2], faces[i][1])
+        f4 = (faces[i][1], faces[i][0], faces[i][2])
+        
+        t = poly_idx[i]
+            
+        if vtx2vtx[faces[i][0]][0] == -1:
+            vtx2vtx[faces[i][0]][0] = faces[i][1]
+        else:
+            if faces[i][1] not in vtx2vtx[faces[i][0]]:
+                vtx2vtx[faces[i][0]].append(faces[i][1])
+            
+        if vtx2vtx[faces[i][1]][0] == -1:
+            vtx2vtx[faces[i][1]][0] = faces[i][2]
+        else:
+            if faces[i][2] not in vtx2vtx[faces[i][1]]:
+                vtx2vtx[faces[i][1]].append(faces[i][2])
+        
+        if vtx2vtx[faces[i][2]][0] == -1:
+            vtx2vtx[faces[i][2]][0] = faces[i][0]
+        else:
+            if faces[i][0] not in vtx2vtx[faces[i][2]]:
+                vtx2vtx[faces[i][2]].append(faces[i][0])
+            
+            
+                
+        if vtx2poly[faces[i][0]][0] == -1:
+            vtx2poly[faces[i][0]][0] = t
+        else:
+            if t not in vtx2poly[faces[i][0]]:
+                vtx2poly[faces[i][0]].append(t)
+        
+        if vtx2poly[faces[i][1]][0] == -1:
+            vtx2poly[faces[i][1]][0] = t
+        else:
+            if t not in vtx2poly[faces[i][1]]:
+                vtx2poly[faces[i][1]].append(t)
+        
+        if vtx2poly[faces[i][2]][0] == -1:
+            vtx2poly[faces[i][2]][0] = t
+        else:
+            if t not in vtx2poly[faces[i][2]]:
+                vtx2poly[faces[i][2]].append(t)
+            
+            
+            
+        if f1 not in support_set:
+            map_[f2] = t
+            map_[f3] = t
+            map_[f4] = t
+            support_set.add(f2)
+            support_set.add(f3)
+            support_set.add(f4)
+        else:
+            idx_to_append1 = np.where(adjs[t] == -1)[0][0]
+            idx_to_append2 = np.where(adjs[map_[f1]] == -1)[0][0]
+            adjs[t][idx_to_append1] = map_[f1]
+            adjs[map_[f1]][idx_to_append2] = t
+                
+       
+    return adjs, vtx2vtx, vtx2poly   
+
+@njit(Tuple((int64[:,::1],LT(LT(int64)),LT(LT(int64))))(int64[:,::1], int64))
+def compute_hex_mesh_adjs(faces, num_vertices):
+        
+    num_poly = faces.shape[0]//6
+    adjs =  np.zeros((num_poly, 6), dtype=np.int64)-1
+    vtx2vtx = L()
+    vtx2poly = L()
+        
+    for k in range(num_vertices):
+        tmp1 = L()
+        tmp2 = L()
+        tmp1.append(-1)
+        tmp2.append(-1)
+        vtx2vtx.append(tmp1)
+        vtx2poly.append(tmp2)
+        
+    tmp = np.arange(num_poly)
+    poly_idx = np.repeat(tmp, 6)
+        
+    map_ = dict()
+    support_set = set()
+    map_[(-1,-1,-1,-1)] = -1
+    support_set.add((-1,-1,-1,-1))
+        
+    for i in range(faces.shape[0]):
+        
+        f1 = (faces[i][0], faces[i][1], faces[i][2], faces[i][3])
+        f2 = (faces[i][3], faces[i][2], faces[i][1], faces[i][0])
+        f3 = (faces[i][2], faces[i][1], faces[i][0], faces[i][3])
+        f4 = (faces[i][1], faces[i][0], faces[i][3], faces[i][2])
+        f5 = (faces[i][0], faces[i][3], faces[i][2], faces[i][1])
+        
+        t = poly_idx[i]
+            
+        if vtx2vtx[faces[i][0]][0] == -1:
+            vtx2vtx[faces[i][0]][0] = faces[i][1]
+        else:
+            if faces[i][1] not in vtx2vtx[faces[i][0]]:
+                vtx2vtx[faces[i][0]].append(faces[i][1])
+            
+        if vtx2vtx[faces[i][1]][0] == -1:
+            vtx2vtx[faces[i][1]][0] = faces[i][2]
+        else:
+            if faces[i][2] not in vtx2vtx[faces[i][1]]:
+                vtx2vtx[faces[i][1]].append(faces[i][2])
+        
+        if vtx2vtx[faces[i][2]][0] == -1:
+            vtx2vtx[faces[i][2]][0] = faces[i][3]
+        else:
+            if faces[i][3] not in vtx2vtx[faces[i][2]]:
+                vtx2vtx[faces[i][2]].append(faces[i][3])
+        
+        if vtx2vtx[faces[i][3]][0] == -1:
+            vtx2vtx[faces[i][3]][0] = faces[i][0]
+        else:
+            if faces[i][0] not in vtx2vtx[faces[i][3]]:
+                vtx2vtx[faces[i][3]].append(faces[i][0])
+            
+            
+                
+        if vtx2poly[faces[i][0]][0] == -1:
+            vtx2poly[faces[i][0]][0] = t
+        else:
+            if t not in vtx2poly[faces[i][0]]:
+                vtx2poly[faces[i][0]].append(t)
+        
+        if vtx2poly[faces[i][1]][0] == -1:
+            vtx2poly[faces[i][1]][0] = t
+        else:
+            if t not in vtx2poly[faces[i][1]]:
+                vtx2poly[faces[i][1]].append(t)
+        
+        if vtx2poly[faces[i][2]][0] == -1:
+            vtx2poly[faces[i][2]][0] = t
+        else:
+            if t not in vtx2poly[faces[i][2]]:
+                vtx2poly[faces[i][2]].append(t)
+                
+        if vtx2poly[faces[i][3]][0] == -1:
+            vtx2poly[faces[i][3]][0] = t
+        else:
+            if t not in vtx2poly[faces[i][3]]:
+                vtx2poly[faces[i][3]].append(t)
+            
+            
+            
+        if f1 not in support_set:
+            map_[f2] = t
+            map_[f3] = t
+            map_[f4] = t
+            map_[f5] = t
+            support_set.add(f2)
+            support_set.add(f3)
+            support_set.add(f4)
+            support_set.add(f5)
+        else:
+            idx_to_append1 = np.where(adjs[t] == -1)[0][0]
+            idx_to_append2 = np.where(adjs[map_[f1]] == -1)[0][0]
+            adjs[t][idx_to_append1] = map_[f1]
+            adjs[map_[f1]][idx_to_append2] = t
+                
+       
+    return adjs, vtx2vtx, vtx2poly   
+
+
+@njit(Tuple((int64[:,::1],LT(LT(int64)),LT(LT(int64))))(int64[:,::1], int64))
+def compute_hex_mesh_adjs(faces, num_vertices):
+        
+    num_poly = faces.shape[0]//6
+    adjs =  np.zeros((num_poly, 6), dtype=np.int64)-1
+    vtx2vtx = L()
+    vtx2poly = L()
+        
+    for k in range(num_vertices):
+        tmp1 = L()
+        tmp2 = L()
+        tmp1.append(-1)
+        tmp2.append(-1)
+        vtx2vtx.append(tmp1)
+        vtx2poly.append(tmp2)
+        
+    tmp = np.arange(num_poly)
+    poly_idx = np.repeat(tmp, 6)
+        
+    map_ = dict()
+    support_set = set()
+    map_[(-1,-1,-1,-1)] = -1
+    support_set.add((-1,-1,-1,-1))
+        
+    for i in range(faces.shape[0]):
+        
+        f1 = (faces[i][0], faces[i][1], faces[i][2], faces[i][3])
+        f2 = (faces[i][3], faces[i][2], faces[i][1], faces[i][0])
+        f3 = (faces[i][2], faces[i][1], faces[i][0], faces[i][3])
+        f4 = (faces[i][1], faces[i][0], faces[i][3], faces[i][2])
+        f5 = (faces[i][0], faces[i][3], faces[i][2], faces[i][1])
+        
+        t = poly_idx[i]
+            
+        if vtx2vtx[faces[i][0]][0] == -1:
+            vtx2vtx[faces[i][0]][0] = faces[i][1]
+        else:
+            if faces[i][1] not in vtx2vtx[faces[i][0]]:
+                vtx2vtx[faces[i][0]].append(faces[i][1])
+            
+        if vtx2vtx[faces[i][1]][0] == -1:
+            vtx2vtx[faces[i][1]][0] = faces[i][2]
+        else:
+            if faces[i][2] not in vtx2vtx[faces[i][1]]:
+                vtx2vtx[faces[i][1]].append(faces[i][2])
+        
+        if vtx2vtx[faces[i][2]][0] == -1:
+            vtx2vtx[faces[i][2]][0] = faces[i][3]
+        else:
+            if faces[i][3] not in vtx2vtx[faces[i][2]]:
+                vtx2vtx[faces[i][2]].append(faces[i][3])
+        
+        if vtx2vtx[faces[i][3]][0] == -1:
+            vtx2vtx[faces[i][3]][0] = faces[i][0]
+        else:
+            if faces[i][0] not in vtx2vtx[faces[i][3]]:
+                vtx2vtx[faces[i][3]].append(faces[i][0])
+            
+            
+                
+        if vtx2poly[faces[i][0]][0] == -1:
+            vtx2poly[faces[i][0]][0] = t
+        else:
+            if t not in vtx2poly[faces[i][0]]:
+                vtx2poly[faces[i][0]].append(t)
+        
+        if vtx2poly[faces[i][1]][0] == -1:
+            vtx2poly[faces[i][1]][0] = t
+        else:
+            if t not in vtx2poly[faces[i][1]]:
+                vtx2poly[faces[i][1]].append(t)
+        
+        if vtx2poly[faces[i][2]][0] == -1:
+            vtx2poly[faces[i][2]][0] = t
+        else:
+            if t not in vtx2poly[faces[i][2]]:
+                vtx2poly[faces[i][2]].append(t)
+                
+        if vtx2poly[faces[i][3]][0] == -1:
+            vtx2poly[faces[i][3]][0] = t
+        else:
+            if t not in vtx2poly[faces[i][3]]:
+                vtx2poly[faces[i][3]].append(t)
+            
+            
+            
+        if f1 not in support_set:
+            map_[f2] = t
+            map_[f3] = t
+            map_[f4] = t
+            map_[f5] = t
+            support_set.add(f2)
+            support_set.add(f3)
+            support_set.add(f4)
+            support_set.add(f5)
+        else:
+            idx_to_append1 = np.where(adjs[t] == -1)[0][0]
+            idx_to_append2 = np.where(adjs[map_[f1]] == -1)[0][0]
+            adjs[t][idx_to_append1] = map_[f1]
+            adjs[map_[f1]][idx_to_append2] = t
+                
+       
+    return adjs, vtx2vtx, vtx2poly   
 
 
 def compute_face_normals(vertices, faces, quad=False):

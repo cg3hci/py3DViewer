@@ -1,6 +1,7 @@
 from .Abstractmesh import AbstractMesh
 import numpy as np
 from ..utils import IO, ObservableArray
+from ..utils.load_operations import compute_hex_mesh_adjs as compute_adjacencies
 from ..utils.metrics import hex_scaled_jacobian, hex_volume
 
 class Hexmesh(AbstractMesh):
@@ -23,10 +24,10 @@ class Hexmesh(AbstractMesh):
         
         self.hexes            = None #npArray (Nx8) 
         self.labels           = None #npArray (Nx1) 
-        self.hex2hex          = None #npArray (Nx4?) 
+        self.__hex2hex          = None #npArray (Nx4?) 
         self.face2hex         = None #npArray (Nx2?)
         self.hex2face         = None #npArray (Nx6)
-        self.vtx2hex          = None #npArray (NxM)
+        self.__vtx2hex          = None #npArray (NxM)
         self.__internal_hexes = None
         
         super(Hexmesh, self).__init__()
@@ -200,7 +201,7 @@ class Hexmesh(AbstractMesh):
     def __load_operations(self):
         
         self.__compute_faces()
-        self.__compute_adjacencies()
+        self.__hex2hex, self._AbstractMesh__vtx2vtx, self.__vtx2hex = compute_adjacencies(self.faces, self.num_vertices)
         self._AbstractMesh__update_bounding_box()
         self.set_clipping(self.bbox[0,0], self.bbox[1,0], 
                      self.bbox[0,1], self.bbox[1,1], 
@@ -219,47 +220,6 @@ class Hexmesh(AbstractMesh):
         self.faces = tmp
         self.faces.attach(self)
     
-    def __compute_adjacencies(self):
-        
-        map_ = dict()
-        adjs = np.zeros((self.num_hexes, 6), dtype=np.int)-1
-        #adjs = [[] for i in range(self.num_hexes)]
-        vtx2hex = [[] for i in range(self.num_vertices)]
-        hexes_idx = np.repeat(np.array(range(self.num_hexes)), 6)
-        self.hex2face = np.array(range(self.num_faces)).reshape(-1,6)
-        
-        for f, t in zip(np.asarray(self.faces), hexes_idx):
-            
-            vtx2hex[f[0]].append(t)
-            vtx2hex[f[1]].append(t)
-            vtx2hex[f[2]].append(t)
-            vtx2hex[f[3]].append(t)
-            
-            f =  (f[0], f[1], f[2], f[3])
-            f1 = (f[3], f[2], f[1], f[0])
-            f2 = (f[2], f[1], f[0], f[3])
-            f3 = (f[1], f[0], f[3], f[2])
-            f4 = (f[0], f[3], f[2], f[1])
-
-            try:
-                tmp = map_[f]
-            except KeyError:
-                tmp = None
-
-            if tmp is None:
-                map_[f1] = t
-                map_[f2] = t
-                map_[f3] = t
-                map_[f4] = t
-            else:
-                
-                idx_to_append1 = np.where(adjs[t] == -1)[0][0]
-                idx_to_append2 = np.where(adjs[map_[f]] == -1)[0][0]
-                adjs[t][idx_to_append1] = map_[f]
-                adjs[map_[f]][idx_to_append2] = t
-        
-        self.hex2hex = adjs#np.array([np.array(a) for a in adjs])
-        self.vtx2hex = np.array([np.unique(np.array(a)) for a in vtx2hex])
         
         
     def __load_from_file(self, filename):
@@ -304,7 +264,7 @@ class Hexmesh(AbstractMesh):
     def internals(self):
         
         if self.__internal_hexes is None:
-            self.__internal_hexes = np.all(self.hex2hex != -1, axis = 1)
+            self.__internal_hexes = np.all(self.__hex2hex != -1, axis = 1)
         
         return self.__internal_hexes
         
@@ -317,7 +277,7 @@ class Hexmesh(AbstractMesh):
         if (self._AbstractMesh__boundary_needs_update):
             clipping_range = super(Hexmesh, self).boundary()
             indices = np.where(self.internals)[0]
-            clipping_range[indices[np.all(clipping_range[self.hex2hex[indices]], axis=1)]] = False
+            clipping_range[indices[np.all(clipping_range[self.__hex2hex[indices]], axis=1)]] = False
             clipping_range = np.repeat(clipping_range, 6)
             self._AbstractMesh__boundary_cached = clipping_range
             self._AbstractMesh__boundary_needs_update = False
@@ -360,3 +320,14 @@ class Hexmesh(AbstractMesh):
             self._AbstractMesh__simplex_centroids = np.asarray(self.vertices[self.hexes].mean(axis = 1))
         
         return self._AbstractMesh__simplex_centroids
+    
+    
+    @property
+    def hex2hex(self):
+        
+        return self.__hex2hex
+    
+    @property
+    def vtx2hex(self):
+        
+        return self.__vtx2hex

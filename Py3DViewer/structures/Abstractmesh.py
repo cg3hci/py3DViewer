@@ -61,7 +61,7 @@ class AbstractMesh(Observer, Subject):
         Remember to add that this doesn't copy observer, vtx2vtx and vtx2face, and this is a value copy"""
         new = type(self)()
         for key in self.__dict__.keys():
-            if "observer" not in key and "vtx2vtx" not in key and "vtx2face" not in key:
+            if "observer" not in key and "vtx2vtx" not in key and "vtx2face" not in key and "vtx2tet" not in key and "vtx2hex" not in key:
                 setattr(new, key, copy.deepcopy(getattr(self, key)))
         return new
         
