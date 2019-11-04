@@ -31,7 +31,6 @@ class Tetmesh(AbstractMesh):
         self.__internal_tets = None
         
         super(Tetmesh, self).__init__()
-        self._three_triangle_soup = True
         
         if filename is not None:
             
@@ -289,7 +288,7 @@ class Tetmesh(AbstractMesh):
         internal_triangles = np.repeat(self.internals, 4*3, axis=0)
         return internal_triangles
     
-    def _as_threejs_colors(self):
+    def _as_aajs_colors(self):
         return np.repeat(self.boundary()[1], 3)
     
     @property

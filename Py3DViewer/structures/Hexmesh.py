@@ -31,7 +31,6 @@ class Hexmesh(AbstractMesh):
         self.__internal_hexes = None
         
         super(Hexmesh, self).__init__()
-        self._three_triangle_soup = True
         
         if filename is not None:
             
