@@ -2,6 +2,8 @@ import ipywidgets as widgets
 from ..utils import ColorMap, Observer
 from ..visualization import colors
 from IPython.display import display as ipydisplay
+import threading
+from time import sleep
 import numpy as np
 
 class GUI(Observer):
@@ -11,6 +13,8 @@ class GUI(Observer):
         self.mesh = drawable_mesh.geometry
         self.mesh.attach(self)
         self.widgets = []
+        self.__clipping_in_queue = False
+        self.__dont_update_clipping = False
         self.flip_x_button = widgets.ToggleButton(
                     value=False,
                     description='Flip x',
@@ -41,55 +45,55 @@ class GUI(Observer):
             )
         self.widgets += [self.flip_z_button]
        
-        x_range = (round(self.mesh.bbox[0][0], 2), round(self.mesh.bbox[1][0],2))
+        x_range = self.mesh.bbox[0][0], self.mesh.bbox[1][0]
         self.clipping_slider_x = widgets.FloatRangeSlider(
             value=x_range,
             min=x_range[0],
             max=x_range[1],
-            step=0.01,
+            step=abs(x_range[0]-x_range[1])/100,
             description='X:',
             disabled=False,
             continuous_update=True,
             orientation='horizontal',
             readout=True,
-            readout_format=".3f",
+            readout_format=".2f",
         )
         self.widgets += [self.clipping_slider_x]
 
 
-        y_range = (round(self.mesh.bbox[0][1], 2), round(self.mesh.bbox[1][1],2))
+        y_range = self.mesh.bbox[0][1], self.mesh.bbox[1][1]
         self.clipping_slider_y = widgets.FloatRangeSlider(
             value = y_range,
             min = y_range[0],
             max = y_range[1],
-            step=0.001,
+            step=abs(y_range[0]-y_range[1])/100,
             description='Y:',
             disabled=False,
             continuous_update=True,
             orientation='horizontal',
             readout=True,
-            readout_format=".3f",
+            readout_format=".2f",
         )
         self.widgets += [self.clipping_slider_y]
 
-        z_range = (round(self.mesh.bbox[0][2], 2), round(self.mesh.bbox[1][2],2))
+        z_range = self.mesh.bbox[0][2], self.mesh.bbox[1][2]
         self.clipping_slider_z = widgets.FloatRangeSlider(
             value = z_range,
             min = z_range[0],
             max = z_range[1],
-            step=0.001,
+            step=abs(z_range[0]-z_range[1])/100,
             description='Z:',
             disabled=False,
             continuous_update=True,
             orientation='horizontal',
             readout=True,
-            readout_format=".3f",
+            readout_format=".2f",
         )
         self.widgets += [self.clipping_slider_z]
         
         self.wireframe_opacity_slider = widgets.FloatSlider(
                         value=0.4,
-                        min=0.2,
+                        min=0.,
                         max=1.,
                         step=0.1,
                         continuous_update=True,
@@ -183,18 +187,36 @@ class GUI(Observer):
     def __update_external_color(self, change): 
         self.drawable.update_external_color(colors.hex2rgb(self.color_external.value))
         
-    def __update_clipping(self, change): 
+    def __clipping_updater(self):
+            
+        self.__dont_update_clipping = True
         flip_x = self.flip_x_button.value
         flip_y = self.flip_y_button.value
         flip_z = self.flip_z_button.value
         min_x, max_x = self.clipping_slider_x.value
         min_y, max_y = self.clipping_slider_y.value
         min_z, max_z = self.clipping_slider_z.value
-        
         self.mesh.set_clipping(min_x = min_x, max_x = max_x, 
                                min_y = min_y, max_y = max_y, 
                                min_z = min_z, max_z = max_z,
                                flip_x = flip_x, flip_y = flip_y, flip_z = flip_z)
+        if self.__clipping_in_queue:
+            self.__clipping_in_queue = False
+            self.__dont_update_clipping = False
+            self.__update_clipping(None)
+        else:
+            self.__dont_update_clipping = False
+
+        
+    def __update_clipping(self, change): 
+       
+        if self.__dont_update_clipping:
+            self.__clipping_in_queue = True
+        else:
+            thread = threading.Thread(target=self.__clipping_updater, args=())
+            thread.daemon = True
+            thread.start()
+
         
     
     def update(self):

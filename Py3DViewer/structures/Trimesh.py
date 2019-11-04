@@ -3,6 +3,7 @@ import numpy as np
 from ..utils import IO, ObservableArray
 from ..utils.load_operations import compute_surface_mesh_adjs as compute_adjacencies
 from ..utils.load_operations import compute_vertex_normals, compute_face_normals
+from ..utils.load_operations import _compute_three_vertex_normals as compute_three_normals
 from ..utils.metrics import triangle_aspect_ratio, triangle_area
 
 class Trimesh(AbstractMesh):
@@ -243,7 +244,6 @@ class Trimesh(AbstractMesh):
         Compute the boundary of the current mesh. It only returns the faces that are inside the clipping
         """
         if (self._AbstractMesh__boundary_needs_update):
-            print("Recalculating boundary")
             clipping_range = super(Trimesh, self).boundary()
             self._AbstractMesh__boundary_cached = clipping_range
             self._AbstractMesh__boundary_needs_update = False
@@ -256,8 +256,9 @@ class Trimesh(AbstractMesh):
         edges_flat = self.vertices[edges].tolist()
         return edges_flat
     
-    def as_triangles_flat(self):
-        return self.vertices[self.boundary()[0].flatten()]
+    def _as_threejs_triangle_soup(self):
+        tris = self.vertices[self.boundary()[0].flatten()]
+        return tris.astype(np.float32), compute_three_normals(tris).astype(np.float32)
     
     def as_triangles(self):
         return self.boundary()[0].flatten().astype("uint32")

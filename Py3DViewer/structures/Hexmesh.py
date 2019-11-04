@@ -1,7 +1,7 @@
 from .Abstractmesh import AbstractMesh
 import numpy as np
 from ..utils import IO, ObservableArray
-from ..utils.load_operations import compute_hex_mesh_adjs as compute_adjacencies
+from ..utils.load_operations import compute_hex_mesh_adjs as compute_adjacencies, _compute_three_vertex_normals as compute_three_normals
 from ..utils.metrics import hex_scaled_jacobian, hex_volume
 
 class Hexmesh(AbstractMesh):
@@ -299,11 +299,13 @@ class Hexmesh(AbstractMesh):
         edges_flat = self.vertices[edges]
         return edges_flat.astype(np.float32)
     
-    def as_triangles_flat(self):
+    def _as_threejs_triangle_soup(self):
         boundaries = self.boundary()[0]
         boundaries = np.c_[boundaries[:,:3], boundaries[:,2:], boundaries[:,0]]
         boundaries.shape = (-1, 3)
-        return self.vertices[boundaries.flatten()]
+        tris = self.vertices[boundaries.flatten()]
+        vtx_normals = compute_three_normals(tris)
+        return tris.astype(np.float32), vtx_normals.astype(np.float32)
     
     def as_triangles(self):
         boundaries = self.boundary()[0]

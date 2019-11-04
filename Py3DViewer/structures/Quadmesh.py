@@ -3,6 +3,7 @@ import numpy as np
 from ..utils import IO
 from ..utils.load_operations import compute_surface_mesh_adjs as compute_adjacencies
 from ..utils.load_operations import compute_vertex_normals, compute_face_normals
+from ..utils.load_operations import _compute_three_vertex_normals as compute_three_normals
 from ..utils.metrics import quad_area, quad_aspect_ratio
 
 class Quadmesh(AbstractMesh):
@@ -254,12 +255,12 @@ class Quadmesh(AbstractMesh):
         edges_flat = self.vertices[edges].tolist()
         return edges_flat
     
-    def as_triangles_flat(self):
+    def _as_threejs_triangle_soup(self):
         boundaries = self.boundary()[0]
         boundaries = np.c_[boundaries[:,:3], boundaries[:,2:], boundaries[:,0]]
         boundaries.shape = (-1, 3)
-        triangles_flat = self.vertices[boundaries.flatten()]
-        return triangles_flat
+        tris = self.vertices[boundaries.flatten()]
+        return tris.astype(np.float32), compute_three_normals(tris).astype(np.float32)
     
     def as_triangles(self):
         boundaries = self.boundary()[0]

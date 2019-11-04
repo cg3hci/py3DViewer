@@ -52,7 +52,8 @@ class Drawable(Observer):
             self.geometry_color[internal_color] = new_color
             colors = geometry._as_threejs_colors()
             new_colors = self.geometry_color[colors]
-            interleaved = np.concatenate((geometry.as_triangles_flat(), new_colors), axis=1)
+            tris, vtx_normals = geometry._as_threejs_triangle_soup()
+            interleaved = np.concatenate((tris, new_colors, vtx_normals), axis=1)
             self.drawable_mesh.geometry.attributes['color'].data.array = interleaved
 
 
@@ -66,10 +67,11 @@ class Drawable(Observer):
             self.geometry_color[np.logical_not(internal_color)] = new_color
         else:
             self.geometry_color[:] = new_color
-            colors = geometry._as_threejs_colors()
-            new_colors = self.geometry_color[colors]
-            interleaved = np.concatenate((geometry.as_triangles_flat(), new_colors), axis=1)
-            self.drawable_mesh.geometry.attributes['color'].data.array = interleaved
+        colors = geometry._as_threejs_colors()
+        new_colors = self.geometry_color[colors]
+        tris, vtx_normals = geometry._as_threejs_triangle_soup()
+        interleaved = np.concatenate((tris, new_colors, vtx_normals), axis=1)
+        self.drawable_mesh.geometry.attributes['color'].data.array = interleaved
             
             
     def __initialize_wireframe(self):
@@ -84,14 +86,14 @@ class Drawable(Observer):
     def __get_drawable_from_boundary(self):
         
         geometry_attributes = {}
-        tris = self.geometry.as_triangles_flat().astype(np.float32)
+        tris, vtx_normals = self.geometry._as_threejs_triangle_soup()
         new_colors = self.geometry_color[self.geometry._as_threejs_colors()].astype(np.float32)
-        interleaved_array = np.concatenate((tris, new_colors), axis=1)
+        interleaved_array = np.concatenate((tris, new_colors, vtx_normals), axis=1)
         buffer = three.InterleavedBuffer(array = interleaved_array, stride = 3)
         geometry_attributes['position'] = three.InterleavedBufferAttribute(data=buffer, itemSize=3, dynamic = True)
         geometry_attributes['color'] = three.InterleavedBufferAttribute(data=buffer, itemSize=3, offset=3, dynamic=True)
+        geometry_attributes['normal'] = three.InterleavedBufferAttribute(data=buffer, itemSize=3, offset=6, dynamic=True)
         drawable_geometry = three.BufferGeometry(attributes = geometry_attributes)
-        #drawable_geometry.exec_three_obj_method("computeVertexNormals")
             
         return drawable_geometry
     
@@ -131,9 +133,6 @@ class Drawable(Observer):
         
         self.update_internal_color(self._internal_color, geometry)
         self.update_external_color(self._external_color, geometry)
-            #self.drawable_mesh.geometry.exec_three_obj_method("computeVertexNormals")
-
-            #self.drawable_mesh.geometry.exec_three_obj_method("computeVertexNormals") #Why does this cause index attribute to disappear!?
         if self.queue:
             self.queue = False
             self.updating = False

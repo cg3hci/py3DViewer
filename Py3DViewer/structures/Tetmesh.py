@@ -2,6 +2,7 @@ from .Abstractmesh import AbstractMesh
 import numpy as np
 from ..utils import IO, ObservableArray
 from ..utils.load_operations import compute_tet_mesh_adjs as compute_adjacencies
+from ..utils.load_operations import _compute_three_vertex_normals as compute_three_normals
 from ..utils.metrics import tet_scaled_jacobian, tet_volume
 
 class Tetmesh(AbstractMesh):
@@ -278,8 +279,9 @@ class Tetmesh(AbstractMesh):
         edges_flat = self.vertices[edges].tolist()
         return edges_flat
     
-    def as_triangles_flat(self):
-        return self.vertices[self.boundary()[0].flatten()]
+    def _as_threejs_triangle_soup(self):
+        tris = self.vertices[self.boundary()[0].flatten()]
+        return tris.astype(np.float32), compute_three_normals(tris).astype(np.float32)
     
     def as_triangles(self):
         return self.boundary()[0].flatten().astype("uint32")
@@ -288,7 +290,7 @@ class Tetmesh(AbstractMesh):
         internal_triangles = np.repeat(self.internals, 4*3, axis=0)
         return internal_triangles
     
-    def _as_aajs_colors(self):
+    def _as_threejs_colors(self):
         return np.repeat(self.boundary()[1], 3)
     
     @property

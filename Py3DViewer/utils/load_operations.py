@@ -393,13 +393,12 @@ def compute_vertex_normals(face_normals, vtx2face):
 
 def _compute_three_vertex_normals(tri_soup):
     
-    e1_v = tri_soup[:,1] - tri_soup[:,0]
-    e2_v = tri_soup[:,2] - tri_soup[:,1]
+    tmp = tri_soup[0::3]
+    a = tri_soup[1::3] - tmp
+    b = tri_soup[2::3] - tmp
+    cross = np.cross(a,b)
+    face_normals = cross / np.linalg.norm(cross, axis=1, keepdims=True)
+    vtx_normals = np.repeat(face_normals, 3, axis=0)
     
-    face_normals = np.cross(e1_v, e2_v)
-    norm = np.linalg.norm(face_normals, axis=1)
-    norm.shape = (-1,1)
-    face_normals = face_normals/norm
-    
-    return np.repeat(face_normals, 3, axis=0)
+    return vtx_normals
 
