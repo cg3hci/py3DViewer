@@ -39,8 +39,7 @@ class AbstractMesh(Observer, Subject):
         self.vertices            = None #npArray (Nx3)
         self.vtx_normals         = None #npArray (Nx3) ## Is this used by volumetric meshes? Consider moving it inside surface meshes only
         self.faces               = None #npArray (NxM)
-        self._three_triangle_soup = False
-        self._dont_update = False
+        self._dont_update        = False
         self.__vtx2face          = None #npArray (NxM)
         self.__vtx2vtx           = None #npArray (Nx1)
         self.__bounding_box      = None #npArray (2x3)

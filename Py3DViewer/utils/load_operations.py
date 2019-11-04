@@ -388,3 +388,18 @@ def compute_vertex_normals(face_normals, vtx2face):
     norm = np.sqrt(np.sum(vtx_normals**2, axis=1))
     norm=np.reshape(norm, (-1,1))
     return vtx_normals/norm
+
+
+
+def _compute_three_vertex_normals(tri_soup):
+    
+    e1_v = tri_soup[:,1] - tri_soup[:,0]
+    e2_v = tri_soup[:,2] - tri_soup[:,1]
+    
+    face_normals = np.cross(e1_v, e2_v)
+    norm = np.linalg.norm(face_normals, axis=1)
+    norm.shape = (-1,1)
+    face_normals = face_normals/norm
+    
+    return np.repeat(face_normals, 3, axis=0)
+
