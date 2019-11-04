@@ -127,8 +127,11 @@ class Drawable(Observer):
         )
 
     def run(self, geometry):
+        """
         edges = geometry.as_edges_flat()
         self.wireframe.geometry.attributes['position'].array = edges
+        """
+        self.wireframe = self.__initialize_wireframe()
         self.geometry_color = self.__initialize_geometry_color(None, geometry)
         
         self.update_internal_color(self._internal_color, geometry)
