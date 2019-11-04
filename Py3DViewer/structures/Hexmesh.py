@@ -297,8 +297,8 @@ class Hexmesh(AbstractMesh):
     def as_edges_flat(self):
         boundaries = self.boundary()[0]
         edges = np.c_[boundaries[:,:2], boundaries[:,1:3], boundaries[:,2:4], boundaries[:,3], boundaries[:,0]].flatten()
-        edges_flat = self.vertices[edges].tolist()
-        return edges_flat
+        edges_flat = self.vertices[edges]
+        return edges_flat.astype(np.float32)
     
     def as_triangles_flat(self):
         boundaries = self.boundary()[0]

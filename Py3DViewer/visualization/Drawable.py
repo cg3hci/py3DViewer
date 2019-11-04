@@ -145,15 +145,17 @@ class Drawable(Observer):
         )
 
     def run(self, geometry):
-        edges = geometry.as_edges_flat()
-        self.wireframe.geometry.attributes['position'].array = edges
         self.geometry_color = self.__initialize_geometry_color(None, geometry)
         if (self.tri_soup):
             self.update_internal_color(self._internal_color, geometry)
             self.update_external_color(self._external_color, geometry)
+            edges = geometry.as_edges_flat()
+            self.wireframe.geometry.attributes['position'].array = edges
             #self.drawable_mesh.geometry.exec_three_obj_method("computeVertexNormals")
         else:
             tris = geometry.as_triangles()
+            edges = geometry.as_edges_flat()
+            self.wireframe.geometry.attributes['position'].array = edges
             self.drawable_mesh.geometry.attributes['position'].array = geometry.vertices
             self.drawable_mesh.geometry.attributes['normal'].array = geometry.vtx_normals
             self.drawable_mesh.geometry.attributes['index'].array = tris
