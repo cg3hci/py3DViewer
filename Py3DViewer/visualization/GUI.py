@@ -156,15 +156,18 @@ class GUI(Observer):
         )
         self.widgets += [self.color_external]
         
-        """
+        
         self.color_label_pickers = [widgets.ColorPicker(
                                             concise=True,
                                             description='Label ' + str(i),
-                                            value= self.listColor(int(i)),
+                                            value= colors.random_color(return_hex=True),
                                             disabled=False,
+                                            layout = self.visible_layout,
                                             ) for i in range(len(np.unique(self.mesh.labels)))]
+        
+        self.color_label_pickers = widgets.HBox(self.color_label_pickers, layout=self.invisible_layout)
         self.widgets += [self.color_label_pickers]
-        """
+        
         
         
         self.flip_x_button.observe(self.__update_clipping, names='value')
@@ -180,6 +183,7 @@ class GUI(Observer):
         self.coloring_type_menu.observe(self.__change_color_type, names='value')
         self.color_map.observe(self.__change_color_map, names='value')
         self.metric_menu.observe(self.__change_metric, names='value')
+        [i.observe(self.__change_color_label,names='value') for i in self.color_label_pickers.children]
         #self.wireframe_thickness_slider.observe(self.__update_wireframe_thickness, names='value')
         
         for widget in self.widgets:
@@ -206,6 +210,8 @@ class GUI(Observer):
             self.metric_menu.layout = self.invisible_layout
             self.color_external.layout = self.visible_layout
             self.color_internal.layout = self.visible_layout
+            self.color_label_pickers.layout = self.invisible_layout
+
             self.drawable._color_map = None
             self.__update_external_color(None)
             self.__update_internal_color(None)
@@ -216,16 +222,41 @@ class GUI(Observer):
             self.metric_menu.layout = self.visible_layout
             self.color_external.layout = self.invisible_layout
             self.color_internal.layout = self.invisible_layout
+            self.color_label_pickers.layout = self.invisible_layout
+
             self.__change_color_map(None)
         
         elif self.coloring_type_menu.value == 2:
-            pass
+            
+            self.color_label_pickers.layout = self.visible_layout
+            self.color_external.layout = self.invisible_layout
+            self.color_internal.layout = self.invisible_layout
+            self.color_map.layout = self.invisible_layout
+            self.metric_menu.layout = self.invisible_layout
+            
+            self.__change_color_label(None)
                     
 
         
     def __change_metric(self, change):
         
         self.__change_color_map(None)
+        
+        
+    def __change_color_label(self, change):
+        
+        mesh_color = np.zeros((self.mesh.labels.size,3), dtype=np.float)
+        
+        for idx, i in enumerate(self.mesh.labels):
+            
+            mesh_color[idx] = colors.hex2rgb(self.color_label_pickers.children[i].value)
+        
+        self.drawable._color_map = mesh_color
+        self.drawable.update_color_map(mesh_color)
+            
+            
+        
+        
     
     def __change_color_map(self, change):
         
