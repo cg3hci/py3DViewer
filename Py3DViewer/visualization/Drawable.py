@@ -101,9 +101,12 @@ class Drawable(Observer):
         return three.BufferAttribute(array, normalized = False, dynamic = True)
 
     def __get_wireframe_from_boundary(self): 
-        buffer_index = self.__as_buffer_attr(self.geometry.as_edges_flat().astype(np.uint32))
-        vertices = self.__as_buffer_attr(self.geometry.vertices.astype(np.float32))
-        wireframe = three.BufferGeometry(attributes={'position': vertices,'index': buffer_index})
+        edges = self.geometry.vertices[self.geometry.as_edges_flat()].astype(np.float32)
+        buffer = np.empty((int(edges.shape[0] * 3), 3), dtype=np.float32).reshape(-1, 3)
+        buffer[:edges.shape[0]] = edges
+        vertices = self.__as_buffer_attr(buffer)
+        wireframe = three.BufferGeometry(attributes={'position': vertices})
+        wireframe.exec_three_obj_method("setDrawRange", 0, edges.shape[0])
         return wireframe
     
     def __initialize_drawable_mesh(self):
@@ -127,8 +130,10 @@ class Drawable(Observer):
         )
 
     def run(self, geometry):
-        edges = geometry.as_edges_flat()
-        self.wireframe.geometry.attributes['index'].array = edges
+        edges = self.geometry.vertices[self.geometry.as_edges_flat()].astype(np.float32)
+        self.wireframe.geometry.attributes['position'].array[:edges.shape[0]] = edges
+        self.wireframe.geometry.exec_three_obj_method('setDrawRange', 0, edges.shape[0])
+        self.wireframe.geometry.attributes['position'].array = self.wireframe.geometry.attributes['position'].array
         self.geometry_color = self.__initialize_geometry_color(None, geometry)
         self.update_internal_color(self._internal_color, geometry)
         self.update_external_color(self._external_color, geometry)
