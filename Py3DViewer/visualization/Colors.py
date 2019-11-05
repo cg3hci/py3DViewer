@@ -6,6 +6,11 @@ class colors:
     teal = np.array([1, 212, 180],dtype=np.float) / 255
     black = np.array([0, 0, 0],dtype=np.float) / 255
     orange = np.array([255, 165, 0], dtype=np.float) / 255
+    blue = np.array([0, 0, 255], dtype=np.float) / 255
+    red = np.array([255, 0, 0], dtype=np.float) / 255
+    green = np.array([0, 255, 0], dtype=np.float) / 255
+    white = np.array([255, 255, 255], dtype=np.float) / 255
+    purple = np.array([255, 0, 255], dtype=np.float) / 255
     
     
     def hex2rgb(hex_color):
@@ -23,3 +28,18 @@ class colors:
         if len(b) == 1:
             b = '0'+b
         return f"#{r}{g}{b}"
+    
+    
+    def random_color(return_hex = False):
+        
+        r = np.random.randint(256) / 255.0
+        g = np.random.randint(256) / 255.0 
+        b = np.random.randint(256) / 255.0
+        
+        color = np.array([r,g,b], dtype=np.float)
+        
+        if return_hex:
+            
+            return colors.rgb2hex(color)
+        
+        return color

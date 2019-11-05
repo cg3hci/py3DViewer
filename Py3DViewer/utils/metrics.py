@@ -170,18 +170,23 @@ def tet_volume(vertices, tets):
          and the second element is the array of the volume of the given tetrahedra
     
     """
-    
     p0 = vertices[tets[:,0]]
     p1 = vertices[tets[:,1]]
     p2 = vertices[tets[:,2]]
     p3 = vertices[tets[:,3]]
-        
-        
-    l0 = p1 - p0
-    l2 = p0 - p2
-    l3 = p3 - p0
+
+    ones = np.ones(p0.shape[0])
+
+    p0 = np.c_[p0,ones]
+    p1 = np.c_[p1,ones]
+    p2 = np.c_[p2,ones]
+    p3 = np.c_[p3,ones]
+
+    matr = np.transpose(np.c_[p0, p1, p2, p3].reshape(-1,4,4), (0,2,1))
+
+    volume = np.abs(np.linalg.det(matr))/6
     
-    return ((None, None), (np.cross(l2, l0, axis=1)* l3)/6)
+    return ((None, None), volume)
     
 #______________________________________Hexes______________________________________________________
 

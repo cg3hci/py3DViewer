@@ -320,7 +320,11 @@ class Hexmesh(AbstractMesh):
         internal_triangles = np.repeat(self.internals, 12*3, axis=0)
         return internal_triangles
     
-    def _as_threejs_colors(self):
+    def _as_threejs_colors(self, colors=None):
+        
+        if colors is not None:
+            return np.repeat(colors, 6*2*3, axis=0)
+        
         return np.repeat(self.boundary()[1], 6)
     
     @property
