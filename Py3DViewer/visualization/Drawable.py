@@ -76,7 +76,7 @@ class Drawable(Observer):
             
     def __initialize_wireframe(self):
         edges_material = three.LineBasicMaterial(color='#686868', 
-                                                        linewidth = 1, 
+                                                        linewidth = 5, 
                                                         depthTest=True, 
                                                         opacity=.2,
                                                         transparent=True)
@@ -101,9 +101,9 @@ class Drawable(Observer):
         return three.BufferAttribute(array, normalized = False, dynamic = True)
 
     def __get_wireframe_from_boundary(self): 
-        surface_wireframe = self.geometry.as_edges_flat()
-        buffer_wireframe = three.BufferAttribute(surface_wireframe, normalized=False, dynamic=True)
-        wireframe = three.BufferGeometry(attributes={'position': buffer_wireframe})
+        buffer_index = self.__as_buffer_attr(self.geometry.as_edges_flat().astype(np.uint32))
+        vertices = self.__as_buffer_attr(self.geometry.vertices.astype(np.float32))
+        wireframe = three.BufferGeometry(attributes={'position': vertices,'index': buffer_index})
         return wireframe
     
     def __initialize_drawable_mesh(self):
@@ -127,15 +127,12 @@ class Drawable(Observer):
         )
 
     def run(self, geometry):
-        """
         edges = geometry.as_edges_flat()
-        self.wireframe.geometry.attributes['position'].array = edges
-        """
-        self.wireframe = self.__initialize_wireframe()
+        self.wireframe.geometry.attributes['index'].array = edges
         self.geometry_color = self.__initialize_geometry_color(None, geometry)
-        
         self.update_internal_color(self._internal_color, geometry)
         self.update_external_color(self._external_color, geometry)
+        
         if self.queue:
             self.queue = False
             self.updating = False

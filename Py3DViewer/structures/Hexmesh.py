@@ -208,11 +208,8 @@ class Hexmesh(AbstractMesh):
         self.__compute_faces()
         self.__hex2hex, self._AbstractMesh__vtx2vtx, self.__vtx2hex = compute_adjacencies(self.faces, self.num_vertices)
         self._AbstractMesh__update_bounding_box()
-        self.set_clipping(self.bbox[0,0], self.bbox[1,0], 
-                     self.bbox[0,1], self.bbox[1,1], 
-                     self.bbox[0,2], self.bbox[1,2])
         self.__compute_metrics()
-        
+        self.reset_clipping()
         self._dont_update = False
         self.update()
 
@@ -295,9 +292,15 @@ class Hexmesh(AbstractMesh):
     
     def as_edges_flat(self):
         boundaries = self.boundary()[0]
-        edges = np.c_[boundaries[:,:2], boundaries[:,1:3], boundaries[:,2:4], boundaries[:,3], boundaries[:,0]].flatten()
-        edges_flat = self.vertices[edges]
-        return edges_flat.astype(np.float32)
+        edges = np.c_[boundaries[:,:2], boundaries[:,1:3], boundaries[:,2:4], boundaries[:,3], boundaries[:,0]].reshape(-1, 2)
+        edges = np.sort(edges, axis=1)
+        edges = np.unique(edges, axis=0)
+        return edges.flatten().astype(np.uint32)
+    
+    def as_edges_debug(self):
+        boundaries = self.boundary()[0]
+        edges = np.c_[boundaries[:,:2], boundaries[:,1:3], boundaries[:,2:4], boundaries[:,3], boundaries[:,0]]
+        return edges
     
     def _as_threejs_triangle_soup(self):
         boundaries = self.boundary()[0]
