@@ -247,8 +247,7 @@ class GUI(Observer):
         
         mesh_color = np.zeros((self.mesh.labels.size,3), dtype=np.float)
         
-        for idx, i in enumerate(self.mesh.labels):
-            
+        for idx, i in enumerate(self.mesh.labels.reshape(-1)):
             mesh_color[idx] = colors.hex2rgb(self.color_label_pickers.children[i].value)
         
         self.drawable._color_map = mesh_color

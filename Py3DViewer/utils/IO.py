@@ -66,13 +66,13 @@ def read_mesh(filename):
 
         tmp_vtx = np.array(tmp_vtx)
         tmp_simplices = np.array(tmp_simplices)
-        tmp_labels = np.array(tmp_labels)
+        tmp_labels = np.array(tmp_labels, dtype=np.int)
         
         vtx = ObservableArray(tmp_vtx.shape)
         vtx[:] = tmp_vtx
         simplices = ObservableArray(tmp_simplices.shape, dtype=np.int)
         simplices[:] = tmp_simplices
-        labels = ObservableArray(tmp_labels.shape)
+        labels = ObservableArray(tmp_labels.shape, dtype=np.int)
         labels[:] = tmp_labels
         
         return vtx, simplices, labels
