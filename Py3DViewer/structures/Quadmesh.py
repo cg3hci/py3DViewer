@@ -252,8 +252,8 @@ class Quadmesh(AbstractMesh):
     def as_edges_flat(self):
         boundaries = self.boundary()[0]
         edges = np.c_[boundaries[:,:2], boundaries[:,1:3], boundaries[:,2:4], boundaries[:,3], boundaries[:,0]].flatten()
-        edges_flat = self.vertices[edges].tolist()
-        return edges_flat
+        #edges_flat = self.vertices[edges].tolist()
+        return edges
     
     def _as_threejs_triangle_soup(self):
         boundaries = self.boundary()[0]
@@ -268,7 +268,9 @@ class Quadmesh(AbstractMesh):
         boundaries.shape = (-1, 3)
         return boundaries.astype("uint32").flatten()
     
-    def _as_threejs_colors(self):
+    def _as_threejs_colors(self, colors=None):
+        if colors is not None:
+            return np.repeat(colors, 6, axis=0)
         return np.repeat(self.boundary()[1], 6)
     
     @property

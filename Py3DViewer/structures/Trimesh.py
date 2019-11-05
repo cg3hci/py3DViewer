@@ -253,8 +253,8 @@ class Trimesh(AbstractMesh):
     def as_edges_flat(self):
         boundaries = self.boundary()[0]
         edges = np.c_[boundaries[:,:2], boundaries[:,1:], boundaries[:,2], boundaries[:,0]].flatten()
-        edges_flat = self.vertices[edges].tolist()
-        return edges_flat
+        #edges_flat = self.vertices[edges].tolist()
+        return edges
     
     def _as_threejs_triangle_soup(self):
         tris = self.vertices[self.boundary()[0].flatten()]
@@ -263,7 +263,10 @@ class Trimesh(AbstractMesh):
     def as_triangles(self):
         return self.boundary()[0].flatten().astype("uint32")
     
-    def _as_threejs_colors(self):
+    def _as_threejs_colors(self, colors=None):
+        
+        if colors is not None:
+            return np.repeat(colors, 3, axis=0)
         return np.repeat(self.boundary()[1], 3)
     
     @property

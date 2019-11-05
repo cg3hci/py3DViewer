@@ -12,6 +12,7 @@ class Drawable(Observer):
         super(Drawable, self).__init__()
         self._external_color = colors.teal
         self._internal_color = colors.orange
+        self._color_map      = None
         self.geometry = geometry
         if reactive:
             self.geometry.attach(self)
@@ -72,11 +73,24 @@ class Drawable(Observer):
         tris, vtx_normals = geometry._as_threejs_triangle_soup()
         interleaved = np.concatenate((tris, new_colors, vtx_normals), axis=1)
         self.drawable_mesh.geometry.attributes['color'].data.array = interleaved
+        
+    
+    def update_color_map(self, new_colors, geometry = None):
+        
+        if geometry is None:
+            geometry = self.geometry
+        
+        self.geometry_color[:] = geometry._as_threejs_colors(colors= new_colors)
+        colors = geometry._as_threejs_colors()
+        new_colors = self.geometry_color[colors]
+        tris, vtx_normals = geometry._as_threejs_triangle_soup()
+        interleaved = np.concatenate((tris, new_colors, vtx_normals), axis=1)
+        self.drawable_mesh.geometry.attributes['color'].data.array = interleaved 
             
             
     def __initialize_wireframe(self):
         edges_material = three.LineBasicMaterial(color='#686868', 
-                                                        linewidth = 5, 
+                                                        linewidth = 1, 
                                                         depthTest=True, 
                                                         opacity=.2,
                                                         transparent=True)
@@ -130,8 +144,11 @@ class Drawable(Observer):
         edges = geometry.as_edges_flat()
         self.wireframe.geometry.attributes['index'].array = edges
         self.geometry_color = self.__initialize_geometry_color(None, geometry)
-        self.update_internal_color(self._internal_color, geometry)
-        self.update_external_color(self._external_color, geometry)
+        if self._color_map is None:
+            self.update_internal_color(self._internal_color, geometry)
+            self.update_external_color(self._external_color, geometry)
+        else:
+            self.update_color_map(self._color_map, geometry)
         
         if self.queue:
             self.queue = False

@@ -276,8 +276,8 @@ class Tetmesh(AbstractMesh):
         
         boundaries = self.boundary()[0]
         edges = np.c_[boundaries[:,:2], boundaries[:,1:], boundaries[:,2], boundaries[:,0]].flatten()
-        edges_flat = self.vertices[edges].tolist()
-        return edges_flat
+        #edges_flat = self.vertices[edges].tolist()
+        return edges
     
     def _as_threejs_triangle_soup(self):
         tris = self.vertices[self.boundary()[0].flatten()]
@@ -290,7 +290,11 @@ class Tetmesh(AbstractMesh):
         internal_triangles = np.repeat(self.internals, 4*3, axis=0)
         return internal_triangles
     
-    def _as_threejs_colors(self):
+    def _as_threejs_colors(self, colors=None):
+        
+        if colors is not None:
+            return np.repeat(colors, 4*3, axis=0)
+        
         return np.repeat(self.boundary()[1], 3)
     
     @property

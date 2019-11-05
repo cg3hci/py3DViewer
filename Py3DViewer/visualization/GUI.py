@@ -15,6 +15,10 @@ class GUI(Observer):
         self.widgets = []
         self.__clipping_in_queue = False
         self.__dont_update_clipping = False
+        
+        self.invisible_layout = {'display':'none'}
+        self.visible_layout = {'display':''}
+        
         self.flip_x_button = widgets.ToggleButton(
                     value=False,
                     description='Flip x',
@@ -115,8 +119,17 @@ class GUI(Observer):
             options=[(i, idx) for idx, i in enumerate(ColorMap.color_maps.keys())],
             value=0,
             description='Color-Map:',
+            layout = self.invisible_layout,
         )
         self.widgets += [self.color_map]
+        
+        self.metric_menu = widgets.Dropdown(
+            options= [(i, idx) for idx, i in enumerate(self.mesh.simplex_metrics.keys())],
+            value=0,
+            description='Metric:',
+            layout = self.invisible_layout,
+        )
+        self.widgets += [self.metric_menu]
 
         self.coloring_type_menu = widgets.Dropdown(
             options=[('Default', 0), ('Simplex Quality', 1), ('Label',2)],
@@ -125,12 +138,7 @@ class GUI(Observer):
         )
         self.widgets += [self.coloring_type_menu]
         
-        self.metric_menu = widgets.Dropdown(
-            options= [(i, idx) for idx, i in enumerate(self.mesh.simplex_metrics.keys())],
-            value=0,
-            description='Metric:',
-        )
-        self.widgets += [self.metric_menu]
+
         
         self.color_internal = widgets.ColorPicker(
                             concise=True,
@@ -169,6 +177,9 @@ class GUI(Observer):
         self.color_external.observe(self.__update_external_color, names='value')
         self.color_wireframe.observe(self.__update_wireframe_color, names='value')
         self.wireframe_opacity_slider.observe(self.__update_wireframe_opacity, names='value')
+        self.coloring_type_menu.observe(self.__change_color_type, names='value')
+        self.color_map.observe(self.__change_color_map, names='value')
+        self.metric_menu.observe(self.__change_metric, names='value')
         #self.wireframe_thickness_slider.observe(self.__update_wireframe_thickness, names='value')
         
         for widget in self.widgets:
@@ -186,6 +197,66 @@ class GUI(Observer):
             
     def __update_external_color(self, change): 
         self.drawable.update_external_color(colors.hex2rgb(self.color_external.value))
+        
+    def __change_color_type(self, change):
+        
+        if self.coloring_type_menu.value == 0:
+            
+            self.color_map.layout = self.invisible_layout
+            self.metric_menu.layout = self.invisible_layout
+            self.color_external.layout = self.visible_layout
+            self.color_internal.layout = self.visible_layout
+            self.drawable._color_map = None
+            self.__update_external_color(None)
+            self.__update_internal_color(None)
+            
+        elif self.coloring_type_menu.value == 1:
+        
+            self.color_map.layout = self.visible_layout
+            self.metric_menu.layout = self.visible_layout
+            self.color_external.layout = self.invisible_layout
+            self.color_internal.layout = self.invisible_layout
+            self.__change_color_map(None)
+        
+        elif self.coloring_type_menu.value == 2:
+            pass
+                    
+
+        
+    def __change_metric(self, change):
+        
+        self.__change_color_map(None)
+    
+    def __change_color_map(self, change):
+        
+        metric_string = list(self.mesh.simplex_metrics.keys())[self.metric_menu.value]
+        (min_range, max_range), metric = self.mesh.simplex_metrics[metric_string]
+        c_map_string = list(ColorMap.color_maps.keys())[self.color_map.value]
+        c_map = ColorMap.color_maps[c_map_string]
+        
+        if min_range is None or max_range is None:
+            
+            min_range = np.min(metric)
+            max_range = np.max(metric)
+            
+            if (np.abs(max_range-min_range) > 1e-7):
+                normalized_metric = ((metric - np.min(metric))/np.ptp(metric)) * (c_map.shape[0]-1)
+            else:
+                normalized_metric = np.repeat(np.mean(metric), metric.shape[0])
+        else:
+            normalized_metric = np.clip(metric, min_range, max_range)
+            normalized_metric = (normalized_metric - min_range)/(max_range-min_range) * (c_map.shape[0]-1)
+            
+        normalized_metric = 1-normalized_metric
+            
+        metric_to_colormap = np.rint(normalized_metric).astype(np.int)
+        
+        mesh_color = c_map[metric_to_colormap]
+        
+        self.drawable._color_map = mesh_color
+        self.drawable.update_color_map(mesh_color)
+        
+        
         
     def __clipping_updater(self):
             
