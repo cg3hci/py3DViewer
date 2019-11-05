@@ -133,6 +133,10 @@ class Tetmesh(AbstractMesh):
         mask = mask.astype(np.bool)
         
         self.tets = self.tets[mask]
+                    
+        if self.labels is not None:
+            self.labels = self.labels[mask]
+        
         self.__load_operations()
         
     
@@ -155,7 +159,7 @@ class Tetmesh(AbstractMesh):
 
         Parameters:
 
-            vtx_ids (Array (Nx1 / 1xN) type=int): List of vertices to remove. Each vertex is in the form [int]
+            vtx_ids (Array (Nx1 / 1xN) type=int): List of vertices to remove. Each vertex is ifn the form [int]
     
         """ 
         self._dont_update = True
@@ -164,10 +168,16 @@ class Tetmesh(AbstractMesh):
         for v_id in vtx_ids:
                         
             self.vertices = np.delete(self.vertices, v_id, 0)
-            self.tets = self.tets[(self.tets[:,0] != v_id) & 
-                                    (self.tets[:,1] != v_id) & 
-                                    (self.tets[:,2] != v_id) & 
-                                    (self.tets[:,3] != v_id)]
+            
+            condition = ((self.tets[:,0] != v_id) & 
+                        (self.tets[:,1] != v_id) & 
+                        (self.tets[:,2] != v_id) & 
+                        (self.tets[:,3] != v_id))
+            
+            if self.labels is not None:
+                self.labels = self.labels[condition]
+                
+            self.tets = self.tets[condition]
             
             self.tets[(self.tets[:,0] > v_id)] -= np.array([1, 0, 0, 0])
             self.tets[(self.tets[:,1] > v_id)] -= np.array([0, 1, 0, 0])

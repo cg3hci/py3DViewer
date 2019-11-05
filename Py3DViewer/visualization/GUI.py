@@ -211,7 +211,7 @@ class GUI(Observer):
             self.color_external.layout = self.visible_layout
             self.color_internal.layout = self.visible_layout
             self.color_label_pickers.layout = self.invisible_layout
-
+            self.drawable._label_colors = None
             self.drawable._color_map = None
             self.__update_external_color(None)
             self.__update_internal_color(None)
@@ -223,18 +223,20 @@ class GUI(Observer):
             self.color_external.layout = self.invisible_layout
             self.color_internal.layout = self.invisible_layout
             self.color_label_pickers.layout = self.invisible_layout
-
+            self.drawable._label_colors = None
             self.__change_color_map(None)
         
         elif self.coloring_type_menu.value == 2:
             
-            self.color_label_pickers.layout = self.visible_layout
             self.color_external.layout = self.invisible_layout
             self.color_internal.layout = self.invisible_layout
             self.color_map.layout = self.invisible_layout
             self.metric_menu.layout = self.invisible_layout
             
-            self.__change_color_label(None)
+            if self.mesh.labels is not None:
+            
+                self.color_label_pickers.layout = self.visible_layout
+                self.__change_color_label(None)
                     
 
         
@@ -245,13 +247,9 @@ class GUI(Observer):
         
     def __change_color_label(self, change):
         
-        mesh_color = np.zeros((self.mesh.labels.size,3), dtype=np.float)
+        self.drawable._label_colors = [colors.hex2rgb(i.value) for i in self.color_label_pickers.children]
         
-        for idx, i in enumerate(self.mesh.labels.reshape(-1)):
-            mesh_color[idx] = colors.hex2rgb(self.color_label_pickers.children[i].value)
-        
-        self.drawable._color_map = mesh_color
-        self.drawable.update_color_map(mesh_color)
+        self.drawable.update_color_label()
             
             
         
@@ -260,31 +258,10 @@ class GUI(Observer):
     def __change_color_map(self, change):
         
         metric_string = list(self.mesh.simplex_metrics.keys())[self.metric_menu.value]
-        (min_range, max_range), metric = self.mesh.simplex_metrics[metric_string]
+        
         c_map_string = list(ColorMap.color_maps.keys())[self.color_map.value]
-        c_map = ColorMap.color_maps[c_map_string]
-        
-        if min_range is None or max_range is None:
-            
-            min_range = np.min(metric)
-            max_range = np.max(metric)
-            
-            if (np.abs(max_range-min_range) > 1e-7):
-                normalized_metric = ((metric - np.min(metric))/np.ptp(metric)) * (c_map.shape[0]-1)
-            else:
-                normalized_metric = np.repeat(np.mean(metric), metric.shape[0])
-        else:
-            normalized_metric = np.clip(metric, min_range, max_range)
-            normalized_metric = (normalized_metric - min_range)/(max_range-min_range) * (c_map.shape[0]-1)
-            
-        normalized_metric = 1-normalized_metric
-            
-        metric_to_colormap = np.rint(normalized_metric).astype(np.int)
-        
-        mesh_color = c_map[metric_to_colormap]
-        
-        self.drawable._color_map = mesh_color
-        self.drawable.update_color_map(mesh_color)
+         
+        self.drawable.compute_color_map(metric_string, c_map_string)
         
         
         

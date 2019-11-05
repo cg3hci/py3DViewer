@@ -144,6 +144,8 @@ class Hexmesh(AbstractMesh):
         mask = mask.astype(np.bool)
         
         self.hexes = self.hexes[mask]
+        if self.labels is not None:
+            self.labels = self.labels[mask]
         self.__load_operations()
         
     
@@ -176,14 +178,20 @@ class Hexmesh(AbstractMesh):
         for v_id in vtx_ids:
                         
             self.vertices = np.delete(self.vertices, v_id, 0)
-            self.hexes = self.hexes[(self.hexes[:,0] != v_id) & 
+            
+            condition = ((self.hexes[:,0] != v_id) & 
                                     (self.hexes[:,1] != v_id) & 
                                     (self.hexes[:,2] != v_id) & 
                                     (self.hexes[:,3] != v_id) &
                                     (self.hexes[:,4] != v_id) &
                                     (self.hexes[:,5] != v_id) &
                                     (self.hexes[:,6] != v_id) &
-                                    (self.hexes[:,7] != v_id)]
+                                    (self.hexes[:,7] != v_id))
+            
+            if self.labels is not None:
+                self.labels = self.labels[condition]
+            
+            self.hexes = self.hexes[condition]
             
             self.hexes[(self.hexes[:,0] > v_id)] -= np.array([1, 0, 0, 0, 0, 0, 0, 0])
             self.hexes[(self.hexes[:,1] > v_id)] -= np.array([0, 1, 0, 0, 0, 0, 0, 0])

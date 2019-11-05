@@ -127,6 +127,8 @@ class Trimesh(AbstractMesh):
         mask = mask.astype(np.bool)
         
         self.faces = self.faces[mask]
+        if self.labels is not None:
+            self.labels = self.labels[mask]
         self.__load_operations()
         
     
@@ -159,9 +161,14 @@ class Trimesh(AbstractMesh):
         for v_id in vtx_ids:
                         
             self.vertices = np.delete(self.vertices, v_id, 0)
-            self.faces = self.faces[(self.faces[:,0] != v_id) & 
+            condition = ((self.faces[:,0] != v_id) & 
                                     (self.faces[:,1] != v_id) & 
-                                    (self.faces[:,2] != v_id)]
+                                    (self.faces[:,2] != v_id))
+            
+            if self.labels is not None:
+                self.labels = self.labels[condition]
+                
+            self.faces = self.faces[condition]
             
             self.faces[(self.faces[:,0] > v_id)] -= np.array([1, 0, 0])
             self.faces[(self.faces[:,1] > v_id)] -= np.array([0, 1, 0])

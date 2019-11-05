@@ -2,7 +2,7 @@ import pythreejs as three
 import numpy as np
 from time import time, sleep
 from .Colors import colors
-from ..utils import Observer
+from ..utils import Observer, ColorMap
 import threading
 import copy
     
@@ -13,6 +13,10 @@ class Drawable(Observer):
         self._external_color = colors.teal
         self._internal_color = colors.orange
         self._color_map      = None
+        self._metric_string   = None
+        self._c_map_string    = None
+        self._label_colors    = None
+        
         self.geometry = geometry
         if reactive:
             self.geometry.attach(self)
@@ -85,7 +89,55 @@ class Drawable(Observer):
         new_colors = self.geometry_color[colors]
         tris, vtx_normals = geometry._as_threejs_triangle_soup()
         interleaved = np.concatenate((tris, new_colors, vtx_normals), axis=1)
-        self.drawable_mesh.geometry.attributes['color'].data.array = interleaved 
+        self.drawable_mesh.geometry.attributes['color'].data.array = interleaved
+        
+    
+    def compute_color_map(self, metric_string, c_map_string, geometry=None):
+        
+        if geometry is None:
+            geometry = self.geometry
+        
+        self._metric_string = metric_string
+        self._c_map_string  = c_map_string
+        
+        (min_range, max_range), metric = self.geometry.simplex_metrics[metric_string]
+        c_map = ColorMap.color_maps[c_map_string]
+        
+        if min_range is None or max_range is None:
+            
+            min_range = np.min(metric)
+            max_range = np.max(metric)
+            
+            if (np.abs(max_range-min_range) > 1e-7):
+                normalized_metric = ((metric - np.min(metric))/np.ptp(metric)) * (c_map.shape[0]-1)
+            else:
+                normalized_metric = np.repeat(np.mean(metric), metric.shape[0])
+        else:
+            normalized_metric = np.clip(metric, min_range, max_range)
+            normalized_metric = (normalized_metric - min_range)/(max_range-min_range) * (c_map.shape[0]-1)
+            
+        normalized_metric = 1-normalized_metric
+            
+        metric_to_colormap = np.rint(normalized_metric).astype(np.int)
+        
+        mesh_color = c_map[metric_to_colormap]
+        
+        self._color_map = mesh_color
+        self.update_color_map(mesh_color, geometry)
+        
+    
+    def update_color_label(self, geometry = None):
+        
+        if geometry is None:
+            geometry = self.geometry
+            
+        mesh_color = np.zeros((self.geometry.labels.size,3), dtype=np.float)
+        
+        for idx, i in enumerate(self.geometry.labels.reshape(-1)):
+            mesh_color[idx] = self._label_colors[i]
+        
+        self._color_map = mesh_color
+        self.update_color_map(mesh_color)
             
             
     def __initialize_wireframe(self):
@@ -152,9 +204,13 @@ class Drawable(Observer):
         if self._color_map is None:
             self.update_internal_color(self._internal_color, geometry)
             self.update_external_color(self._external_color, geometry)
-        else:
-            self.update_color_map(self._color_map, geometry)
         
+        elif self._label_colors is not None:
+            self.update_color_label(geometry)
+        else:
+            self.compute_color_map(self._metric_string, self._c_map_string, geometry)
+
+
         if self.queue:
             self.queue = False
             self.updating = False
