@@ -50,11 +50,12 @@ class GUI(Observer):
         self.widgets += [self.flip_z_button]
        
         x_range = self.mesh.bbox[0][0], self.mesh.bbox[1][0]
+        x_step = abs(x_range[0]-x_range[1])/100
         self.clipping_slider_x = widgets.FloatRangeSlider(
             value=x_range,
-            min=x_range[0],
-            max=x_range[1],
-            step=abs(x_range[0]-x_range[1])/100,
+            min=x_range[0]-x_step,
+            max=x_range[1]+x_step,
+            step=x_step,
             description='X:',
             disabled=False,
             continuous_update=True,
@@ -66,11 +67,12 @@ class GUI(Observer):
 
 
         y_range = self.mesh.bbox[0][1], self.mesh.bbox[1][1]
+        y_step = abs(y_range[0]-y_range[1])/100
         self.clipping_slider_y = widgets.FloatRangeSlider(
             value = y_range,
-            min = y_range[0],
-            max = y_range[1],
-            step=abs(y_range[0]-y_range[1])/100,
+            min=y_range[0]-y_step,
+            max=y_range[1]+y_step,
+            step=y_step,
             description='Y:',
             disabled=False,
             continuous_update=True,
@@ -81,11 +83,12 @@ class GUI(Observer):
         self.widgets += [self.clipping_slider_y]
 
         z_range = self.mesh.bbox[0][2], self.mesh.bbox[1][2]
+        z_step = abs(z_range[0]-z_range[1])/100
         self.clipping_slider_z = widgets.FloatRangeSlider(
             value = z_range,
-            min = z_range[0],
-            max = z_range[1],
-            step=abs(z_range[0]-z_range[1])/100,
+            min = z_range[0]-z_step,
+            max = z_range[1]+z_step,
+            step=z_step,
             description='Z:',
             disabled=False,
             continuous_update=True,

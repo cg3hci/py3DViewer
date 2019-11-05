@@ -302,7 +302,8 @@ class Hexmesh(AbstractMesh):
         boundaries = self.boundary()[0]
         edges = np.c_[boundaries[:,:2], boundaries[:,1:3], boundaries[:,2:4], boundaries[:,3], boundaries[:,0]].reshape(-1, 2)
         edges = np.sort(edges, axis=1)
-        edges = np.unique(edges, axis=0)
+        if edges.size > 0:
+            edges = np.unique(edges, axis=0)
         return edges.flatten().astype(np.uint32)
     
     def as_edges_debug(self):
