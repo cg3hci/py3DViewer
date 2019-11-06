@@ -8,7 +8,7 @@ class Viewer(object):
 
     def __init__(self, geometry, mesh_color = None, width=1000, height=700, reactive=False, with_gui=False):
         super(Viewer, self).__init__()
-        self.drawable = Drawable(geometry, mesh_color = mesh_color, reactive = reactive)
+        self.drawable = Drawable(geometry, mesh_color = mesh_color, reactive = reactive or with_gui)
         self.camera = self.__initialize_camera(width, height)
         self.scene = self.__initialize_scene()
         self.controls = self.__initialize_controls()

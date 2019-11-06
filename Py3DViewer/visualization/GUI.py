@@ -166,7 +166,7 @@ class GUI(Observer):
                                             value= colors.random_color(return_hex=True),
                                             disabled=False,
                                             layout = self.visible_layout,
-                                            ) for i in range(len(np.unique(self.mesh.labels)))]
+                                            ) for i in np.unique(self.mesh.labels)]
         
         self.color_label_pickers = widgets.HBox(self.color_label_pickers, layout=self.invisible_layout)
         self.widgets += [self.color_label_pickers]
@@ -250,7 +250,7 @@ class GUI(Observer):
         
     def __change_color_label(self, change):
         
-        self.drawable._label_colors = [colors.hex2rgb(i.value) for i in self.color_label_pickers.children]
+        self.drawable._label_colors = {int(i.description.split()[1]): colors.hex2rgb(i.value) for i in self.color_label_pickers.children}
         
         self.drawable.update_color_label()
             
