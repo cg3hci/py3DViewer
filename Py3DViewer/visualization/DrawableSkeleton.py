@@ -6,10 +6,10 @@ from ..utils import Observer, ColorMap
 import threading
 import copy
     
-class Drawable(Observer):
+class DrawableSkeleton(Observer):
     
     def __init__(self, geometry, mesh_color = None, reactive = False):
-        super(Drawable, self).__init__()
+        super(DrawableSkeleton, self).__init__()
         self._external_color = colors.teal
         self._internal_color = colors.orange
         self._color_map      = None
@@ -21,9 +21,9 @@ class Drawable(Observer):
         if reactive:
             self.geometry.attach(self)
         self.geometry_color = self.__initialize_geometry_color(mesh_color)
-        self.drawable_mesh = self.__initialize_drawable_mesh()
-        
+        self.mesh = self.__initialize_mesh()
         self.wireframe = self.__initialize_wireframe()
+        self.threejs_items = [self.mesh, self.wireframe]
         self.updating = False
         self.queue = False
         
@@ -59,7 +59,7 @@ class Drawable(Observer):
             new_colors = self.geometry_color[colors]
             tris, vtx_normals = geometry._as_threejs_triangle_soup()
             interleaved = np.concatenate((tris, new_colors, vtx_normals), axis=1)
-            self.drawable_mesh.geometry.attributes['color'].data.array = interleaved
+            self.mesh.geometry.attributes['color'].data.array = interleaved
 
 
     def update_external_color(self, new_color, geometry = None):
@@ -76,7 +76,7 @@ class Drawable(Observer):
         new_colors = self.geometry_color[colors]
         tris, vtx_normals = geometry._as_threejs_triangle_soup()
         interleaved = np.concatenate((tris, new_colors, vtx_normals), axis=1)
-        self.drawable_mesh.geometry.attributes['color'].data.array = interleaved
+        self.mesh.geometry.attributes['color'].data.array = interleaved
         
     
     def update_color_map(self, new_colors, geometry = None):
@@ -89,7 +89,7 @@ class Drawable(Observer):
         new_colors = self.geometry_color[colors]
         tris, vtx_normals = geometry._as_threejs_triangle_soup()
         interleaved = np.concatenate((tris, new_colors, vtx_normals), axis=1)
-        self.drawable_mesh.geometry.attributes['color'].data.array = interleaved
+        self.mesh.geometry.attributes['color'].data.array = interleaved
         
     
     def compute_color_map(self, metric_string, c_map_string, geometry=None):
@@ -175,7 +175,7 @@ class Drawable(Observer):
         wireframe.exec_three_obj_method("setDrawRange", 0, edges.shape[0])
         return wireframe
     
-    def __initialize_drawable_mesh(self):
+    def __initialize_mesh(self):
         drawable_geometry = self.__get_drawable_from_boundary()
         material = three.MeshLambertMaterial(
                                            polygonOffset=True,

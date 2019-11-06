@@ -142,14 +142,14 @@ class GUI(Observer):
         self.widgets += [self.coloring_type_menu]
         
 
-        
-        self.color_internal = widgets.ColorPicker(
+        if hasattr(self.mesh, "internals"):
+            self.color_internal = widgets.ColorPicker(
                             concise=True,
                             description='Internal Color',
                             value=colors.rgb2hex(self.drawable._internal_color),
                             disabled=False,
-        )
-        self.widgets += [self.color_internal]
+            )
+            self.widgets += [self.color_internal]
             
         self.color_external = widgets.ColorPicker(
             concise=True,
@@ -179,7 +179,8 @@ class GUI(Observer):
         self.clipping_slider_x.observe(self.__update_clipping, names='value')
         self.clipping_slider_y.observe(self.__update_clipping, names='value')
         self.clipping_slider_z.observe(self.__update_clipping, names='value')
-        self.color_internal.observe(self.__update_internal_color, names='value')
+        if hasattr(self.mesh, "internals"): 
+            self.color_internal.observe(self.__update_internal_color, names='value')
         self.color_external.observe(self.__update_external_color, names='value')
         self.color_wireframe.observe(self.__update_wireframe_color, names='value')
         self.wireframe_opacity_slider.observe(self.__update_wireframe_opacity, names='value')
@@ -247,16 +248,11 @@ class GUI(Observer):
         
         self.__change_color_map(None)
         
-        
     def __change_color_label(self, change):
         
         self.drawable._label_colors = {int(i.description.split()[1]): colors.hex2rgb(i.value) for i in self.color_label_pickers.children}
         
         self.drawable.update_color_label()
-            
-            
-        
-        
     
     def __change_color_map(self, change):
         
@@ -265,8 +261,6 @@ class GUI(Observer):
         c_map_string = list(ColorMap.color_maps.keys())[self.color_map.value]
          
         self.drawable.compute_color_map(metric_string, c_map_string)
-        
-        
         
     def __clipping_updater(self):
             
@@ -298,8 +292,6 @@ class GUI(Observer):
             thread.daemon = True
             thread.start()
 
-        
-    
     def update(self):
         clipping = self.mesh.clipping
         flips = clipping.flip
