@@ -41,7 +41,7 @@ class Trimesh(AbstractMesh):
             self.vertices = ObservableArray(vertices.shape)
             self.vertices[:] = vertices
             self.vertices.attach(self)
-            self.faces = ObservableArray(faces.shape, dtype=np.int)
+            self.faces = ObservableArray(faces.shape, dtype=np.int64)
             self.faces[:] = faces
             self.faces.attach(self)
             self.__load_operations()
