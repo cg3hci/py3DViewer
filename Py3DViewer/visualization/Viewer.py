@@ -46,7 +46,7 @@ class Viewer(object):
         camera_position = tuple(camera_target + [0, 0, np.mean([drawable.scale for drawable in self.drawables])])
         directional_light = three.DirectionalLight(color = '#ffffff', position = [0, 10, 0], intensity = 1)
         camera = three.PerspectiveCamera(
-            position=camera_position, aspect=width/height, lookAt=camera_target, fov=50, near=.1, far=10000,
+            position=camera_position, aspect=width/height, lookAt=camera_target, fov=50, near=.001, far=100000,
             children=[directional_light]
         )
         return camera
