@@ -22,6 +22,10 @@ class Viewer(object):
         if with_gui:
             if len(self.drawables) > 1:
                 print("ERROR: GUI only supports one geometry at a time, so far.")
+            
+            if "Skeleton" in str(type(self.drawables[0])):
+                print("ERROR: GUI only supports meshes, so far.")
+            
             else:
                 self.UI = self.__initialize_GUI(self.drawables[0])
         self.controls.exec_three_obj_method("update")
