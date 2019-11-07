@@ -3,7 +3,7 @@ import setuptools
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-install_requires = ['numpy', 'pythreejs', 'ipywidgets', 'numba']
+install_requires = ['numpy', 'pythreejs', 'ipywidgets', 'numba', 'scipy']
 
 setuptools.setup(
     name="Py3DViewer",

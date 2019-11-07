@@ -1,4 +1,0 @@
--- Fix memory leak
--- Fix speed overhead (don't call every single notify but call the last one)
--- Fix warning (64bit, cast them down to 32bit before giving to 3js)
--- Fix colors (internal)

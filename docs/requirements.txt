@@ -1,6 +1,7 @@
 numpy
 numba
 pythreejs
+scipy
 ipywidgets
 sphinx
 sphinx_rtd_theme
