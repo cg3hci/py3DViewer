@@ -96,19 +96,19 @@ def save_mesh(mesh, filename):
         f.write(f'{mesh.num_vertices}\n')
         
         for v in np.asarray(mesh.vertices):
-            f.write(f'{v[0]} {v[1]} {v[2]} 0\n')
+            f.write(f'{float(v[0])} {float(v[1])} {float(v[2])} 0\n')
         
         if mesh.tets.shape[1] == 4:
             f.write('Tetrahedra\n')
             f.write(f'{mesh.num_tets}\n')
             for idx, t in enumerate(np.asarray(mesh.tets)):
-                f.write(f'{t[0]+1} {t[1]+1} {t[2]+1} {t[3]+1} {np.asarray(mesh.labels)[idx]}\n')
+                f.write(f'{int(t[0])+1} {t[1]+1} {int(t[2])+1} {int(t[3])+1} {np.asarray(mesh.labels)[idx]}\n')
         
         else:
             f.write('Hexahedra\n')
             f.write(f'{mesh.num_hexes}\n')
             for idx, h in enumerate(np.asarray(mesh.hexes)):
-                f.write(f'{h[0]+1} {h[1]+1} {h[2]+1} {h[3]+1} {h[4]+1} {h[5]+1} {h[6]+1} {h[7]+1} {np.asarray(mesh.labels)[idx]}\n')
+                f.write(f'{int(h[0])+1} {int(h[1])+1} {int(h[2])+1} {int(h[3])+1} {int(h[4])+1} {int(h[5])+1} {int(h[6])+1} {int(h[7])+1} {np.asarray(mesh.labels)[idx]}\n')
         
         f.write('End')
         
@@ -172,15 +172,15 @@ def save_obj(mesh, filename):
     with open(filename, 'w') as f:
         
         for vtx in mesh.vertices:
-            f.write(f"v {vtx[0]} {vtx[1]} {vtx[2]}\n")
+            f.write(f"v {float(vtx[0])} {float(vtx[1])} {float(vtx[2])}\n")
             
         for face in mesh.faces:
             
             if 'Trimesh' in str(type(mesh)):
-                f.write(f"f {face[0]+1} {face[1]+1} {face[2]+1}\n")
+                f.write(f"f {int(face[0])+1} {int(face[1])+1} {int(face[2])+1}\n")
             
             if 'Quadmesh' in str(type(mesh)):
-                f.write(f"f {face[0]+1} {face[1]+1} {face[2]+1} {face[3]+1}\n")
+                f.write(f"f {int(face[0])+1} {int(face[1])+1} {int(face[2])+1} {int(face[3])+1}\n")
 
 
                 
@@ -230,3 +230,83 @@ def read_skeleton(filename):
                 continue
                 
         return np.array(joint_list), np.array(radius), np.array(bones, dtype=np.int)
+
+    
+    
+def read_off(filename):
+    
+    with open(filename) as file:
+        
+        vtx_list  = []
+        face_list = []
+        edge_list = []
+        
+        num_vertices = 0
+        num_faces   = 0
+        num_edges   = 0
+        
+        lines = file.readlines()
+        
+        idx = 0
+        for line in lines:
+            
+            idx +=1
+            
+            if line[0] == '#':
+                continue
+                  
+            if len(line.split()) == 3:
+                
+                head = line.split()
+                num_vertices = int(head[0])
+                num_faces   = int(head[1])
+                num_edges   = int(head[2])
+                
+                break
+                
+        for line in lines[idx:idx+num_vertices]:
+            
+            vtx = line.split()
+            vtx_list+=[[float(vtx[0]), float(vtx[1]), float(vtx[2])]]
+        
+        if num_faces > 0:
+            for line in lines[idx+num_vertices:]:
+            
+                face = line.split()
+                face_list += [[int(f) for f in face[1:int(face[0])+1]]]
+                
+        
+        vtx_list = np.array(vtx_list)
+        face_list = np.array(face_list)
+    
+        vtx = ObservableArray(vtx_list.shape)
+        vtx[:] = vtx_list
+        faces = ObservableArray(face_list.shape, dtype=np.int)
+        faces[:] = face_list
+  
+        return vtx, faces
+
+
+def save_off(mesh, filename):
+    
+    with open(filename, 'w') as f:
+        
+        f.write('OFF\n')
+        f.write('#Created with Py3DViewer\n\n')
+        f.write(f'{mesh.num_vertices} {mesh.num_faces} 0\n')
+        for vtx in mesh.vertices:
+            f.write(f'{float(vtx[0])} {float(vtx[1])} {float(vtx[2])}\n')
+            
+        for face in mesh.faces:
+            if face.size==3:
+                f.write(f'3 {int(face[0])} {int(face[1])} {int(face[2])}\n')
+            elif face.size==4:
+                f.write(f'4 {int(face[0])} {int(face[1])} {int(face[2])} {int(face[3])}\n')
+        
+                
+        
+        
+                
+            
+            
+>>>>>>> 44a98c5677bf8254e6db476f533fdf2582005bd0
