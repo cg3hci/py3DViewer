@@ -22,7 +22,10 @@ class ObservableArray(np.ndarray, Subject):
     def __getitem__(self, index):
         to_return = super(ObservableArray, self).__getitem__(index)
         if hasattr(self, "_observers") and type(to_return) is not ObservableArray:
-            tmp = ObservableArray(to_return.shape)
+            if to_return.shape != ():
+                tmp = ObservableArray(to_return.shape)
+            else:
+                tmp = ObservableArray((1,))
             tmp[:] = to_return
             tmp._observers = self._observers
             return tmp
