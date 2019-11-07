@@ -74,6 +74,13 @@ class Viewer(object):
     def update(self):
         [drawable.update() for drawable in self.drawables]
     
+    def update_camera(self):
+        camera_target = tuple(np.mean([drawable.center for drawable in self.drawables], axis=0))
+        camera_position = tuple(camera_target + [0, 0, np.mean([drawable.scale for drawable in self.drawables])])
+        self.camera.position = camera_position
+        self.camera.lookAt = camera_target
+        self.controls.target = tuple(np.mean([drawable.center for drawable in self.drawables], axis=0))
+
     def show(self):
         ipydisplay(self.renderer)
     
