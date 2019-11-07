@@ -37,7 +37,7 @@ class Tetmesh(AbstractMesh):
             
             self.__load_from_file(filename)
         
-        elif vertices and tets:
+        elif vertices is not None and tets is not None:
             
             self.vertices = ObservableArray(vertices.shape)
             self.vertices[:] = vertices

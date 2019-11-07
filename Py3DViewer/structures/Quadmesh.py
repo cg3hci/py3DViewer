@@ -33,7 +33,7 @@ class Quadmesh(AbstractMesh):
             
             self.__load_from_file(filename)
         
-        elif vertices and faces:
+        elif vertices is not None and faces is not None:
             self.vertices = ObservableArray(vertices.shape)
             self.vertices[:] = vertices
             self.vertices.attach(self)
