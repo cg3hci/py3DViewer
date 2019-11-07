@@ -39,10 +39,10 @@ class Hexmesh(AbstractMesh):
         elif vertices is not None and hexes is not None:
             
             self.vertices = ObservableArray(vertices.shape)
-            self.vertices[:] = vertices
+            self.vertices[:] = np.array(vertices)
             self.vertices.attach(self)
             self.hexes = ObservableArray(hexes.shape, dtype=np.int)
-            self.hexes[:] = hexes
+            self.hexes[:] = np.array(hexes)
             self.hexes.attach(self)
             self.__load_operations()
             

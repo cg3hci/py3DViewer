@@ -40,10 +40,10 @@ class Tetmesh(AbstractMesh):
         elif vertices is not None and tets is not None:
             
             self.vertices = ObservableArray(vertices.shape)
-            self.vertices[:] = vertices
+            self.vertices[:] = np.array(vertices)
             self.vertices.attach(self)
             self.tets = ObservableArray(tets.shape, dtype=np.int)
-            self.tets[:] = tets
+            self.tets[:] = np.array(tets)
             self.tets.attach(self)
             self.__load_operations()
         

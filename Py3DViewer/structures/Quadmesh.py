@@ -35,10 +35,10 @@ class Quadmesh(AbstractMesh):
         
         elif vertices is not None and faces is not None:
             self.vertices = ObservableArray(vertices.shape)
-            self.vertices[:] = vertices
+            self.vertices[:] = np.array(vertices)
             self.vertices.attach(self)
             self.faces = ObservableArray(faces.shape, dtype=np.int)
-            self.faces[:] = faces
+            self.faces[:] = np.array(faces)
             self.faces.attach(self)
             self.__load_operations()
         
