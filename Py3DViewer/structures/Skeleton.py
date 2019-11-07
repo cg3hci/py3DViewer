@@ -1,9 +1,8 @@
-from .Trimesh import Trimesh
 from ..visualization.Viewer import Viewer
 import numpy as np
-from ..utils import IO
+from ..utils import Observer, Subject, IO, ObservableArray
 
-class Skeleton(object):
+class Skeleton(Observer, Subject):
     
     """
     This class represent a skeleton composed of joints and bones. It is possible to load the mesh from a file (.skel) or
@@ -19,39 +18,54 @@ class Skeleton(object):
     
     """
     
-    def __init__(self, filename=None, joints=None, radius=1.0, bones=None, load_associated_mesh=False):
+    def __init__(self, filename=None, vertices=None, radius=1.0, edges=None):
         
-        self.joints = None
+        self.vertices = None
         self.radius = None
-        self.bones = None
+        self.edges = None
         
         if filename is not None:
             
             self.__load_from_file(filename)
-            if load_associated_mesh:
-                self.associated_mesh = Trimesh(filename.replace('skel', 'obj'))
-        
-        elif joints is not None and bones is not None:
             
-            self.joints = joints
-            self.radius = radius
-            self.bones = bones
+        elif vertices is not None and edges is not None:
             
+            self.radius = self.__make_observable(radius)
+            self.vertices = self.__make_observable(vertices)
+            self.edges = self.__make_observable(edges)
 
-        super(Skeleton,self).__init__()
+        Observer.__init__(self)
+        Subject.__init__(self)
         
+    def __make_observable(self, array):
+        tmp = ObservableArray(array.shape)
+        tmp[:] = array
+        tmp.attach(self)
+        return tmp
         
+    def update(self):
+        self._notify()
+        
+    """
     def show(self, UI = False, width = 700, height = 700):
         view = Viewer(self, UI=UI, width = width, height = height).show()
         return view
-        
-        
-    
-    
+    """
     
     def __load_from_file(self, filename):
-        
         if 'skel' in filename.split('.')[-1]:
-            
-            self.joits, self.radius, self.bones = IO.read_skeleton(filename)
+            self.vertices, self.radius, self.edges = IO.read_skeleton(filename)
+            self.radius = self.__make_observable(self.radius)
+            self.vertices = self.__make_observable(self.vertices)
+            self.edges = self.__make_observable(self.edges)
  
+    def as_edges_flat(self):
+        return self.edges.astype(np.int).flatten()
+    
+    @property
+    def center(self):
+        return np.mean(self.vertices, axis=0)
+    
+    @property
+    def scale(self):
+        return np.linalg.norm(np.min(self.vertices, axis=0)-np.max(self.vertices, axis=0))

@@ -229,4 +229,4 @@ def read_skeleton(filename):
             except Exception:
                 continue
                 
-        return ObservableArray(vtx_list), ObservableArray(radius), ObservableArray(edges)
+        return np.array(joint_list), np.array(radius), np.array(bones, dtype=np.int)

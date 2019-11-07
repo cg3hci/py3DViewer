@@ -3,6 +3,7 @@ import ipywidgets as widgets
 import numpy as np
 from IPython.display import display as ipydisplay
 from .DrawableMesh import DrawableMesh
+from .DrawableSkeleton import DrawableSkeleton
 from .GUI import GUI
 
 class Viewer(object):
@@ -27,8 +28,11 @@ class Viewer(object):
         
     
     def __get_drawable_from_geometry(self, geometry, color, reactive):
-        if "mesh" in str(type(geometry)): #TODO: Find a more clever way of doing this
+        geometry_type = str(type(geometry))
+        if "mesh" in geometry_type: #TODO: Find a more clever way of doing this
             return DrawableMesh(geometry, mesh_color = color, reactive = reactive)
+        elif "Skeleton" in geometry_type:
+            return DrawableSkeleton(geometry, skeleton_color = color, reactive = reactive)
         
     def __initialize_GUI(self, geometry):
         return GUI(geometry)
