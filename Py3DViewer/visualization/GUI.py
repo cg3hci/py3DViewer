@@ -213,7 +213,8 @@ class GUI(Observer):
             self.color_map.layout = self.invisible_layout
             self.metric_menu.layout = self.invisible_layout
             self.color_external.layout = self.visible_layout
-            self.color_internal.layout = self.visible_layout
+            if hasattr(self.mesh, "internals"):
+                self.color_internal.layout = self.visible_layout
             self.color_label_pickers.layout = self.invisible_layout
             self.drawable._label_colors = None
             self.drawable._color_map = None
@@ -225,7 +226,8 @@ class GUI(Observer):
             self.color_map.layout = self.visible_layout
             self.metric_menu.layout = self.visible_layout
             self.color_external.layout = self.invisible_layout
-            self.color_internal.layout = self.invisible_layout
+            if hasattr(self.mesh, "internals"):
+                self.color_internal.layout = self.invisible_layout
             self.color_label_pickers.layout = self.invisible_layout
             self.drawable._label_colors = None
             self.__change_color_map(None)
@@ -233,7 +235,8 @@ class GUI(Observer):
         elif self.coloring_type_menu.value == 2:
             
             self.color_external.layout = self.invisible_layout
-            self.color_internal.layout = self.invisible_layout
+            if hasattr(self.mesh, "internals"):
+                self.color_internal.layout = self.invisible_layout
             self.color_map.layout = self.invisible_layout
             self.metric_menu.layout = self.invisible_layout
             
