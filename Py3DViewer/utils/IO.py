@@ -66,13 +66,13 @@ def read_mesh(filename):
 
         tmp_vtx = np.array(tmp_vtx)
         tmp_simplices = np.array(tmp_simplices)
-        tmp_labels = np.array(tmp_labels, dtype=np.int)
+        tmp_labels = np.array(tmp_labels, dtype=np.int64)
         
         vtx = ObservableArray(tmp_vtx.shape)
         vtx[:] = tmp_vtx
-        simplices = ObservableArray(tmp_simplices.shape, dtype=np.int)
+        simplices = ObservableArray(tmp_simplices.shape, dtype=np.int64)
         simplices[:] = tmp_simplices
-        labels = ObservableArray(tmp_labels.shape, dtype=np.int)
+        labels = ObservableArray(tmp_labels.shape, dtype=np.int64)
         labels[:] = tmp_labels
         
         return vtx, simplices, labels
@@ -149,7 +149,7 @@ def read_obj(filename):
     
         vtx = ObservableArray(tmp_vtx.shape)
         vtx[:] = tmp_vtx
-        faces = ObservableArray(tmp_faces.shape, dtype=np.int)
+        faces = ObservableArray(tmp_faces.shape, dtype=np.int64)
         faces[:] = tmp_faces
         normals = ObservableArray(tmp_normals.shape)
         normals[:] = normals
@@ -229,7 +229,7 @@ def read_skeleton(filename):
             except Exception:
                 continue
                 
-        return np.array(joint_list), np.array(radius), np.array(bones, dtype=np.int)
+        return np.array(joint_list), np.array(radius), np.array(bones, dtype=np.int64)
 
     
     
@@ -281,7 +281,7 @@ def read_off(filename):
     
         vtx = ObservableArray(vtx_list.shape)
         vtx[:] = vtx_list
-        faces = ObservableArray(face_list.shape, dtype=np.int)
+        faces = ObservableArray(face_list.shape, dtype=np.int64)
         faces[:] = face_list
   
         return vtx, faces
