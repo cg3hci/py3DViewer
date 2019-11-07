@@ -214,8 +214,13 @@ class Trimesh(AbstractMesh):
             self.faces.attach(self)
             self.face_normals.attach(self)
             
+        elif ext == 'off':
+            self.vertices, self.faces = IO.read_off(filename)
+            self.vertices.attach(self)
+            self.faces.attach(self)
+            
         else:
-            raise Exception("Only .obj files are supported")
+            raise Exception("Only .obj and .off files are supported")
             
         self.__load_operations()
         
@@ -237,6 +242,10 @@ class Trimesh(AbstractMesh):
         
         if ext == 'obj':
             IO.save_obj(self, filename)
+        elif ext == 'off':
+            IO.save_off(self, filename)
+        else:
+            raise Exception("Only .obj and .off files are supported")
         
     
     def __compute_metrics(self): 
