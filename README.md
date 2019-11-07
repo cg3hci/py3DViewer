@@ -1,4 +1,6 @@
 ![Py3DViewer Logo](https://github.com/cg3hci/py3DViewer/blob/master/docs/source/logo.png)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/cg3hci/py3dviewer/master?filepath=Playground.ipynb)
+
 
 
 Fast research and prototyping, nowadays, is shifting towards languages that allow interactive execution and quick changes. Python is very widely used for rapid prototyping. Py3DViewer is a new Python library that allows researchers to quickly prototype geometry processing algorithms by interactively editing and viewing meshes. Polygonal and polyhedral meshes are both supported. The library is designed to be used in conjunction with [Jupyter environments](https://jupyter.org), which allow interactive Python code execution and data visualization in a browser, thus opening up the possibility of viewing a mesh while editing the underlying geometry and topology.
