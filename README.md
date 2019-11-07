@@ -74,7 +74,7 @@ We aim to completely integrate [PyTorch](https://pytorch.org) tensors to represe
 
 In the near future, the interactive Jupyter interface will be extended to more widgets and will support adding custom UI elements to better suit each different user's need. 
 
-More generally, the library will continously improve in its documentation and examples. To facilitate prototyping for new users, we are working to implement interactive examples in the form of tutorial notebooks, by using [Binder](https://mybinder.org) platform as a mean to quickly try our library's features. 
+More generally, the library will continously improve in its documentation and examples. To facilitate prototyping for new users, we are working to implement interactive examples in the form of tutorial notebooks, by using the [Binder](https://mybinder.org) platform as a mean to quickly try our library's features. 
 
 One of the most important features we will implement in the near future, is a complete PyTorch support for the data structures and algorithms for the underlying representation, instead of [Numpy](https://numpy.org), if the user so chooses. This feature will allow the library to seamlessly run its algorithms on the GPU, to speed up parallel computations and to allow researchers to easily and efficiently prototype Geometry Processing algorithms and Deep Learning networks.
 
