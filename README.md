@@ -62,7 +62,7 @@ m = Trimesh('data/goyle.obj')
 m.show()
 ```
 
-More examples are available [here](https://py3dviewer.readthedocs.io/en/latest/notes/getting_started.html)!
+More examples are available [here](https://mybinder.org/v2/gh/cg3hci/py3dviewer/master?filepath=Playground.ipynb)!
 
 ## Documentation
 
