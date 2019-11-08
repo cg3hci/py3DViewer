@@ -8,3 +8,6 @@ The library is designed to be easy and quick to use in the context of fast proto
     from Py3DViewer import Trimesh
     m = Trimesh('data/goyle.obj')
     m.show()
+    
+    
+    More examples are available `here <https://mybinder.org/v2/gh/cg3hci/py3dviewer/master?filepath=Playground.ipynb>`_.
