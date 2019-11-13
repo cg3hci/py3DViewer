@@ -22,12 +22,12 @@ class Quadmesh(AbstractMesh):
     
     """
     def __init__(self, filename = None, vertices= None, faces = None, labels = None):
+        super(Quadmesh, self).__init__()
         
         self.face_normals    = None #npArray (Nx3)
         self.labels     = None #npArray (Nx1)
         self.__face2face     = None #npArray (Nx3?)
         
-        super(Quadmesh, self).__init__()
         
         if filename is not None:
             
@@ -52,6 +52,7 @@ class Quadmesh(AbstractMesh):
             self.__load_operations()
         
         
+        self._AbstractMesh__finished_loading = True
 # ==================== METHODS ==================== #     
     
     @property

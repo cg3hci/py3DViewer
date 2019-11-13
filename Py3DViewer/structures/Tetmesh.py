@@ -23,6 +23,7 @@ class Tetmesh(AbstractMesh):
     
     def __init__(self, filename = None, vertices = None, tets = None, labels = None):
         
+        super(Tetmesh, self).__init__()
         self.tets             = None #npArray (Nx4) 
         self.labels           = None #npArray (Nx1) 
         self.__tet2tet          = None #npArray (Nx4?) 
@@ -31,7 +32,6 @@ class Tetmesh(AbstractMesh):
         self.__vtx2tet          = None #npArray (NxM)
         self.__internal_tets = None
         
-        super(Tetmesh, self).__init__()
         
         if filename is not None:
             
@@ -54,6 +54,7 @@ class Tetmesh(AbstractMesh):
                 self.labels[:] = labels
                 self.labels.attach(self)
          
+        self._AbstractMesh__finished_loading = True
     
     # ==================== METHODS ==================== #
     

@@ -22,6 +22,7 @@ class Hexmesh(AbstractMesh):
     
     def __init__(self, filename= None, vertices = None, hexes = None, labels = None):
         
+        super(Hexmesh, self).__init__()
         self.hexes            = None #npArray (Nx8) 
         self.labels           = None #npArray (Nx1) 
         self.__hex2hex          = None #npArray (Nx4?) 
@@ -30,7 +31,6 @@ class Hexmesh(AbstractMesh):
         self.__vtx2hex          = None #npArray (NxM)
         self.__internal_hexes = None
         
-        super(Hexmesh, self).__init__()
         
         if filename is not None:
             
@@ -55,6 +55,7 @@ class Hexmesh(AbstractMesh):
             
             self.__load_operations()
         
+        self._AbstractMesh__finished_loading = True
     
     # ==================== METHODS ==================== #
     

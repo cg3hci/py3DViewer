@@ -24,11 +24,11 @@ class Trimesh(AbstractMesh):
     
     def __init__(self, filename = None, vertices = None, faces = None, labels = None):
         
+        super(Trimesh, self).__init__()
         self.face_normals     = None #npArray (Nx3)
         self.labels      = None #npArray (Nx1)
         self.__face2face      = None #npArray (Nx3?)
         
-        super(Trimesh, self).__init__()
         
         if filename is not None:
             
@@ -51,6 +51,7 @@ class Trimesh(AbstractMesh):
                 self.labels[:] = labels
                 self.labels.attach(self)
          
+        self._AbstractMesh__finished_loading = True
     
     # ==================== METHODS ==================== #    
         

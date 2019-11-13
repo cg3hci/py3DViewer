@@ -36,6 +36,7 @@ class AbstractMesh(Observer, Subject):
     
     def __init__(self):
         
+        self.__finished_loading = False
         self.vertices            = None #npArray (Nx3)
         self.vtx_normals         = None #npArray (Nx3) ## Is this used by volumetric meshes? Consider moving it inside surface meshes only
         self.faces               = None #npArray (NxM)
@@ -54,6 +55,10 @@ class AbstractMesh(Observer, Subject):
      
     # ==================== METHODS ==================== #
     
+    def __setattr__(self, key, value):
+        self.__dict__[key] = value
+        if key[0] != "_" and self.__finished_loading:
+            self.update()
         
     def copy(self):
         """
