@@ -18,16 +18,19 @@ class GUI(Observer):
         
         self.invisible_layout = {'display':'none'}
         self.visible_layout = {'display':''}
-        
+        self.flip_button_layout = {'width': 'auto', 
+                                   'margin': '0px 0px 0px 10px'}
+        self.slider_layout = {
+            
+        }
         self.flip_x_button = widgets.ToggleButton(
                     value=False,
                     description='Flip x',
                     disabled=False,
                     button_style='info',
                     tooltip='Flip the visualization range on x axis',
-                    icon='check'
+                    layout=self.flip_button_layout
                 )
-        self.widgets += [self.flip_x_button]
 
         self.flip_y_button = widgets.ToggleButton(
                 value=False,
@@ -35,9 +38,8 @@ class GUI(Observer):
                 disabled=False,
                 button_style='info', # 'success', 'info', 'warning', 'danger' or ''
                 tooltip='IFlip the visualization range on y axis',
-                icon='check',
+                layout=self.flip_button_layout
             )
-        self.widgets += [self.flip_y_button]
         
         self.flip_z_button = widgets.ToggleButton(
                 value=False,
@@ -45,9 +47,8 @@ class GUI(Observer):
                 disabled=False,
                 button_style='info', # 'success', 'info', 'warning', 'danger' or ''
                 tooltip='Flip the visualization range on z axis',
-                icon='check',
+                layout=self.flip_button_layout
             )
-        self.widgets += [self.flip_z_button]
        
         x_range = self.mesh.bbox[0][0], self.mesh.bbox[1][0]
         x_step = abs(x_range[0]-x_range[1])/100
@@ -56,14 +57,14 @@ class GUI(Observer):
             min=x_range[0]-x_step,
             max=x_range[1]+x_step,
             step=x_step,
-            description='X:',
+            description='X Clipping:',
             disabled=False,
             continuous_update=True,
             orientation='horizontal',
             readout=True,
-            readout_format=".2f",
+            readout_format=".1f",
+            layout=self.slider_layout
         )
-        self.widgets += [self.clipping_slider_x]
 
 
         y_range = self.mesh.bbox[0][1], self.mesh.bbox[1][1]
@@ -73,14 +74,14 @@ class GUI(Observer):
             min=y_range[0]-y_step,
             max=y_range[1]+y_step,
             step=y_step,
-            description='Y:',
+            description='Y Clipping:',
             disabled=False,
             continuous_update=True,
             orientation='horizontal',
             readout=True,
-            readout_format=".2f",
+            readout_format=".1f",
+            layout=self.slider_layout
         )
-        self.widgets += [self.clipping_slider_y]
 
         z_range = self.mesh.bbox[0][2], self.mesh.bbox[1][2]
         z_step = abs(z_range[0]-z_range[1])/100
@@ -89,14 +90,14 @@ class GUI(Observer):
             min = z_range[0]-z_step,
             max = z_range[1]+z_step,
             step=z_step,
-            description='Z:',
+            description='Z Clipping:',
             disabled=False,
             continuous_update=True,
             orientation='horizontal',
             readout=True,
-            readout_format=".2f",
+            readout_format=".1f",
+            layout=self.slider_layout
         )
-        self.widgets += [self.clipping_slider_z]
         
         self.wireframe_opacity_slider = widgets.FloatSlider(
                         value=0.4,
@@ -105,18 +106,31 @@ class GUI(Observer):
                         step=0.1,
                         continuous_update=True,
                         readout_format=".1f",
-                        description = 'Wireframe Opacity',
+                        description = 'Wireframe',
                         disable = False,
                 )
-        self.widgets += [self.wireframe_opacity_slider]
-
+        
         self.color_wireframe = widgets.ColorPicker(
                             concise=True,
-                            description='Wireframe Color',
                             value=self.drawable.wireframe.material.color,
                             disabled=False,
+                            layout={'margin': '0 0 0 10px'}
                         )
-        self.widgets += [self.color_wireframe]
+        
+        self.widgets += [
+            widgets.HBox([
+                self.clipping_slider_x, self.flip_x_button
+            ]),
+            widgets.HBox([
+                self.clipping_slider_y, self.flip_y_button
+            ]),
+            widgets.HBox([
+                self.clipping_slider_z, self.flip_z_button
+            ]),
+            widgets.HBox([
+                self.wireframe_opacity_slider, self.color_wireframe
+            ]),
+        ]
         
         self.color_map = widgets.Dropdown(
             options=[(i, idx) for idx, i in enumerate(ColorMap.color_maps.keys())],
