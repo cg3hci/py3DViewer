@@ -151,28 +151,30 @@ class GUI(Observer):
         self.coloring_type_menu = widgets.Dropdown(
             options=[('Default', 0), ('Simplex Quality', 1), ('Label',2)],
             value=0,
-            description='Type Color:',
+            description='Color Type:',
         )
         self.widgets += [self.coloring_type_menu]
         
 
+        mesh_colors = []
         if hasattr(self.mesh, "internals"):
             self.color_internal = widgets.ColorPicker(
-                            concise=True,
-                            description='Internal Color',
-                            value=colors.rgb2hex(self.drawable._internal_color),
-                            disabled=False,
+                concise=True,
+                description='Internal',
+                value=colors.rgb2hex(self.drawable._internal_color),
+                disabled=False,
             )
-            self.widgets += [self.color_internal]
+            mesh_colors += [self.color_internal]
             
         self.color_external = widgets.ColorPicker(
             concise=True,
-            description='External Color',
+            description='External',
             value=colors.rgb2hex(self.drawable._external_color),
-            disabled=False
+            disabled=False,
         )
-        self.widgets += [self.color_external]
+        mesh_colors += [self.color_external]
         
+        self.widgets += [widgets.HBox(mesh_colors)]
         
         self.color_label_pickers = [widgets.ColorPicker(
                                             concise=True,
