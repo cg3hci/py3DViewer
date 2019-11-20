@@ -102,7 +102,7 @@ Please cite our [paper]() if you use the Py3DViewer in your own work:
 ```bibtex
 @inproceedings{py3dviewer2019,
   title={{The Py3DViewer project}: a Python library for fast prototyping in geometry processing},
-  author={Cherchi, Gianmarco and Pitzalis, Luca and Frogia, Giovanni L. and Scateni, Riccardo},
+  author={Cherchi, Gianmarco and Pitzalis, Luca and Frongia, Giovanni L. and Scateni, Riccardo},
   booktitle={Proceedings of the Conference on Smart Tools and Applications in Computer Graphics},
   organization={Eurographics Association},
   year={2019},
