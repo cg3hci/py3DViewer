@@ -4,6 +4,7 @@ import numpy as np
 from IPython.display import display as ipydisplay
 from .DrawableMesh import DrawableMesh
 from .DrawableSkeleton import DrawableSkeleton
+from .DrawablePointcloud import DrawablePointCloud
 from .GUI import GUI
 
 class Viewer(object):
@@ -37,6 +38,8 @@ class Viewer(object):
             return DrawableMesh(geometry, mesh_color = color, reactive = reactive)
         elif "Skeleton" in geometry_type:
             return DrawableSkeleton(geometry, skeleton_color = color, reactive = reactive)
+        elif "PointCloud" in geometry_type:
+            return DrawablePointCloud(geometry, point_color = color, reactive = reactive)
         
     def __initialize_GUI(self, geometry):
         return GUI(geometry)
