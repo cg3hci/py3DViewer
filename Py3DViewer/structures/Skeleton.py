@@ -1,5 +1,6 @@
 from ..visualization.Viewer import Viewer
 import numpy as np
+import copy
 from ..utils import Observer, Subject, IO, ObservableArray
 
 class Skeleton(Observer, Subject):
