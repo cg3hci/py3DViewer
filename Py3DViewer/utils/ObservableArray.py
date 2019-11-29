@@ -18,6 +18,8 @@ class ObservableArray(np.ndarray, Subject):
             if (hasattr(self, "_observers")):
                 to_return._observers = self._observers
             Subject._notify(self)
+        else:
+            Subject._notify(self)
         
     def __getitem__(self, index):
         to_return = super(ObservableArray, self).__getitem__(index)
