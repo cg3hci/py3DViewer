@@ -37,6 +37,13 @@ class Skeleton(Observer, Subject):
         Observer.__init__(self)
         Subject.__init__(self)
         
+    def copy(self):
+        new = type(self)()
+        for key in self.__dict__.keys():
+            if "observer" not in key:
+                setattr(new, key, copy.deepcopy(getattr(self, key)))
+        return new
+    
     def __make_observable(self, array):
         tmp = ObservableArray(array.shape)
         tmp[:] = array
