@@ -1,4 +1,5 @@
 import numpy as np
+from numba import jit
 from scipy.sparse import lil_matrix as sp_matrix
 from scipy.sparse import eye as identity
 from scipy.sparse.linalg import spsolve
