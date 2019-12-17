@@ -31,7 +31,7 @@ def taubin_smoothing_internal(n, e, vertices, lambda_, mu, iters):
         vertices = (I - mu*K)@vertices
     return vertices
 
-def taubin_smoothing(mesh, lambda_, mu, iters):
+def taubin_smoothing(mesh, lambda_ = 0.89, mu = -0.9, iters):
     n = mesh.num_vertices
     e = mesh.edges
     mesh.vertices = taubin_smoothing_internal(n, e, mesh.vertices, lambda_, mu, iters)
