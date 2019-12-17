@@ -27,7 +27,7 @@ def taubin_smoothing_internal(n, e, vertices, lambda_, mu, iterations):
         A[i]/=np.sum(A[i])
     I = np.eye(n)
     K = I - A
-    for i in range(iters):
+    for i in range(iterations):
         vertices = (I - lambda_*K)@vertices
         vertices = (I - mu*K)@vertices
     return vertices
