@@ -75,7 +75,7 @@ class AbstractMesh(Observer, Subject):
         if (not self._dont_update):
             self._notify()
         
-    def show(self, width = 700, height = 700, mesh_color = None, reactive = True):
+    def show(self, width = 700, height = 700, mesh_color = None, reactive =  False):
 
         """
         Show the mesh within the current cell. It is possible to manipulate the mesh through the UI.
@@ -91,7 +91,7 @@ class AbstractMesh(Observer, Subject):
             Viewer: The viewer object
         """
 
-        view = Viewer(self, mesh_color=mesh_color, width = width, height = height, reactive=True)
+        view = Viewer(self, mesh_color=mesh_color, width = width, height = height, reactive=reactive)
         view.show()
         return view
         
