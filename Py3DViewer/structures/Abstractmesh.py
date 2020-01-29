@@ -72,7 +72,24 @@ class AbstractMesh(Observer, Subject):
     def update(self):
         self.__boundary_needs_update = True
         self.__update_bounding_box()
-        self.reset_clipping()
+        min_x = self.bbox[0,0]
+        max_x = self.bbox[1,0]
+        min_y = self.bbox[0,1]
+        max_y = self.bbox[1,1]
+        min_z = self.bbox[0,2]
+        max_z = self.bbox[1,2]
+        if min_x is not None:
+            self.__clipping.min_x = min_x
+        if max_x is not None:
+            self.__clipping.max_x = max_x
+        if min_y is not None:
+            self.__clipping.min_y = min_y
+        if max_y is not None:
+            self.__clipping.max_y = max_y
+        if min_z is not None:
+            self.__clipping.min_z = min_z
+        if max_z is not None:
+            self.__clipping.max_z = max_z
         if (not self._dont_update):
             self._notify()
         
@@ -102,6 +119,7 @@ class AbstractMesh(Observer, Subject):
         return self.__clipping
     
     
+                
     def set_clipping(self, min_x = None, max_x = None, 
                       min_y = None, max_y = None, 
                       min_z = None, max_z = None,
@@ -318,6 +336,6 @@ class AbstractMesh(Observer, Subject):
         
         self.__bounding_box = np.array([[min_x_coord, min_y_coord, min_z_coord],
                                         [max_x_coord, max_y_coord, max_z_coord]])
-       
+                
     def __repr__(self):
         return f"Mesh of {self.num_faces} polygons."
