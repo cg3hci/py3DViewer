@@ -319,5 +319,4 @@ class AbstractMesh(Observer, Subject):
                                         [max_x_coord, max_y_coord, max_z_coord]])
        
     def __repr__(self):
-        self.show()
-        return f"Showing {self.num_faces} polygons."
+        return f"Mesh of {self.num_faces} polygons."

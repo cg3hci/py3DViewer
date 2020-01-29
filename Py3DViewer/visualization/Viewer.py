@@ -86,5 +86,5 @@ class Viewer(object):
         ipydisplay(self.renderer)
     
     def __repr__(self):
-        self.show()
-        return ""
+        #self.show()
+        return "Use the show method to view the content."
