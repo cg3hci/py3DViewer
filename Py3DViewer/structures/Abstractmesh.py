@@ -72,6 +72,7 @@ class AbstractMesh(Observer, Subject):
     def update(self):
         self.__boundary_needs_update = True
         self.__update_bounding_box()
+        self.reset_clipping()
         if (not self._dont_update):
             self._notify()
         
