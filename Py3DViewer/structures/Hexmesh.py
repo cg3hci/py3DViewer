@@ -48,9 +48,15 @@ class Hexmesh(AbstractMesh):
             self.hexes.attach(self)
             self.__load_operations()
             
-            if labels:
-                self.labels = np.array(labels)
+            if labels is not None:
+                labels = np.array(labels)
+                assert(self.hexes.shape[0] == labels.shape[0])
+                self.labels = ObservableArray(labels.shape, dtype=np.int)
                 self.labels[:] = labels
+                self.labels.attach(self)
+            else:
+                self.labels = ObservableArray(hexes.shape[0], dtype=np.int)
+                self.labels[:] = np.zeros(self.labels.shape, dtype=np.int)
                 self.labels.attach(self)
             
             self.__load_operations()
@@ -342,6 +348,12 @@ class Hexmesh(AbstractMesh):
     @property
     def num_triangles(self):
         return self.num_faces*2
+    
+    @property
+    def edges(self):
+        edges =  np.c_[self.faces[:,:2], self.faces[:,1:3], self.faces[:,2:4], self.faces[:,3], self.faces[:,0]]
+        edges.shape = (-1,2)
+        return edges
     
     @property
     def simplex_centroids(self):

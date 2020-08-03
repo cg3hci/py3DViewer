@@ -124,6 +124,25 @@ class DrawableMesh(Observer):
         
         self._color_map = mesh_color
         self.update_color_map(mesh_color, geometry)
+
+    def compute_generic_color_map(self, values, values_range, c_map_string, geometry=None):
+
+       if geometry is None:
+            geometry = self.geometry
+
+       (min_range, max_range) = values_range
+       c_map = ColorMap.color_maps[c_map_string]
+
+       normalized_values = np.clip(values, min_range, max_range)
+       normalized_values = (normalized_values - min_range)/(max_range-min_range) * (c_map.shape[0]-1)
+       normalized_values = 1-normalized_values
+            
+       values_to_colormap = np.rint(normalized_values).astype(np.int)
+        
+       mesh_color = c_map[values_to_colormap]
+        
+       self._color_map = mesh_color
+       self.update_color_map(mesh_color, geometry)
         
     
     def update_color_label(self, geometry = None):
@@ -134,10 +153,13 @@ class DrawableMesh(Observer):
         mesh_color = np.zeros((self.geometry.labels.size,3), dtype=np.float)
         
         for idx, i in enumerate(self.geometry.labels.reshape(-1)):
+            if i not in self._label_colors:
+                self._label_colors[i] = colors.random_color()
             mesh_color[idx] = self._label_colors[i]
         
         self._color_map = mesh_color
         self.update_color_map(mesh_color)
+
             
             
     def __initialize_wireframe(self):

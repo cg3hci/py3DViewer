@@ -44,9 +44,16 @@ class Quadmesh(AbstractMesh):
             self.faces.attach(self)
             self.__load_operations()
         
-            if labels:
-                self.labels = ObservableArray(labels.shape)
+            if labels is not None:
+                labels = np.array(labels)
+                assert(labels.shape[0] == self.faces.shape[0])
+                self.labels = ObservableArray(labels.shape, dtype=np.int)
                 self.labels[:] = labels
+                self.labels.attach(self)
+            
+            else:
+                self.labels = ObservableArray(faces.shape[0], dtype=np.int)
+                self.labels[:] = np.zeros(self.labels.shape, dtype=np.int)
                 self.labels.attach(self)
                             
             self.__load_operations()

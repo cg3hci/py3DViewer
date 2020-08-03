@@ -98,7 +98,7 @@ def save_mesh(mesh, filename):
         for v in np.asarray(mesh.vertices):
             f.write(f'{float(v[0])} {float(v[1])} {float(v[2])} 0\n')
         
-        if mesh.tets.shape[1] == 4:
+        if hasattr(mesh, 'tets'):
             f.write('Tetrahedra\n')
             f.write(f'{mesh.num_tets}\n')
             for idx, t in enumerate(np.asarray(mesh.tets)):

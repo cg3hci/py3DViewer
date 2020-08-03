@@ -49,9 +49,15 @@ class Tetmesh(AbstractMesh):
             self.tets.attach(self)
             self.__load_operations()
         
-            if labels:
-                self.labels = ObservableArray(labels.shape)
+            if labels is not None:
+                labels = np.array(labels)
+                assert(labels.shape[0] == self.tets.shape[0])
+                self.labels = ObservableArray(labels.shape, dtype=np.int)
                 self.labels[:] = labels
+                self.labels.attach(self)
+            else:
+                self.labels = ObservableArray(tets.shape[0], dtype=np.int)
+                self.labels[:] = np.zeros(self.labels.shape, dtype=np.int)
                 self.labels.attach(self)
          
         self._AbstractMesh__finished_loading = True
@@ -331,3 +337,11 @@ class Tetmesh(AbstractMesh):
     def vxt2tet(self):
         
         return self.__vtx2tet
+    
+    @property
+    def edges(self):
+
+        edges =  np.c_[self.faces[:,:2], self.faces[:,1:], self.faces[:,2], self.faces[:,0]]
+        edges.shape = (-1,2)
+
+        return edges
