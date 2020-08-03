@@ -334,7 +334,7 @@ class Tetmesh(AbstractMesh):
         return self.__tet2tet
     
     @property
-    def vxt2tet(self):
+    def vtx2tet(self):
         
         return self.__vtx2tet
     
