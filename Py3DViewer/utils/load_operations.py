@@ -247,7 +247,7 @@ def compute_hex_mesh_adjs(faces, num_vertices):
             adjs[map_[f1]][idx_to_append2] = t
                 
        
-    return adjs, vtx2vtx, vtx2poly   
+    return adjs, vtx2vtx, vtx2poly
 
 
 @njit(Tuple((int64[:,::1],LT(LT(int64)),LT(LT(int64))))(int64[:,::1], int64), cache=True)
@@ -353,6 +353,27 @@ def compute_hex_mesh_adjs(faces, num_vertices):
                 
        
     return adjs, vtx2vtx, vtx2poly   
+
+@njit(int64[:,::1](int64[:,::1]),cache=True)
+def compute_adj_f2f_volume(faces):
+    
+    adjs =  np.zeros((faces.shape[0], 1), dtype=np.int64)-1
+    map_ = dict()
+    if(faces.shape[1]==3):
+        map_[(-1,-1,-1,-1)] = -1
+    for idx in range(faces.shape[0]):
+        
+        f = faces[idx]
+        f.sort()
+        support = (f[0],f[1],f[2],-1) if faces.shape[1] == 3 else (f[0],f[1],f[2],f[3])
+        if(support in map_):
+            idx_to_append1 = np.where(adjs[map_[support]] == -1)[0][0]
+            idx_to_append2 = np.where(adjs[idx] == -1)[0][0]
+            adjs[map_[support]][idx_to_append1] = idx
+            adjs[idx][idx_to_append2] = map_[support]
+        else:
+            map_[support] = idx
+    return adjs
 
 
 def compute_face_normals(vertices, faces, quad=False):

@@ -1,7 +1,7 @@
 from .Abstractmesh import AbstractMesh
 import numpy as np
 from ..utils import IO, ObservableArray
-from ..utils.load_operations import compute_hex_mesh_adjs as compute_adjacencies, _compute_three_vertex_normals as compute_three_normals
+from ..utils.load_operations import compute_hex_mesh_adjs as compute_adjacencies, _compute_three_vertex_normals as compute_three_normals, compute_adj_f2f_volume as compute_f2f
 from ..utils.metrics import hex_scaled_jacobian, hex_volume
 
 class Hexmesh(AbstractMesh):
@@ -26,8 +26,8 @@ class Hexmesh(AbstractMesh):
         self.hexes            = None #npArray (Nx8) 
         self.labels           = None #npArray (Nx1) 
         self.__hex2hex          = None #npArray (Nx4?) 
-        self.face2hex         = None #npArray (Nx2?)
-        self.hex2face         = None #npArray (Nx6)
+        self.__face2hex         = None #npArray (Nx2?) NOT IMPLEMENTED YET
+        self.__hex2face         = None #npArray (Nx6) NOT IMPLEMENTED YET
         self.__vtx2hex          = None #npArray (NxM)
         self.__internal_hexes = None
         
@@ -345,6 +345,7 @@ class Hexmesh(AbstractMesh):
         
         return np.repeat(self.boundary()[1], 6)
     
+    
     @property
     def num_triangles(self):
         return self.num_faces*2
@@ -373,3 +374,25 @@ class Hexmesh(AbstractMesh):
     def vtx2hex(self):
         
         return self.__vtx2hex
+
+    @property
+    def face2face(self):
+        if self._AbstractMesh__face2face is None: 
+            self._AbstractMesh__face2face = compute_f2f(self.faces) 
+        return self._AbstractMesh__face2face
+
+    @property
+    def surface_faces(self):
+        return np.where(self.face2face == -1)[0]
+     
+    def face_is_on_surface(self, face_ids):
+        res = self.face2face[face_ids] == -1
+        return res if res.size > 1 else res.item()
+
+    def vert_is_on_surface(self, vert_id):
+        verts = np.where((self.faces[:,0] == vert_id) | 
+        (self.faces[:,1] == vert_id) |
+        (self.faces[:,2] == vert_id) |
+        (self.faces[:,3] == vert_id))
+
+        return np.intersect1d(verts, self.surface_faces).size > 0
