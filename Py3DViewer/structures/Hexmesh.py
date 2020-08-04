@@ -1,6 +1,8 @@
 from .Abstractmesh import AbstractMesh
+from .Quadmesh import Quadmesh
 import numpy as np
 from ..utils import IO, ObservableArray
+from ..algorithms.cleaning import remove_isolated_vertices
 from ..utils.load_operations import compute_hex_mesh_adjs as compute_adjacencies, _compute_three_vertex_normals as compute_three_normals, compute_adj_f2f_volume as compute_f2f
 from ..utils.metrics import hex_scaled_jacobian, hex_volume
 
@@ -396,3 +398,11 @@ class Hexmesh(AbstractMesh):
         (self.faces[:,3] == vert_id))
 
         return np.intersect1d(verts, self.surface_faces).size > 0
+    
+    def extract_surface_mesh(self, remove_isolated_vertices=False):
+        faces = np.copy(self.faces[self.surface_faces])
+        vertices = np.copy(self.vertices)
+        result = Quadmesh(vertices=vertices, faces=faces)
+        if remove_isolated_vertices:
+            remove_isolated_vertices(result)
+        return result

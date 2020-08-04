@@ -31,3 +31,10 @@ def remove_duplicated_vertices(vertices, faces):
     
     
     return new_vertices[:j], faces
+
+
+def remove_isolated_vertices(mesh):
+    used_vertices = set(mesh.faces.flatten())
+    all_vertices = set(range(mesh.num_vertices))
+    isolated_vertices = np.array(list(all_vertices.difference(used_vertices)))
+    mesh.remove_vertices(isolated_vertices)

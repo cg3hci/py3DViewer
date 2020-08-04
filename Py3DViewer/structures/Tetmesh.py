@@ -1,4 +1,6 @@
 from .Abstractmesh import AbstractMesh
+from .Trimesh import Trimesh
+from ..algorithms.cleaning import remove_isolated_vertices
 import numpy as np
 from ..utils import IO, ObservableArray
 from ..utils.load_operations import compute_tet_mesh_adjs as compute_adjacencies
@@ -366,3 +368,11 @@ class Tetmesh(AbstractMesh):
         (self.faces[:,2] == vert_id))
 
         return np.intersect1d(verts, self.surface_faces).size > 0
+    
+    def extract_surface_mesh(self, remove_isolated_vertices=False):
+        faces = self.faces[self.surface_faces]
+        vertices = self.vertices
+        result = Trimesh(vertices=vertices, faces=faces)
+        if remove_isolated_vertices:
+            remove_isolated_vertices(result)
+        return result

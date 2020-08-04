@@ -359,11 +359,10 @@ def compute_adj_f2f_volume(faces):
     
     adjs =  np.zeros((faces.shape[0], 1), dtype=np.int64)-1
     map_ = dict()
-    if(faces.shape[1]==3):
-        map_[(-1,-1,-1,-1)] = -1
+    map_[(-1,-1,-1,-1)] = -1
     for idx in range(faces.shape[0]):
         
-        f = faces[idx]
+        f = np.copy(faces[idx])
         f.sort()
         support = (f[0],f[1],f[2],-1) if faces.shape[1] == 3 else (f[0],f[1],f[2],f[3])
         if(support in map_):
