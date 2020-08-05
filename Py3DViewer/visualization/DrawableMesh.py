@@ -113,7 +113,7 @@ class DrawableMesh (Observer):
         new_colors = self.geometry_color[colors]
         tris, vtx_normals = geometry._as_threejs_triangle_soup()
         
-        if self.geometry.material or self.texture is not None:
+        if len(self.geometry.material) > 0 or self.texture is not None:
             interleaved = np.concatenate((tris, new_colors, vtx_normals, self.geometry.uvcoords), axis=1)
         else:
             interleaved = np.concatenate((tris, new_colors, vtx_normals), axis=1)
@@ -129,11 +129,12 @@ class DrawableMesh (Observer):
         new_colors = self.geometry_color[colors]
         tris, vtx_normals = geometry._as_threejs_triangle_soup()
 
-        if self.geometry.material is not {} or self.texture is not None:
+        if len(self.geometry.material) > 0 or self.texture is not None:
             interleaved = np.concatenate((tris, new_colors, vtx_normals, self.faceVertexUvs), axis=1)
         else:
             interleaved = np.concatenate((tris, new_colors, vtx_normals), axis=1)
         self.mesh.geometry.attributes['color'].data.array = interleaved
+        
 
     def compute_color_map(self, metric_string, c_map_string, geometry=None):
 

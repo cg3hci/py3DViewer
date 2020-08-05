@@ -1,6 +1,6 @@
 import ipywidgets as widgets
 import pythreejs as three
-from ..utils import ColorMap, Observer
+from ..utils import ColorMap, Observer, utils
 from ..visualization import colors
 from IPython.display import display as ipydisplay
 import threading
@@ -136,28 +136,31 @@ class GUI(Observer):
             ]),
         ]
 
-        self.picking_title = widgets.Label(
-            value="Click informations:",
-            layout={'margin': '0 0 0 20px'},
-            disabled=False,
-            continuous_update=True
+        self.enable_picking_button = widgets.ToggleButton(
+                value=False,
+                description='Show Picking Info',
+                disabled=False,
+                button_style='info', # 'success', 'info', 'warning', 'danger' or ''
+                tooltip='Enable the picking functionality',
+                layout=self.flip_button_layout
         )
+
 
         self.picking_label = widgets.Label(
-            layout={'margin': '0 0 0 20px'},
+            llayout=self.invisible_layout,
             disabled=False,
             continuous_update=True
         )
 
-        tab_titles = ['Face', 'Vertex']
+        tab_titles = ['Face', 'Vertex'] if utils.mesh_is_surface(drawable_mesh.geometry) else ['Poly', 'Vertex']
         children = [
             widgets.HTML(
                 value="",
-                layout={'margin': '0 0 0 10px'},
+                layout={'width': 'auto','margin': '0 0 0 10px'},
                 disabled=False,
                 continuous_update=True
             ) for title in tab_titles]
-        self.picking_tab = widgets.Tab(layout={'margin': '0 0 0 20px'},
+        self.picking_tab = widgets.Tab(layout=self.invisible_layout,
                                        disabled=True,
                                        width=300,
                                        height=400)
@@ -166,15 +169,17 @@ class GUI(Observer):
             self.picking_tab.set_title(i, tab_titles[i])
         self.color_picking_label = widgets.Label(
             value="Click Color  ",
-            layout={'margin': '0 0 0 20px'},
+            layout=self.invisible_layout,
             disabled=False,
             continuous_update=True
         )
 
         self.widgets += [
-            widgets.HBox([
-                self.picking_title
-            ]),
+            widgets.HBox(
+                [
+                    self.enable_picking_button
+                ]
+            ),
             widgets.HBox([
                 self.picking_label
             ]),
@@ -221,6 +226,7 @@ class GUI(Observer):
             concise=True,
             description="Click Color",
             value=colors.rgb2hex(colors.purple),
+            layout = self.invisible_layout,
             disabled=False,
         )
         self.color_external = widgets.ColorPicker(
@@ -262,6 +268,7 @@ class GUI(Observer):
         self.color_map.observe(self.__change_color_map, names='value')
         self.metric_menu.observe(self.__change_metric, names='value')
 
+        self.enable_picking_button.observe(self.__toggle_picking, names='value')
         self.click_picker.observe(self.on_click, names=['point'])
 
         [i.observe(self.__change_color_label,names='value') for i in self.color_label_pickers.children]
@@ -366,6 +373,10 @@ class GUI(Observer):
             self.__dont_update_clipping = False
 
     def on_click(self, change):
+
+        if not self.enable_picking_button.value:
+            return
+
         geometry_type = str(type(self.drawable.geometry))
 
         # if nothing is clicked
@@ -419,6 +430,8 @@ class GUI(Observer):
         #triangles = np.array([face_index * num_triangles + n for n in np.arange(0, num_triangles)]).astype("int32")
 
         if self.old_picked_face is not None:
+            self.__change_color_type(None)
+            """
             if self.old_picked_face_internal:
                 self.drawable.update_face_color(colors.hex2rgb(self.color_internal.value), face_index=self.old_picked_face,
                                                 num_faces=num_faces,
@@ -429,7 +442,7 @@ class GUI(Observer):
                                                 num_faces=num_faces,
                                                 num_triangles=num_triangles)
                 # [self.drawable.update_external_color(colors.hex2rgb(self.color_external.value), face_index=old_face,geometry=None) for old_face in self.old_picked_face]
-
+            """
         self.old_picked_face = face_index
         self.old_picked_face_internal = internal
        # [self.drawable.update_external_color(colors.hex2rgb(self.color_picking.value), face_index=triangle, geometry=None) for triangle in triangles]
@@ -448,7 +461,22 @@ class GUI(Observer):
         self.picking_tab.children[1].value += 'Vertex coords: (%.3f, %.3f, %.3f)' % tuple(nearest_vertex_coords) + '<br>'
         self.picking_tab.children[1].value += 'Nearest faces: '
         self.picking_tab.children[1].value += ', '.join([str(v) for v in nearest_faces]) + '<br>'
-        
+    
+    def __toggle_picking(self, change):
+
+        if self.enable_picking_button.value:
+            self.picking_tab.layout = {'margin': '0 0 0 20px'}
+            self.picking_label.layout = {'margin': '0 0 0 20px'}
+            self.enable_picking_button.description = 'Hide Picking Info'
+            self.color_picking.layout = self.visible_layout
+        else:
+            self.picking_tab.layout = self.invisible_layout
+            self.picking_label.layout = self.invisible_layout
+            self.color_picking.layout = self.invisible_layout
+            self.enable_picking_button.description = 'Show Picking Info'
+
+
+
     def __update_clipping(self, change): 
        
         if self.__dont_update_clipping:
