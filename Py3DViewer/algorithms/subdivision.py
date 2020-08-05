@@ -1,7 +1,6 @@
 import numpy as np
 from numba import njit, float64, int64
 from numba.types import Tuple
-from ..structures import Trimesh
 
 
 @njit(Tuple((float64[:,::1], int64[:,::1]))(float64[:,::1],int64[:,::1], int64[:,::1]), cache=True)
@@ -74,5 +73,4 @@ def _mid_point_subdivision_trimesh(vertices, faces, edges):
 def mid_point_subdivision(mesh):
     
     v, f = _mid_point_subdivision_trimesh(mesh.vertices, mesh.faces, mesh.edges)
-    
-    return Trimesh(vertices=v, faces=f)
+    mesh.__init__(vertices=v, faces=f)
