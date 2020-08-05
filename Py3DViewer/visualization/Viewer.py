@@ -12,14 +12,12 @@ class Viewer(object):
     def __init__(self, geometries, mesh_color = None, width=1000, height=700, reactive=False, with_gui=False):
         super(Viewer, self).__init__()
         self.drawables=[]
+        self.UI = None
         if type(geometries) is not list:
             self.drawables += [self.__get_drawable_from_geometry(geometries, mesh_color, reactive or with_gui)]
         else:
             self.drawables = [self.__get_drawable_from_geometry(geometry, mesh_color, reactive or with_gui) for geometry in geometries]
-        self.camera = self.__initialize_camera(width, height)
-        self.scene = self.__initialize_scene()
-        self.controls = self.__initialize_controls()
-        self.renderer = self.__initialize_renderer(width, height)
+
         if with_gui:
             if len(self.drawables) > 1:
                 print("ERROR: GUI only supports one geometry at a time, so far.")
@@ -29,6 +27,10 @@ class Viewer(object):
             
             else:
                 self.UI = self.__initialize_GUI(self.drawables[0])
+        self.camera = self.__initialize_camera(width, height)
+        self.scene = self.__initialize_scene()
+        self.controls = self.__initialize_controls()
+        self.renderer = self.__initialize_renderer(width, height)
         self.controls.exec_three_obj_method("update")
         
     
@@ -70,9 +72,15 @@ class Viewer(object):
         return controls
         
     def __initialize_renderer(self, width, height):
-        return three.Renderer(camera = self.camera, background_opacity=1,
-                        scene = self.scene, controls=[self.controls], width=width, height=height,
+        if self.UI is not None:
+            return three.Renderer(camera = self.camera, background_opacity=1,
+                        scene = self.scene, controls=[self.controls, self.UI.click_picker], width=width, height=height,
                         antialias=True)
+        else:
+            return three.Renderer(camera=self.camera, background_opacity=1,
+                                  scene=self.scene, controls=[self.controls], width=width,
+                                  height=height,
+                                  antialias=True)
 
     def update(self):
         [drawable.update() for drawable in self.drawables]

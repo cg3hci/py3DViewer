@@ -22,7 +22,7 @@ class Hexmesh(AbstractMesh):
     
     """
     
-    def __init__(self, filename= None, vertices = None, hexes = None, labels = None):
+    def __init__(self, filename= None, vertices = None, hexes = None, labels = None, texture=None, mtl=None, smoothness=False):
         
         super(Hexmesh, self).__init__()
         self.hexes            = None #npArray (Nx8) 
@@ -32,6 +32,13 @@ class Hexmesh(AbstractMesh):
         self.__hex2face         = None #npArray (Nx6) NOT IMPLEMENTED YET
         self.__vtx2hex          = None #npArray (NxM)
         self.__internal_hexes = None
+        self.__map_face_indexes = None
+        self.texture = texture
+        self.groups = {}
+        self.smoothness = smoothness
+
+        if mtl is not None:
+            self.__load_from_file(mtl)
         
         
         if filename is not None:
@@ -303,6 +310,15 @@ class Hexmesh(AbstractMesh):
             clipping_range = super(Hexmesh, self).boundary()
             indices = np.where(self.internals)[0]
             clipping_range[indices[np.all(clipping_range[self.__hex2hex[indices]], axis=1)]] = False
+
+            self.__map_face_indexes = []
+            counter = 0
+            for c in clipping_range:
+                if c:
+                    self.__map_face_indexes.append(counter)
+                else:
+                    counter = counter + 1
+
             clipping_range = np.repeat(clipping_range, 6)
             self._AbstractMesh__boundary_cached = clipping_range
             self._AbstractMesh__boundary_needs_update = False
@@ -351,6 +367,10 @@ class Hexmesh(AbstractMesh):
     @property
     def num_triangles(self):
         return self.num_faces*2
+
+    @property
+    def map_face_indexes(self):
+        return self.__map_face_indexes
     
     @property
     def edges(self):

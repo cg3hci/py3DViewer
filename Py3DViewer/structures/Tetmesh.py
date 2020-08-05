@@ -23,7 +23,7 @@ class Tetmesh(AbstractMesh):
     
     """
     
-    def __init__(self, filename = None, vertices = None, tets = None, labels = None):
+    def __init__(self, filename = None, vertices = None, tets = None, labels = None, texture=None, mtl=None, smoothness=False):
         
         super(Tetmesh, self).__init__()
         self.tets             = None #npArray (Nx4) 
@@ -33,7 +33,14 @@ class Tetmesh(AbstractMesh):
         self.tet2face         = None #npArray (Nx4)
         self.__vtx2tet          = None #npArray (NxM)
         self.__internal_tets = None
-        
+        self.__map_face_indexes = None
+        self.texture = texture
+        self.groups = {}
+        self.smoothness = smoothness
+
+        if mtl is not None:
+            self.__load_from_file(mtl)
+
         
         if filename is not None:
             
@@ -287,6 +294,15 @@ class Tetmesh(AbstractMesh):
             clipping_range = super(Tetmesh, self).boundary()
             indices = np.where(self.internals)[0]
             clipping_range[indices[np.all(clipping_range[self.__tet2tet[indices]], axis=1)]] = False
+
+            self.__map_face_indexes = []
+            counter = 0
+            for c in clipping_range:
+                if c:
+                    self.__map_face_indexes.append(counter)
+                else:
+                    counter = counter + 1
+
             clipping_range = np.repeat(clipping_range, 4)
             self._AbstractMesh__boundary_cached = clipping_range
             self._AbstractMesh__boundary_needs_update = False
@@ -321,6 +337,10 @@ class Tetmesh(AbstractMesh):
     @property
     def num_triangles(self):
         return self.num_faces
+
+    @property
+    def map_face_indexes(self):
+        return self.__map_face_indexes
     
     @property
     def simplex_centroids(self):

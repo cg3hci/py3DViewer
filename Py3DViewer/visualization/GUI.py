@@ -1,4 +1,5 @@
 import ipywidgets as widgets
+import pythreejs as three
 from ..utils import ColorMap, Observer
 from ..visualization import colors
 from IPython.display import display as ipydisplay
@@ -13,6 +14,9 @@ class GUI(Observer):
         self.mesh = drawable_mesh.geometry
         self.mesh.attach(self)
         self.widgets = []
+        self.click_picker = self.__initialize_picker()
+        self.old_picked_face = None
+        self.old_picked_face_internal = False
         self.__clipping_in_queue = False
         self.__dont_update_clipping = False
         
@@ -131,6 +135,53 @@ class GUI(Observer):
                 self.wireframe_opacity_slider, self.color_wireframe
             ]),
         ]
+
+        self.picking_title = widgets.Label(
+            value="Click informations:",
+            layout={'margin': '0 0 0 20px'},
+            disabled=False,
+            continuous_update=True
+        )
+
+        self.picking_label = widgets.Label(
+            layout={'margin': '0 0 0 20px'},
+            disabled=False,
+            continuous_update=True
+        )
+
+        tab_titles = ['Face', 'Vertex']
+        children = [
+            widgets.HTML(
+                value="",
+                layout={'margin': '0 0 0 10px'},
+                disabled=False,
+                continuous_update=True
+            ) for title in tab_titles]
+        self.picking_tab = widgets.Tab(layout={'margin': '0 0 0 20px'},
+                                       disabled=True,
+                                       width=300,
+                                       height=400)
+        self.picking_tab.children = children
+        for i in range(len(children)):
+            self.picking_tab.set_title(i, tab_titles[i])
+        self.color_picking_label = widgets.Label(
+            value="Click Color  ",
+            layout={'margin': '0 0 0 20px'},
+            disabled=False,
+            continuous_update=True
+        )
+
+        self.widgets += [
+            widgets.HBox([
+                self.picking_title
+            ]),
+            widgets.HBox([
+                self.picking_label
+            ]),
+            widgets.HBox([
+                self.picking_tab
+            ])
+        ]
         
         self.color_map = widgets.Dropdown(
             options=[(i, idx) for idx, i in enumerate(ColorMap.color_maps.keys())],
@@ -165,7 +216,13 @@ class GUI(Observer):
                 disabled=False,
             )
             mesh_colors += [self.color_internal]
-            
+
+        self.color_picking = widgets.ColorPicker(
+            concise=True,
+            description="Click Color",
+            value=colors.rgb2hex(colors.purple),
+            disabled=False,
+        )
         self.color_external = widgets.ColorPicker(
             concise=True,
             description='External',
@@ -173,6 +230,7 @@ class GUI(Observer):
             disabled=False,
         )
         mesh_colors += [self.color_external]
+        mesh_colors += [self.color_picking]
         
         self.widgets += [widgets.HBox(mesh_colors)]
         
@@ -203,13 +261,16 @@ class GUI(Observer):
         self.coloring_type_menu.observe(self.__change_color_type, names='value')
         self.color_map.observe(self.__change_color_map, names='value')
         self.metric_menu.observe(self.__change_metric, names='value')
+
+        self.click_picker.observe(self.on_click, names=['point'])
+
         [i.observe(self.__change_color_label,names='value') for i in self.color_label_pickers.children]
         #self.wireframe_thickness_slider.observe(self.__update_wireframe_thickness, names='value')
         
         for widget in self.widgets:
             ipydisplay(widget)
             
-            
+
     def __update_wireframe_color(self, change): 
         self.drawable.update_wireframe_color(self.color_wireframe.value)
             
@@ -260,8 +321,11 @@ class GUI(Observer):
             
                 self.color_label_pickers.layout = self.visible_layout
                 self.__change_color_label(None)
-                    
 
+    def __initialize_picker(self):
+        pickable_objects = self.drawable.mesh
+        picker = three.Picker(controlling=pickable_objects, event='click')
+        return picker
         
     def __change_metric(self, change):
         
@@ -301,6 +365,89 @@ class GUI(Observer):
         else:
             self.__dont_update_clipping = False
 
+    def on_click(self, change):
+        geometry_type = str(type(self.drawable.geometry))
+
+        # if nothing is clicked
+        if change.owner.object is None:
+            self.picking_label.value = "Nothing found"
+            self.picking_tab.children[0].value = ' '
+            self.picking_tab.children[1].value = ' '
+        else:
+            # click_operations is called based on the number of triangles per face of the geometry
+            if "Quadmesh" in geometry_type:
+                self.click_operations(change, 2)
+            elif "Tetmesh" in geometry_type:
+                self.click_operations(change, 4)
+            elif "Hexmesh" in geometry_type:
+                self.click_operations(change, 12)
+            else:
+                # Trimesh
+                self.click_operations(change, 1)
+
+    def click_operations(self, change, num_triangles):
+        face_index = change.owner.faceIndex // num_triangles
+        coords = change['new']
+        internal = False
+
+        if num_triangles <= 2:
+            vertexes = np.array(self.drawable.geometry.faces[face_index]).astype("int32")
+            num_faces = self.drawable.geometry.num_faces
+        elif num_triangles == 4:
+            face_index = face_index + self.drawable.geometry.map_face_indexes[face_index]
+            if self.drawable.geometry.internals[face_index]:
+                internal = True
+            vertexes = np.array(self.drawable.geometry.tets[face_index]).astype("int32")
+            num_faces = self.drawable.geometry.num_tets
+        else:
+            face_index = face_index + self.drawable.geometry.map_face_indexes[face_index]
+            if self.drawable.geometry.internals[face_index]:
+                internal = True
+            vertexes = np.array(self.drawable.geometry.hexes[face_index]).astype("int32")
+            num_faces = self.drawable.geometry.num_hexes
+
+        vertex_coords = np.array([self.drawable.geometry.vertices[vrtx] for vrtx in vertexes]).astype("float32")
+        nearest_vertex, nearest_vertex_coords = self.find_nearest_vertex(vertexes, vertex_coords, change.owner.point)
+
+        if num_triangles <= 2:
+            nearest_faces = np.array(self.drawable.geometry.vtx2face[nearest_vertex]).astype("int32")
+        elif num_triangles == 4:
+            nearest_faces = np.array(self.drawable.geometry.vtx2tet[nearest_vertex]).astype("int32")
+        else:
+            nearest_faces = np.array(self.drawable.geometry.vtx2hex[nearest_vertex]).astype("int32")
+
+        #triangles = np.array([face_index * num_triangles + n for n in np.arange(0, num_triangles)]).astype("int32")
+
+        if self.old_picked_face is not None:
+            if self.old_picked_face_internal:
+                self.drawable.update_face_color(colors.hex2rgb(self.color_internal.value), face_index=self.old_picked_face,
+                                                num_faces=num_faces,
+                                                num_triangles=num_triangles)
+                # [self.drawable.update_external_color(colors.hex2rgb(self.color_internal.value), face_index=old_face, geometry=None) for old_face in self.old_picked_face]
+            else:
+                self.drawable.update_face_color(colors.hex2rgb(self.color_external.value), face_index=self.old_picked_face,
+                                                num_faces=num_faces,
+                                                num_triangles=num_triangles)
+                # [self.drawable.update_external_color(colors.hex2rgb(self.color_external.value), face_index=old_face,geometry=None) for old_face in self.old_picked_face]
+
+        self.old_picked_face = face_index
+        self.old_picked_face_internal = internal
+       # [self.drawable.update_external_color(colors.hex2rgb(self.color_picking.value), face_index=triangle, geometry=None) for triangle in triangles]
+        self.drawable.update_face_color(colors.hex2rgb(self.color_picking.value), face_index=face_index, num_faces=num_faces,num_triangles=num_triangles)
+
+        self.picking_label.value = 'Clicked on (%.3f, %.3f, %.3f)' % tuple(coords)
+        self.picking_tab.children[0].value = 'Face index: %d' % face_index + '<br>'
+        self.picking_tab.children[0].value += 'Vertex indices: '
+        self.picking_tab.children[0].value += ', '.join([str(v) for v in vertexes]) + '<br>'
+
+        self.picking_tab.children[0].value += ''.join(
+            'Vertex ' + str(a) + ' coords: (%.3f, %.3f, %.3f)' % tuple(b) + '<br>' for a, b in
+            zip(vertexes, vertex_coords))
+
+        self.picking_tab.children[1].value = 'Vertex index: %d' % nearest_vertex + '<br>'
+        self.picking_tab.children[1].value += 'Vertex coords: (%.3f, %.3f, %.3f)' % tuple(nearest_vertex_coords) + '<br>'
+        self.picking_tab.children[1].value += 'Nearest faces: '
+        self.picking_tab.children[1].value += ', '.join([str(v) for v in nearest_faces]) + '<br>'
         
     def __update_clipping(self, change): 
        
@@ -327,3 +474,8 @@ class GUI(Observer):
         self.clipping_slider_x.value = x_range
         self.clipping_slider_y.value = y_range
         self.clipping_slider_z.value = z_range
+
+    @staticmethod
+    def find_nearest_vertex(vertexes, vertex_coords, click_coords):
+        dist = [np.linalg.norm(click_coords - vertex) for vertex in vertex_coords]
+        return vertexes[dist.index(min(dist))], vertex_coords[dist.index(min(dist))]
