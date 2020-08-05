@@ -45,6 +45,7 @@ class AbstractMesh(Observer, Subject):
         self._dont_update        = False
         self.__vtx2face          = None #npArray (NxM)
         self.__vtx2vtx           = None #npArray (Nx1)
+        self.__face2face         = None 
         self.__bounding_box      = None #npArray (2x3)
         self.simplex_metrics     = dict() #dictionary[propertyName : ((min, max), npArray (Nx1))]
         self.__simplex_centroids = None #npArray (Nx1)
@@ -351,7 +352,7 @@ class AbstractMesh(Observer, Subject):
 
     @property
     def vtx2vtx(self):
-
+                
         return self.__vtx2vtx
 
 

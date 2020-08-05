@@ -1,8 +1,10 @@
 from .Abstractmesh import AbstractMesh
+from .Trimesh import Trimesh
+from ..algorithms.cleaning import remove_isolated_vertices as rm_isolated
 import numpy as np
 from ..utils import IO, ObservableArray
 from ..utils.load_operations import compute_tet_mesh_adjs as compute_adjacencies
-from ..utils.load_operations import _compute_three_vertex_normals as compute_three_normals
+from ..utils.load_operations import _compute_three_vertex_normals as compute_three_normals, compute_adj_f2f_volume as compute_f2f
 from ..utils.metrics import tet_scaled_jacobian, tet_volume
 
 class Tetmesh(AbstractMesh):
@@ -205,11 +207,11 @@ class Tetmesh(AbstractMesh):
         self.__internal_tets = None
 
         self.__compute_faces()
-        self.__tet2tet, self._AbstractMesh__vtx2vtx, self.__vtx2tet = compute_adjacencies(self.faces, self.num_vertices)
+        self.__tet2tet, self._AbstractMesh__vtx2vtx, self.__vtx2tet, self._AbstractMesh__vtx2face = compute_adjacencies(self.faces, self.num_vertices)
         self._AbstractMesh__update_bounding_box()
         self.reset_clipping()
         self.__compute_metrics()
-            
+        self._AbstractMesh__face2face = None
         self._dont_update = False
         self.update()
 
@@ -339,9 +341,38 @@ class Tetmesh(AbstractMesh):
         return self.__vtx2tet
     
     @property
+    def face2face(self):
+        if self._AbstractMesh__face2face is None: 
+            self._AbstractMesh__face2face = compute_f2f(self.faces) 
+        return self._AbstractMesh__face2face
+    
+    @property
     def edges(self):
 
         edges =  np.c_[self.faces[:,:2], self.faces[:,1:], self.faces[:,2], self.faces[:,0]]
         edges.shape = (-1,2)
 
         return edges
+
+    @property
+    def surface_faces(self):
+        return np.where(self.face2face == -1)[0]
+    
+    def face_is_on_surface(self, face_ids):
+        res = self.face2face[face_ids] == -1
+        return res if res.size > 1 else res.item()
+    
+    def vert_is_on_surface(self, vert_id):
+        verts = np.where((self.faces[:,0] == vert_id) | 
+        (self.faces[:,1] == vert_id) |
+        (self.faces[:,2] == vert_id))
+
+        return np.intersect1d(verts, self.surface_faces).size > 0
+    
+    def extract_surface_mesh(self, remove_isolated_vertices=False):
+        faces = self.faces[self.surface_faces]
+        vertices = self.vertices
+        result = Trimesh(vertices=vertices, faces=faces)
+        if remove_isolated_vertices:
+            rm_isolated(result)
+        return result

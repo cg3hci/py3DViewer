@@ -1,6 +1,5 @@
 from .Abstractmesh import AbstractMesh
 import numpy as np
-from ..utils import IO
 from ..utils import IO, ObservableArray
 from ..utils.load_operations import compute_surface_mesh_adjs as compute_adjacencies
 from ..utils.load_operations import compute_vertex_normals, compute_face_normals
