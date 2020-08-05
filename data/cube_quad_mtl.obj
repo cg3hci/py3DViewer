@@ -19,12 +19,17 @@ v 1.000000 1.000000 1.000000
 v 1.000000 -1.000000 1.000000
 # 8 vertices, 0 vertices normals
 
-
+usemtl m1
 f 2 3 4 1
+usemtl m2
 f 5 6 2 1
+usemtl m3
 f 3 7 8 4
+usemtl m4
 f 1 4 8 5
+usemtl m5
 f 8 7 6 5
+usemtl m6
 f 6 7 3 2
 
 # 6 faces, 0 coords texture
