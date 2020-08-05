@@ -2,7 +2,7 @@ from .Abstractmesh import AbstractMesh
 from .Quadmesh import Quadmesh
 import numpy as np
 from ..utils import IO, ObservableArray
-from ..algorithms.cleaning import remove_isolated_vertices
+from ..algorithms.cleaning import remove_isolated_vertices as rm_isolated
 from ..utils.load_operations import compute_hex_mesh_adjs as compute_adjacencies, _compute_three_vertex_normals as compute_three_normals, compute_adj_f2f_volume as compute_f2f
 from ..utils.metrics import hex_scaled_jacobian, hex_volume
 
@@ -223,13 +223,13 @@ class Hexmesh(AbstractMesh):
         self._AbstractMesh__boundary_needs_update = True
         self._AbstractMesh__simplex_centroids = None
         self.__internal_hexes = None
-        
         self.__compute_faces()
-        self.__hex2hex, self._AbstractMesh__vtx2vtx, self.__vtx2hex = compute_adjacencies(self.faces, self.num_vertices)
+        self.__hex2hex, self._AbstractMesh__vtx2vtx, self.__vtx2hex, self._AbstractMesh__vtx2face = compute_adjacencies(self.faces, self.num_vertices)
         self._AbstractMesh__update_bounding_box()
         self.__compute_metrics()
         self.reset_clipping()
         self._dont_update = False
+        self._AbstractMesh__face2face = None
         self.update()
 
     
@@ -404,5 +404,5 @@ class Hexmesh(AbstractMesh):
         vertices = np.copy(self.vertices)
         result = Quadmesh(vertices=vertices, faces=faces)
         if remove_isolated_vertices:
-            remove_isolated_vertices(result)
+            rm_isolated(result)
         return result

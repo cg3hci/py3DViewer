@@ -1,6 +1,6 @@
 from .Abstractmesh import AbstractMesh
 from .Trimesh import Trimesh
-from ..algorithms.cleaning import remove_isolated_vertices
+from ..algorithms.cleaning import remove_isolated_vertices as rm_isolated
 import numpy as np
 from ..utils import IO, ObservableArray
 from ..utils.load_operations import compute_tet_mesh_adjs as compute_adjacencies
@@ -207,11 +207,11 @@ class Tetmesh(AbstractMesh):
         self.__internal_tets = None
 
         self.__compute_faces()
-        self.__tet2tet, self._AbstractMesh__vtx2vtx, self.__vtx2tet = compute_adjacencies(self.faces, self.num_vertices)
+        self.__tet2tet, self._AbstractMesh__vtx2vtx, self.__vtx2tet, self._AbstractMesh__vtx2face = compute_adjacencies(self.faces, self.num_vertices)
         self._AbstractMesh__update_bounding_box()
         self.reset_clipping()
         self.__compute_metrics()
-            
+        self._AbstractMesh__face2face = None
         self._dont_update = False
         self.update()
 
@@ -374,5 +374,5 @@ class Tetmesh(AbstractMesh):
         vertices = self.vertices
         result = Trimesh(vertices=vertices, faces=faces)
         if remove_isolated_vertices:
-            remove_isolated_vertices(result)
+            rm_isolated(result)
         return result

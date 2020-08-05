@@ -273,13 +273,11 @@ class AbstractMesh(Observer, Subject):
         
     @property
     def vtx2vtx(self):
-        
         return self.__vtx2vtx
         
         
     @property
     def vtx2face(self):
-        
         return self.__vtx2face 
     
 
