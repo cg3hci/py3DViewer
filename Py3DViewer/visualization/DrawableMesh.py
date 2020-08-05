@@ -79,6 +79,22 @@ class DrawableMesh (Observer):
             #interleaved is made up of the triangle soup, the new colors and the normals of this vertices
             self.mesh.geometry.attributes['color'].data.array = interleaved
 
+    def update_face_color(self, new_color, face_index, num_faces, num_triangles, geometry=None):
+
+        if geometry is None:
+            geometry = self.geometry
+
+        faces = np.full((num_faces,), False)
+        faces[face_index] = True
+        faces = np.repeat(faces, num_triangles*3, axis=0)
+
+        self.geometry_color[faces] = new_color
+        colors = geometry._as_threejs_colors()
+        new_colors = self.geometry_color[colors]
+        tris, vtx_normals = geometry._as_threejs_triangle_soup()
+        interleaved = np.concatenate((tris, new_colors, vtx_normals), axis=1)
+        self.mesh.geometry.attributes['color'].data.array = interleaved
+
     def update_external_color(self, new_color, geometry = None):
 
 
@@ -96,8 +112,9 @@ class DrawableMesh (Observer):
         colors = geometry._as_threejs_colors()
         new_colors = self.geometry_color[colors]
         tris, vtx_normals = geometry._as_threejs_triangle_soup()
-        if self.geometry.material is not {} or self.texture is not None:
-            interleaved = np.concatenate((tris, new_colors, vtx_normals, self.geometry.uvcoords ), axis=1)
+        
+        if self.geometry.material or self.texture is not None:
+            interleaved = np.concatenate((tris, new_colors, vtx_normals, self.geometry.uvcoords), axis=1)
         else:
             interleaved = np.concatenate((tris, new_colors, vtx_normals), axis=1)
         self.mesh.geometry.attributes['color'].data.array = interleaved
