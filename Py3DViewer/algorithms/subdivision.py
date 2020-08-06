@@ -74,3 +74,21 @@ def mid_point_subdivision(mesh):
     
     v, f = _mid_point_subdivision_trimesh(mesh.vertices, mesh.faces, mesh.edges)
     mesh.__init__(vertices=v, faces=f)
+
+
+def hex_to_tet_subdivision(hexes, subdivision_rule=3):
+
+    if subdivision_rule == 0:
+        split_rules = np.array([[0,1,2,5], [0,2,7,5], [0,2,3,7], [0,5,7,4], [2,7,5,6]], dtype=np.int)
+    elif subdivision_rule == 1:
+        split_rules = np.array([[0,5,7,4], [0,1,7,5], [1,6,7,5], [0,7,2,3], [0,7,1,2], [1,7,6,2]], dtype=np.int)
+    elif subdivision_rule == 2:
+        split_rules = np.array([[0,4,5,6], [0,3,7,6], [0,7,4,6], [0,1,2,5], [0,3,6,2], [0,6,5,2]], dtype=np.int)
+    elif subdivision_rule == 3:
+        split_rules = np.array([[0,2,3,6], [0,3,7,6], [0,7,4,6], [0,5,6,4], [1,5,6,0], [1,6,2,0]], dtype=np.int)
+    else:
+        raise ValueError("subdivision_rule must be an integer between 0 and 3")
+
+    tetrahedra = np.ascontiguousarray(hexes[:,split_rules])
+    tetrahedra.shape = (-1,4)
+    return tetrahedra
