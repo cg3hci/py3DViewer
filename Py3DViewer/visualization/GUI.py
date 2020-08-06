@@ -1,6 +1,6 @@
 import ipywidgets as widgets
 import pythreejs as three
-from ..utils import ColorMap, Observer, utils
+from ..utils import ColorMap, Observer, utilities
 from ..visualization import colors
 from IPython.display import display as ipydisplay
 import threading
@@ -152,7 +152,7 @@ class GUI(Observer):
             continuous_update=True
         )
 
-        tab_titles = ['Face', 'Vertex'] if utils.mesh_is_surface(drawable_mesh.geometry) else ['Poly', 'Vertex']
+        tab_titles = ['Face', 'Vertex'] if utilities.mesh_is_surface(drawable_mesh.geometry) else ['Poly', 'Vertex']
         children = [
             widgets.HTML(
                 value="",
