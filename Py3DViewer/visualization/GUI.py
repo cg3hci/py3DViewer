@@ -474,6 +474,7 @@ class GUI(Observer):
             self.picking_label.layout = self.invisible_layout
             self.color_picking.layout = self.invisible_layout
             self.enable_picking_button.description = 'Show Picking Info'
+            self.__change_color_type(None)
 
 
 
