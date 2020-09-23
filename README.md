@@ -97,7 +97,7 @@ For major changes, please open an issue first to discuss what you would like to 
 
 ## Cite Us
 
-Please cite our [paper]() if you use the Py3DViewer in your own work:
+Please cite our [paper](https://diglib.eg.org/handle/10.2312/stag20191374) if you use the Py3DViewer in your own work:
 
 ```bibtex
 @inproceedings{py3dviewer2019,
