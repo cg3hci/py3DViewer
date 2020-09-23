@@ -88,7 +88,7 @@ University of Cagliari (Italy)
 
 ### Other Contributors
 
-Giampaolo Perelli (University of Cagliari).
+Chiara Manca, Giampaolo Perelli, Alessandra Perniciano (University of Cagliari).
 
 ## Contributing
 
@@ -115,4 +115,4 @@ This project is licensed under the MIT License - see the [LICENSE.md](https://gi
 
 ## More Information
 
-For other information you can contact one of the main developers of the library: G. Cherchi (g.cherchi@unica.it), L. Pitzalis (luca.pitzalis94@unica.it) and G. L. Frongia (giovannil.frongia@unica.it).
+For other information you can contact one of the main developers of the library: G. Cherchi (g.cherchi@unica.it) and L. Pitzalis (luca.pitzalis94@unica.it).
