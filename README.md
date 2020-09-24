@@ -100,12 +100,15 @@ For major changes, please open an issue first to discuss what you would like to 
 Please cite our [paper](https://diglib.eg.org/handle/10.2312/stag20191374) if you use the Py3DViewer in your own work:
 
 ```bibtex
-@inproceedings{py3dviewer2019,
-  title={{The Py3DViewer project}: a Python library for fast prototyping in geometry processing},
-  author={Cherchi, Gianmarco and Pitzalis, Luca and Frongia, Giovanni L. and Scateni, Riccardo},
-  booktitle={Proceedings of the Conference on Smart Tools and Applications in Computer Graphics},
-  organization={Eurographics Association},
-  year={2019},
+@inproceedings {py3dviewer2019,
+  title = {{The Py3DViewer Project: A Python Library for fast Prototyping in Geometry Processing}},
+  author = {Cherchi, Gianmarco and Pitzalis, Luca and Frongia, Giovanni Laerte and Scateni, Riccardo},
+  booktitle = {Smart Tools and Apps for Graphics - Eurographics Italian Chapter Conference},
+  year = {2019},
+  publisher = {The Eurographics Association},
+  ISSN = {2617-4855},
+  ISBN = {978-3-03868-100-7},
+  DOI = {10.2312/stag.20191374}
 }
 ```
 
