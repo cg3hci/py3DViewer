@@ -52,6 +52,10 @@ class DrawableMesh (Observer):
             if hasattr(self.geometry, "internals"):
                 internal_color = geometry.internal_triangles_idx()
                 color[internal_color] = self._internal_color
+        else:
+            mesh_color = np.array(mesh_color, dtype=np.float)/255
+            color = np.repeat(mesh_color.reshape(1,3), geometry.num_triangles*3, axis=0) 
+            self._external_color = mesh_color
 
         return color
 
