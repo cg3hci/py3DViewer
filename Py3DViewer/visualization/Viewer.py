@@ -16,7 +16,12 @@ class Viewer(object):
         if type(geometries) is not list:
             self.drawables += [self.__get_drawable_from_geometry(geometries, mesh_color, reactive or with_gui)]
         else:
-            self.drawables = [self.__get_drawable_from_geometry(geometry, mesh_color, reactive or with_gui) for geometry in geometries]
+            if type(mesh_color[0]) is not list:
+                for i in range(len(geometries)):
+                    self.drawables.append(self.__get_drawable_from_geometry(geometries[i], mesh_color, reactive or with_gui))
+            else:
+                for i in range(len(geometries)):
+                    self.drawables.append(self.__get_drawable_from_geometry(geometries[i], mesh_color[i], reactive or with_gui))
 
         if with_gui:
             if len(self.drawables) > 1:

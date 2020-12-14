@@ -14,7 +14,7 @@ class PointCloud(Observer, Subject):
     
     """
     
-    def __init__(self, vertices=None, radius=1.0, edges=None):
+    def __init__(self, vertices=None):
         
         if vertices is not None:
             self.vertices = self.__make_observable(vertices)
