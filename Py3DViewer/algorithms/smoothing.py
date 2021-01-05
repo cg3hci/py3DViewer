@@ -18,7 +18,7 @@ def laplacian_smoothing(mesh, lambda_=1.0, iterations=1):
     for i in range(iterations):
         mesh.vertices[:] += spsolve( I + lambda_ * L, mesh.vertices) - mesh.vertices[:]
         
-@jit(target='cpu', nopython=True, parallel=True, cache=True)
+@jit(nopython=True, parallel=True, cache=True)
 def taubin_smoothing_internal(n, e, vertices, lambda_, mu, iterations):
     A = np.zeros((n, n))
     for i in range(e.shape[0]):
