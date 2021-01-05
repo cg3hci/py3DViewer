@@ -285,7 +285,8 @@ class GUI(Observer):
         self.drawable.update_wireframe_opacity(self.wireframe_opacity_slider.value)
         
     def __update_internal_color(self, change): 
-        self.drawable.update_internal_color(colors.hex2rgb(self.color_internal.value))
+        if hasattr(self.mesh, "internals"): 
+            self.drawable.update_internal_color(colors.hex2rgb(self.color_internal.value))
             
     def __update_external_color(self, change): 
         self.drawable.update_external_color(colors.hex2rgb(self.color_external.value))
