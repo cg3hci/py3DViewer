@@ -326,7 +326,7 @@ def compute_vertex_normals(face_normals, vtx2face):
 
 
 def _compute_three_vertex_normals(tri_soup):
-    
+    np.errstate(divide='ignore',invalid='ignore')
     tmp = tri_soup[0::3]
     a = tri_soup[1::3] - tmp
     b = tri_soup[2::3] - tmp
