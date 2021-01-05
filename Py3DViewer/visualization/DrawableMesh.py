@@ -79,7 +79,7 @@ class DrawableMesh (Observer):
             colors = geometry._as_threejs_colors()
             new_colors = self.geometry_color[colors]
             tris, vtx_normals = geometry._as_threejs_triangle_soup()
-            interleaved = np.concatenate((tris, new_colors, vtx_normals), axis=1)
+            interleaved = np.concatenate((tris, new_colors, vtx_normals), axis=1).astype(np.float32)
             #interleaved is made up of the triangle soup, the new colors and the normals of this vertices
             self.mesh.geometry.attributes['color'].data.array = interleaved
 
@@ -96,7 +96,7 @@ class DrawableMesh (Observer):
         colors = geometry._as_threejs_colors()
         new_colors = self.geometry_color[colors]
         tris, vtx_normals = geometry._as_threejs_triangle_soup()
-        interleaved = np.concatenate((tris, new_colors, vtx_normals), axis=1)
+        interleaved = np.concatenate((tris, new_colors, vtx_normals), axis=1).astype(np.float32)
         self.mesh.geometry.attributes['color'].data.array = interleaved
 
     def update_external_color(self, new_color, geometry = None):
@@ -118,9 +118,9 @@ class DrawableMesh (Observer):
         tris, vtx_normals = geometry._as_threejs_triangle_soup()
         
         if len(self.geometry.material) > 0 or self.texture is not None:
-            interleaved = np.concatenate((tris, new_colors, vtx_normals, self.geometry.uvcoords), axis=1)
+            interleaved = np.concatenate((tris, new_colors, vtx_normals, self.geometry.uvcoords), axis=1).astype(np.float32)
         else:
-            interleaved = np.concatenate((tris, new_colors, vtx_normals), axis=1)
+            interleaved = np.concatenate((tris, new_colors, vtx_normals), axis=1).astype(np.float32)
         self.mesh.geometry.attributes['color'].data.array = interleaved
 
     def update_color_map(self, new_colors, geometry = None):
@@ -134,9 +134,9 @@ class DrawableMesh (Observer):
         tris, vtx_normals = geometry._as_threejs_triangle_soup()
 
         if len(self.geometry.material) > 0 or self.texture is not None:
-            interleaved = np.concatenate((tris, new_colors, vtx_normals, self.faceVertexUvs), axis=1)
+            interleaved = np.concatenate((tris, new_colors, vtx_normals, self.faceVertexUvs), axis=1).astype(np.float32)
         else:
-            interleaved = np.concatenate((tris, new_colors, vtx_normals), axis=1)
+            interleaved = np.concatenate((tris, new_colors, vtx_normals), axis=1).astype(np.float32)
         self.mesh.geometry.attributes['color'].data.array = interleaved
         
 
