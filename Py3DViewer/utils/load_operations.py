@@ -4,21 +4,25 @@ from numba.types import Tuple, ListType as LT
 import numpy as np
 
 
-@njit(Tuple((int64[:,::1],LT(LT(int64)),LT(LT(int64))))(int64[:,::1], int64, int64), cache=True)
+@njit(Tuple((int64[:,::1],LT(LT(int64)),LT(LT(int64)), LT(LT(int64))))(int64[:,::1], int64, int64), cache=True)
 def compute_surface_mesh_adjs(edges, num_vertices, edges_per_face):
         
     num_faces = edges.shape[0]//edges_per_face
     adjs =  np.zeros((num_faces, edges_per_face), dtype=np.int64)-1
     vtx2vtx = L()
     vtx2face = L()
+    vtx2edge = L()
         
     for k in range(num_vertices):
         tmp1 = L()
         tmp2 = L()
+        tmp3 = L()
         tmp1.append(-1)
         tmp2.append(-1)
+        tmp3.append(-1)
         vtx2vtx.append(tmp1)
         vtx2face.append(tmp2)
+        vtx2edge.append(tmp3)
         
     tmp = np.arange(num_faces)
     faces_idx = np.repeat(tmp, edges_per_face)
@@ -32,6 +36,12 @@ def compute_surface_mesh_adjs(edges, num_vertices, edges_per_face):
             
         e = (edges[i][0], edges[i][1])
         f = faces_idx[i]
+
+        for j in range(2):
+            if vtx2edge[edges[i][j]][0] == -1:
+                vtx2edge[edges[i][j]][0] = i
+            else:
+                vtx2edge[edges[i][j]].append(i)
             
         if vtx2vtx[e[0]][0] == -1:
             vtx2vtx[e[0]][0] = e[1]
@@ -53,28 +63,32 @@ def compute_surface_mesh_adjs(edges, num_vertices, edges_per_face):
             adjs[map_[e]][idx_to_append2] = f
                 
        
-    return adjs, vtx2vtx, vtx2face 
+    return adjs, vtx2vtx, vtx2face, vtx2edge
 
 
-@njit(Tuple((int64[:,::1],LT(LT(int64)),LT(LT(int64)),LT(LT(int64))))(int64[:,::1], int64), cache=True)
-def compute_tet_mesh_adjs(faces, num_vertices):
+@njit(Tuple((int64[:,::1],LT(LT(int64)),LT(LT(int64)),LT(LT(int64)),LT(LT(int64))))(int64[:,::1],int64[:,::1], int64), cache=True)
+def compute_tet_mesh_adjs(faces, edges, num_vertices):
         
     num_poly = faces.shape[0]//4
     adjs =  np.zeros((num_poly, 4), dtype=np.int64)-1
     vtx2vtx = L()
     vtx2poly = L()
     vtx2face = L()
+    vtx2edge = L()
         
     for k in range(num_vertices):
         tmp1 = L()
         tmp2 = L()
         tmp3 = L()
+        tmp4 = L()
         tmp1.append(-1)
         tmp2.append(-1)
         tmp3.append(-1)
+        tmp4.append(-1)
         vtx2vtx.append(tmp1)
         vtx2poly.append(tmp2)
         vtx2face.append(tmp3)
+        vtx2edge.append(tmp4)
         
     tmp = np.arange(num_poly)
     poly_idx = np.repeat(tmp, 4)
@@ -83,6 +97,16 @@ def compute_tet_mesh_adjs(faces, num_vertices):
     support_set = set()
     map_[(-1,-1,-1)] = -1
     support_set.add((-1,-1,-1))
+
+    for i in range(edges.shape[0]):
+            
+        e = (edges[i][0], edges[i][1])
+
+        for j in range(2):
+            if vtx2edge[edges[i][j]][0] == -1:
+                vtx2edge[edges[i][j]][0] = i
+            else:
+                vtx2edge[edges[i][j]].append(i)
         
     for i in range(faces.shape[0]):
         
@@ -152,27 +176,31 @@ def compute_tet_mesh_adjs(faces, num_vertices):
             adjs[map_[f1]][idx_to_append2] = t
                 
        
-    return adjs, vtx2vtx, vtx2poly, vtx2face   
+    return adjs, vtx2vtx, vtx2poly, vtx2face, vtx2edge  
 
-@njit(Tuple((int64[:,::1],LT(LT(int64)),LT(LT(int64)),LT(LT(int64))))(int64[:,::1], int64), cache=True)
-def compute_hex_mesh_adjs(faces, num_vertices):
+@njit(Tuple((int64[:,::1],LT(LT(int64)),LT(LT(int64)),LT(LT(int64)),LT(LT(int64))))(int64[:,::1], int64[:,::1], int64), cache=True)
+def compute_hex_mesh_adjs(faces, edges, num_vertices):
         
     num_poly = faces.shape[0]//6
     adjs =  np.zeros((num_poly, 6), dtype=np.int64)-1
     vtx2vtx = L()
     vtx2poly = L()
     vtx2face = L()
+    vtx2edge = L()
         
     for k in range(num_vertices):
         tmp1 = L()
         tmp2 = L()
         tmp3 = L()
+        tmp4 = L()
         tmp1.append(-1)
         tmp2.append(-1)
         tmp3.append(-1)
+        tmp4.append(-1)
         vtx2vtx.append(tmp1)
         vtx2poly.append(tmp2)
         vtx2face.append(tmp3)
+        vtx2edge.append(tmp4)
         
     tmp = np.arange(num_poly)
     poly_idx = np.repeat(tmp, 6)
@@ -181,6 +209,16 @@ def compute_hex_mesh_adjs(faces, num_vertices):
     support_set = set()
     map_[(-1,-1,-1,-1)] = -1
     support_set.add((-1,-1,-1,-1))
+
+    for i in range(edges.shape[0]):
+                
+        e = (edges[i][0], edges[i][1])
+
+        for j in range(2):
+            if vtx2edge[edges[i][j]][0] == -1:
+                vtx2edge[edges[i][j]][0] = i
+            else:
+                vtx2edge[edges[i][j]].append(i) 
         
     for i in range(faces.shape[0]):
         
@@ -265,7 +303,7 @@ def compute_hex_mesh_adjs(faces, num_vertices):
             adjs[map_[f1]][idx_to_append2] = t
                 
        
-    return adjs, vtx2vtx, vtx2poly, vtx2face
+    return adjs, vtx2vtx, vtx2poly, vtx2face, vtx2edge
    
 
 @njit(int64[:,::1](int64[:,::1]),cache=True)

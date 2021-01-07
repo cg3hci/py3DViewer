@@ -1,6 +1,6 @@
 from .Abstractmesh import AbstractMesh
 import numpy as np
-from ..utils import IO, ObservableArray
+from ..utils import IO, ObservableArray, deprecated
 from ..utils.load_operations import compute_surface_mesh_adjs as compute_adjacencies
 from ..utils.load_operations import compute_vertex_normals, compute_face_normals
 from ..utils.load_operations import _compute_three_vertex_normals as compute_three_normals
@@ -25,9 +25,10 @@ class Trimesh(AbstractMesh):
     def __init__(self, filename=None, vertices=None, faces=None, labels=None, texture=None, mtl=None, smoothness=False):
 
         super(Trimesh, self).__init__()
+        
+        self.vtx_normals  = None # npArray (Nx3)
         self.face_normals = None  # npArray (Nx3)
         self.labels = None  # npArray (Nx1)
-        self.__face2face = None  # npArray (Nx3?)
         self.texture = texture
         self.material = {}
         self.groups = {}
@@ -202,17 +203,22 @@ class Trimesh(AbstractMesh):
         super().rotation(angle, axis)
         self.__load_operations()
 
-    def __load_operations(self):
-        self._dont_update = True
-        self._AbstractMesh__boundary_needs_update = True
-        self._AbstractMesh__simplex_centroids = None
-
+    
+    def __compute_edges(self):
         edges = np.c_[self.faces[:, 0], self.faces[:, 1],
                       self.faces[:, 1], self.faces[:, 2],
                       self.faces[:, 2], self.faces[:, 0]]
         edges.shape = (-1, 2)
+        self.edges = edges
 
-        self.__face2face, self._AbstractMesh__vtx2vtx, self._AbstractMesh__vtx2face = compute_adjacencies(edges,
+
+    def __load_operations(self):
+        self._dont_update = True
+        self._AbstractMesh__boundary_needs_update = True
+        self._AbstractMesh__simplex_centroids = None
+        self.__compute_edges()
+
+        self._AbstractMesh__adj_face2face, self._AbstractMesh__adj_vtx2vtx, self._AbstractMesh__adj_vtx2face, self._AbstractMesh__adj_vtx2edge = compute_adjacencies(self.edges,
                                                                                                           self.num_vertices,
                                                                                                           self.faces.shape[
                                                                                                               1])
@@ -321,10 +327,7 @@ class Trimesh(AbstractMesh):
     def num_triangles(self):
         return self.num_faces
 
-    @property
-    def face2face(self):
-        return self.__face2face
-
+    
     @property
     def visibleFaces(self):
         return self.boundary()[0]
@@ -336,13 +339,14 @@ class Trimesh(AbstractMesh):
             self._AbstractMesh__simplex_centroids = np.asarray(self.vertices[self.faces].mean(axis=1))
         return self._AbstractMesh__simplex_centroids
 
+
+    #adjacencies
     @property
-    def edges(self):
+    def adj_face2face(self):
+        return self._AbstractMesh__adj_face2face
 
-        edges = np.c_[self.faces[:, :2], self.faces[:, 1:], self.faces[:, 2], self.faces[:, 0]]
-        edges.shape = (-1, 2)
-
-        return edges
-
-
-
+    #deprecated
+    @property
+    @deprecated("Use the method adj_face2face instead")
+    def face2face(self):
+        return self._AbstractMesh__adj_face2face

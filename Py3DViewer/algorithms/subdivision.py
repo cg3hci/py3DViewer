@@ -71,8 +71,12 @@ def _mid_point_subdivision_trimesh(vertices, faces, edges):
 
 
 def mid_point_subdivision(mesh):
-    
-    v, f = _mid_point_subdivision_trimesh(mesh.vertices, mesh.faces, mesh.edges)
+
+    if 'Trimesh' in type(mesh):
+        v, f = _mid_point_subdivision_trimesh(mesh.vertices, mesh.faces, mesh.edges)
+    else:
+        print("Implemented only for Trimesh")
+        return
     mesh.__init__(vertices=v, faces=f)
 
 

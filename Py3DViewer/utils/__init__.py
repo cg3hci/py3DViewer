@@ -6,3 +6,4 @@ from .ObservableArray import *
 from .load_operations import *
 from .matrices import *
 from .utilities import *
+from .deprecated import *

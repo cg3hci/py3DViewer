@@ -2,7 +2,7 @@ from .Abstractmesh import AbstractMesh
 from .Trimesh import Trimesh
 from ..algorithms.cleaning import remove_isolated_vertices as rm_isolated
 import numpy as np
-from ..utils import IO, ObservableArray
+from ..utils import IO, ObservableArray, deprecated
 from ..utils.load_operations import compute_tet_mesh_adjs as compute_adjacencies
 from ..utils.load_operations import _compute_three_vertex_normals as compute_three_normals, compute_adj_f2f_volume as compute_f2f
 from ..utils.metrics import tet_scaled_jacobian, tet_volume
@@ -28,10 +28,10 @@ class Tetmesh(AbstractMesh):
         super(Tetmesh, self).__init__()
         self.tets             = None #npArray (Nx4) 
         self.labels           = None #npArray (Nx1) 
-        self.__tet2tet          = None #npArray (Nx4?) 
-        self.face2tet         = None #npArray (Nx2?)
-        self.tet2face         = None #npArray (Nx4)
-        self.__vtx2tet          = None #npArray (NxM)
+        self.__adj_poly2poly          = None #npArray (Nx4?) 
+        self.__adj_vtx2poly          = None #npArray (NxM)
+        self.__adj_face2poly         = None #npArray (Nx2?) NOT IMPLEMENTED YET
+        self.__adj_poly2face         = None #npArray (Nx6) NOT IMPLEMENTED YET
         self.__internal_tets = None
         self.__map_face_indexes = None
         self.texture = texture
@@ -205,7 +205,14 @@ class Tetmesh(AbstractMesh):
             vtx_ids[vtx_ids > v_id] -= 1;
             
         self.__load_operations()
-        
+    
+    
+    def __compute_edges(self):
+
+        edges =  np.c_[self.faces[:,:2], self.faces[:,1:], self.faces[:,2], self.faces[:,0]]
+        edges.shape = (-1,2)
+        self.edges = edges
+
         
     def __load_operations(self):
         self._dont_update = True
@@ -214,7 +221,8 @@ class Tetmesh(AbstractMesh):
         self.__internal_tets = None
 
         self.__compute_faces()
-        self.__tet2tet, self._AbstractMesh__vtx2vtx, self.__vtx2tet, self._AbstractMesh__vtx2face = compute_adjacencies(self.faces, self.num_vertices)
+        self.__compute_edges()
+        self.__adj_poly2poly, self._AbstractMesh__adj_vtx2vtx, self.__adj_vtx2poly, self._AbstractMesh__adj_vtx2face, _ = compute_adjacencies(self.faces, self.edges, self.num_vertices)
         self._AbstractMesh__update_bounding_box()
         self.reset_clipping()
         self.__compute_metrics()
@@ -279,7 +287,7 @@ class Tetmesh(AbstractMesh):
     def internals(self):
         
         if self.__internal_tets is None:
-            self.__internal_tets = np.all(self.__tet2tet != -1, axis = 1)
+            self.__internal_tets = np.all(self.__adj_poly2poly != -1, axis = 1)
         
         return self.__internal_tets
         
@@ -293,7 +301,7 @@ class Tetmesh(AbstractMesh):
         if (self._AbstractMesh__boundary_needs_update):
             clipping_range = super(Tetmesh, self).boundary()
             indices = np.where(self.internals)[0]
-            clipping_range[indices[np.all(clipping_range[self.__tet2tet[indices]], axis=1)]] = False
+            clipping_range[indices[np.all(clipping_range[self.__adj_poly2poly[indices]], axis=1)]] = False
 
             self.__map_face_indexes = []
             counter = 0
@@ -350,29 +358,7 @@ class Tetmesh(AbstractMesh):
         
         return self._AbstractMesh__simplex_centroids
     
-    @property
-    def tet2tet(self):
-        
-        return self.__tet2tet
     
-    @property
-    def vtx2tet(self):
-        
-        return self.__vtx2tet
-    
-    @property
-    def face2face(self):
-        if self._AbstractMesh__face2face is None: 
-            self._AbstractMesh__face2face = compute_f2f(self.faces) 
-        return self._AbstractMesh__face2face
-    
-    @property
-    def edges(self):
-
-        edges =  np.c_[self.faces[:,:2], self.faces[:,1:], self.faces[:,2], self.faces[:,0]]
-        edges.shape = (-1,2)
-
-        return edges
 
     @property
     def surface_faces(self):
@@ -396,3 +382,41 @@ class Tetmesh(AbstractMesh):
         if remove_isolated_vertices:
             rm_isolated(result)
         return result
+
+
+    #adjacencies
+    @property
+    def adj_poly2poly(self):
+        return self.__adj_poly2poly
+    
+    @property
+    def adj_vtx2poly(self):
+        
+        return self.__adj_vtx2poly
+
+    @property
+    def adj_face2face(self):
+        if self._AbstractMesh__adj_face2face is None: 
+            self._AbstractMesh__adj_face2face = compute_f2f(self.faces) 
+        return self._AbstractMesh__adj_face2face
+
+
+    #deprecated
+
+    @property
+    @deprecated("Use the method adj_poly2poly instead")
+    def tet2tet(self):
+        return self.__adj_poly2poly
+    
+    @property
+    @deprecated("Use the method adj_vtx2poly instead")
+    def vtx2tet(self):
+        
+        return self.__adj_vtx2poly
+
+    @property
+    @deprecated("Use the method adj_face2face instead")
+    def face2face(self):
+        if self._AbstractMesh__adj_face2face is None: 
+            self._AbstractMesh__adj_face2face = compute_f2f(self.faces) 
+        return self._AbstractMesh__adj_face2face

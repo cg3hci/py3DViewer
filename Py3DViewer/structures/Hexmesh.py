@@ -1,7 +1,7 @@
 from .Abstractmesh import AbstractMesh
 from .Quadmesh import Quadmesh
 import numpy as np
-from ..utils import IO, ObservableArray
+from ..utils import IO, ObservableArray, deprecated
 from ..algorithms.cleaning import remove_isolated_vertices as rm_isolated
 from ..utils.load_operations import compute_hex_mesh_adjs as compute_adjacencies, _compute_three_vertex_normals as compute_three_normals, compute_adj_f2f_volume as compute_f2f
 from ..utils.metrics import hex_scaled_jacobian, hex_volume
@@ -27,10 +27,10 @@ class Hexmesh(AbstractMesh):
         super(Hexmesh, self).__init__()
         self.hexes            = None #npArray (Nx8) 
         self.labels           = None #npArray (Nx1) 
-        self.__hex2hex          = None #npArray (Nx4?) 
-        self.__face2hex         = None #npArray (Nx2?) NOT IMPLEMENTED YET
-        self.__hex2face         = None #npArray (Nx6) NOT IMPLEMENTED YET
-        self.__vtx2hex          = None #npArray (NxM)
+        self.__adj_poly2poly          = None #npArray (Nx4?) 
+        self.__adj_face2poly         = None #npArray (Nx2?) NOT IMPLEMENTED YET
+        self.__adj_poly2face         = None #npArray (Nx6) NOT IMPLEMENTED YET
+        self.__adj_vtx2poly          = None #npArray (NxM)
         self.__internal_hexes = None
         self.__map_face_indexes = None
         self.texture = texture
@@ -231,7 +231,8 @@ class Hexmesh(AbstractMesh):
         self._AbstractMesh__simplex_centroids = None
         self.__internal_hexes = None
         self.__compute_faces()
-        self.__hex2hex, self._AbstractMesh__vtx2vtx, self.__vtx2hex, self._AbstractMesh__vtx2face = compute_adjacencies(self.faces, self.num_vertices)
+        self.__compute_edges()
+        self.__adj_poly2poly, self._AbstractMesh__adj_vtx2vtx, self.__adj_vtx2poly, self._AbstractMesh__adj_vtx2face, _ = compute_adjacencies(self.faces, self.edges, self.num_vertices)
         self._AbstractMesh__update_bounding_box()
         self.__compute_metrics()
         self.reset_clipping()
@@ -251,6 +252,12 @@ class Hexmesh(AbstractMesh):
         tmp[:] = self.faces
         self.faces = tmp
         self.faces.attach(self)
+
+    
+    def __compute_edges(self):
+        edges =  np.c_[self.faces[:,:2], self.faces[:,1:3], self.faces[:,2:4], self.faces[:,3], self.faces[:,0]]
+        edges.shape = (-1,2)
+        self.edges = edges
     
         
         
@@ -296,7 +303,7 @@ class Hexmesh(AbstractMesh):
     def internals(self):
         
         if self.__internal_hexes is None:
-            self.__internal_hexes = np.all(self.__hex2hex != -1, axis = 1)
+            self.__internal_hexes = np.all(self.__poly2poly != -1, axis = 1)
         
         return self.__internal_hexes
         
@@ -309,7 +316,7 @@ class Hexmesh(AbstractMesh):
         if (self._AbstractMesh__boundary_needs_update):
             clipping_range = super(Hexmesh, self).boundary()
             indices = np.where(self.internals)[0]
-            clipping_range[indices[np.all(clipping_range[self.__hex2hex[indices]], axis=1)]] = False
+            clipping_range[indices[np.all(clipping_range[self.__adj_poly2poly[indices]], axis=1)]] = False
 
             self.__map_face_indexes = []
             counter = 0
@@ -372,11 +379,6 @@ class Hexmesh(AbstractMesh):
     def map_face_indexes(self):
         return self.__map_face_indexes
     
-    @property
-    def edges(self):
-        edges =  np.c_[self.faces[:,:2], self.faces[:,1:3], self.faces[:,2:4], self.faces[:,3], self.faces[:,0]]
-        edges.shape = (-1,2)
-        return edges
     
     @property
     def simplex_centroids(self):
@@ -387,22 +389,6 @@ class Hexmesh(AbstractMesh):
         return self._AbstractMesh__simplex_centroids
     
     
-    @property
-    def hex2hex(self):
-        
-        return self.__hex2hex
-    
-    @property
-    def vtx2hex(self):
-        
-        return self.__vtx2hex
-
-    @property
-    def face2face(self):
-        if self._AbstractMesh__face2face is None: 
-            self._AbstractMesh__face2face = compute_f2f(self.faces) 
-        return self._AbstractMesh__face2face
-
     @property
     def surface_faces(self):
         return np.where(self.face2face == -1)[0]
@@ -426,3 +412,40 @@ class Hexmesh(AbstractMesh):
         if remove_isolated_vertices:
             rm_isolated(result)
         return result
+    
+    #adjacencies
+    @property
+    def adj_poly2poly(self):
+        return self.__adj_poly2poly
+    
+    @property
+    def adj_vtx2poly(self):
+        
+        return self.__adj_vtx2poly
+
+    @property
+    def adj_face2face(self):
+        if self._AbstractMesh__adj_face2face is None: 
+            self._AbstractMesh__adj_face2face = compute_f2f(self.faces) 
+        return self._AbstractMesh__adj_face2face
+
+
+    #deprecated
+
+    @property
+    @deprecated("Use the method adj_poly2poly instead")
+    def hex2hex(self):
+        return self.__adj_poly2poly
+    
+    @property
+    @deprecated("Use the method adj_vtx2poly instead")
+    def vtx2hex(self):
+        
+        return self.__adj_vtx2poly
+
+    @property
+    @deprecated("Use the method adj_face2face instead")
+    def face2face(self):
+        if self._AbstractMesh__adj_face2face is None: 
+            self._AbstractMesh__adj_face2face = compute_f2f(self.faces) 
+        return self._AbstractMesh__adj_face2face

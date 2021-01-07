@@ -1,6 +1,6 @@
 import numpy as np
 from ..visualization import Viewer
-from ..utils import Subject, Observer
+from ..utils import Subject, Observer, deprecated
 import copy
 
 class Clipping(object):
@@ -38,14 +38,15 @@ class AbstractMesh(Observer, Subject):
 
         self.__finished_loading  = False
         self.vertices            = None #npArray (Nx3)
-        self.vtx_normals         = None #npArray (Nx3) ## Is this used by volumetric meshes? Consider moving it inside surface meshes only
         self.faces               = None #npArray (NxM)
+        self.edges               = None #npArray (Nx2)
         self.uvcoords            = None
         self.coor                = [] #Mappatura indici coordinate uv per faccia
         self._dont_update        = False
-        self.__vtx2face          = None #npArray (NxM)
-        self.__vtx2vtx           = None #npArray (Nx1)
-        self.__face2face         = None 
+        self.__adj_vtx2face          = None #npArray (NxM)
+        self.__adj_vtx2vtx           = None #npArray (Nx1)
+        self.__adj_face2face         = None
+        self.__adj_vtx2edge          = None
         self.__bounding_box      = None #npArray (2x3)
         self.simplex_metrics     = dict() #dictionary[propertyName : ((min, max), npArray (Nx1))]
         self.__simplex_centroids = None #npArray (Nx1)
@@ -71,7 +72,7 @@ class AbstractMesh(Observer, Subject):
         Remember to add that this doesn't copy observer, vtx2vtx and vtx2face, and this is a value copy"""
         new = type(self)()
         for key in self.__dict__.keys():
-            if "observer" not in key and "vtx2vtx" not in key and "vtx2face" not in key and "vtx2tet" not in key and "vtx2hex" not in key:
+            if "observer" not in key and "vtx2vtx" not in key and "vtx2face" not in key and "vtx2poly" not in key and "vtx2poly" not in key:
                 setattr(new, key, copy.deepcopy(getattr(self, key)))
         return new
 
@@ -351,18 +352,6 @@ class AbstractMesh(Observer, Subject):
         self.update()
 
     @property
-    def vtx2vtx(self):
-                
-        return self.__vtx2vtx
-
-
-    @property
-    def vtx2face(self):
-
-        return self.__vtx2face
-
-
-    @property
     def bbox(self):
 
         return self.__bounding_box
@@ -399,5 +388,33 @@ class AbstractMesh(Observer, Subject):
         self.__bounding_box = np.array([[min_x_coord, min_y_coord, min_z_coord],
                                         [max_x_coord, max_y_coord, max_z_coord]])
 
+
     def __repr__(self):
         return f"Mesh of {self.num_faces} polygons."
+
+    #adjacencies
+
+    @property
+    def adj_vtx2vtx(self):
+        return self.__adj_vtx2vtx
+
+    @property
+    def adj_vtx2face(self):
+        return self.__adj_vtx2face 
+    
+    @property
+    def adj_vtx2edge(self):
+        return self.__adj_vtx2edge
+
+    #deprecated
+
+    @property
+    @deprecated("Use the method adj_vtx2vtx instead")
+    def vtx2vtx(self):
+                
+        return self.__adj_vtx2vtx
+
+    @property
+    @deprecated("Use the method adj_vtx2face instead")
+    def vtx2face(self):
+        return self.__adj_vtx2face
