@@ -303,7 +303,7 @@ class Hexmesh(AbstractMesh):
     def internals(self):
         
         if self.__internal_hexes is None:
-            self.__internal_hexes = np.all(self.__poly2poly != -1, axis = 1)
+            self.__internal_hexes = np.all(self.__adj_poly2poly != -1, axis = 1)
         
         return self.__internal_hexes
         
