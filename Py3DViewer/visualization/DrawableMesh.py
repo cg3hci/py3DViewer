@@ -83,16 +83,16 @@ class DrawableMesh (Observer):
             #interleaved is made up of the triangle soup, the new colors and the normals of this vertices
             self.mesh.geometry.attributes['color'].data.array = interleaved
 
-    def update_face_color(self, new_color, face_index, num_faces, num_triangles, geometry=None):
+    def update_poly_color(self, new_color, poly_index, num_triangles, geometry=None):
 
         if geometry is None:
             geometry = self.geometry
 
-        faces = np.full((num_faces,), False)
-        faces[face_index] = True
-        faces = np.repeat(faces, num_triangles*3, axis=0)
+        start = poly_index*num_triangles*3
+        end   = start+num_triangles*3
+        indices = np.arange(start, end);
 
-        self.geometry_color[faces] = new_color
+        self.geometry_color[indices] = new_color
         colors = geometry._as_threejs_colors()
         new_colors = self.geometry_color[colors]
         tris, vtx_normals = geometry._as_threejs_triangle_soup()
@@ -132,6 +132,9 @@ class DrawableMesh (Observer):
         colors = geometry._as_threejs_colors()
         new_colors = self.geometry_color[colors]
         tris, vtx_normals = geometry._as_threejs_triangle_soup()
+
+        if(tris.shape != new_colors.shape):
+            return
 
         if len(self.geometry.material) > 0 or self.texture is not None:
             interleaved = np.concatenate((tris, new_colors, vtx_normals, self.faceVertexUvs), axis=1).astype(np.float32)
@@ -185,10 +188,16 @@ class DrawableMesh (Observer):
         if geometry is None:
             geometry = self.geometry
 
-        mesh_color = np.zeros((self.geometry.labels.size,3), dtype=np.float)
 
-        for idx, i in enumerate(self.geometry.labels.reshape(-1)):
-            mesh_color[idx] = self._label_colors[i]
+        mesh_color = np.zeros((geometry.num_polys,3), dtype=np.float)
+
+        
+        for idx, value in enumerate(self.geometry.labels):
+
+            if(int(value) not in self._label_colors):
+                self._label_colors[int(value)] = colors.random_color()
+            mesh_color[idx] = self._label_colors[int(value)]
+            
 
         self._color_map = mesh_color
         self.update_color_map(mesh_color)

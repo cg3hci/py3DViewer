@@ -99,16 +99,16 @@ def save_mesh(mesh, filename):
         for v in np.asarray(mesh.vertices):
             f.write(f'{float(v[0])} {float(v[1])} {float(v[2])} 0\n')
 
-        if hasattr(mesh, 'tets'):
+        if mesh.polys.shape[1] == 4:
             f.write('Tetrahedra\n')
-            f.write(f'{mesh.num_tets}\n')
-            for idx, t in enumerate(np.asarray(mesh.tets)):
+            f.write(f'{mesh.num_polys}\n')
+            for idx, t in enumerate(np.asarray(mesh.polys)):
                 f.write(f'{int(t[0]) + 1} {t[1] + 1} {int(t[2]) + 1} {int(t[3]) + 1} {np.asarray(mesh.labels)[idx]}\n')
 
         else:
             f.write('Hexahedra\n')
-            f.write(f'{mesh.num_hexes}\n')
-            for idx, h in enumerate(np.asarray(mesh.hexes)):
+            f.write(f'{mesh.num_polys}\n')
+            for idx, h in enumerate(np.asarray(mesh.polys)):
                 f.write(
                     f'{int(h[0]) + 1} {int(h[1]) + 1} {int(h[2]) + 1} {int(h[3]) + 1} {int(h[4]) + 1} {int(h[5]) + 1} {int(h[6]) + 1} {int(h[7]) + 1} {np.asarray(mesh.labels)[idx]}\n')
 
@@ -321,7 +321,7 @@ def save_obj(mesh, filename):
         for vtx in mesh.vertices:
             f.write(f"v {float(vtx[0])} {float(vtx[1])} {float(vtx[2])}\n")
 
-        for face in mesh.faces:
+        for face in mesh.polys:
 
             if 'Trimesh' in str(type(mesh)):
                 f.write(f"f {int(face[0]) + 1} {int(face[1]) + 1} {int(face[2]) + 1}\n")
@@ -430,11 +430,11 @@ def save_off(mesh, filename):
 
         f.write('OFF\n')
         f.write('#Created with Py3DViewer\n\n')
-        f.write(f'{mesh.num_vertices} {mesh.num_faces} 0\n')
+        f.write(f'{mesh.num_vertices} {mesh.num_polys} 0\n')
         for vtx in mesh.vertices:
             f.write(f'{float(vtx[0])} {float(vtx[1])} {float(vtx[2])}\n')
 
-        for face in mesh.faces:
+        for face in mesh.polys:
             if face.size == 3:
                 f.write(f'3 {int(face[0])} {int(face[1])} {int(face[2])}\n')
             elif face.size == 4:

@@ -21,18 +21,17 @@ def mass_matrix(mesh):
 
     for i in range(nv):
         volumes = []
-        if(hasattr(mesh, 'hexes')):
-            v2p = mesh.vtx2hex[i]
-            _ , volumes = hex_volume(mesh.vertices, mesh.hexes[v2p])
-        elif(hasattr(mesh, 'tets')):
-            v2p = mesh.vtx2tet[i]
-            _ , volumes = tet_volume(mesh.vertices, mesh.tets[v2p])
-        elif(hasattr(mesh, 'faces')):
-            v2p = mesh.vtx2face[i]
-            if(mesh.faces.shape[1] == 3):
-                _ , volumes = triangle_area(mesh.vertices, mesh.faces[v2p])
+        if mesh.mesh_is_volumetric:
+            if mesh.polys.shape[1] == 4:
+                 _ , volumes = tet_volume(mesh.vertices, mesh.polys[mesh.adj_vtx2poly[i]])
             else:
-                _ , volumes = quad_area(mesh.vertices, mesh.faces[v2p])
+                _ , volumes = hex_volume(mesh.vertices, mesh.polys[mesh.adj_vtx2poly[i]])
+           
+        elif mesh.mesh_is_surface:
+            if(mesh.polys.shape[1] == 3):
+                _ , volumes = triangle_area(mesh.vertices, mesh.polys[mesh.adj_vtx2poly[i]])
+            else:
+                _ , volumes = quad_area(mesh.vertices, mesh.polys[mesh.adj_vtx2poly[i]])
         
         mass[i] *= (np.sum(volumes) / volumes.shape[0])
     

@@ -1,11 +1,5 @@
 import numpy as np
-
-def mesh_is_volumetric(mesh):
-    return hasattr(mesh, 'tets') or hasattr(mesh, 'hexes')
-
-def mesh_is_surface(mesh):
-    return not mesh_is_volumetric(mesh)
-
+from ..algorithms import cleaning
 
 def __tet_barycentric_coords(vertices, tets, points):
     
@@ -42,3 +36,8 @@ def volumetric_barycentric_coords(vertices, polys, points):
     
     if polys.shape == (4,) or polys.shape[1] == 4:
         return __tet_barycentric_coords(vertices, polys, points)
+
+
+
+
+

@@ -9,7 +9,7 @@ from .GUI import GUI
 
 class Viewer(object):
 
-    def __init__(self, geometries, mesh_color = None, width=1000, height=700, reactive=False, with_gui=False):
+    def __init__(self, geometries, mesh_color = None, width=700, height=400, reactive=False, with_gui=False):
         super(Viewer, self).__init__()
         self.drawables=[]
         self.UI = None
@@ -25,10 +25,10 @@ class Viewer(object):
 
         if with_gui:
             if len(self.drawables) > 1:
-                print("ERROR: GUI only supports one geometry at a time, so far.")
+                print("WARNING: GUI only supports one geometry at a time, so far.")
             
             if "Skeleton" in str(type(self.drawables[0])):
-                print("ERROR: GUI only supports meshes, so far.")
+                print("WARNING: GUI only supports meshes, so far.")
             
             else:
                 self.UI = self.__initialize_GUI(self.drawables[0])
@@ -50,6 +50,9 @@ class Viewer(object):
         
     def __initialize_GUI(self, geometry):
         return GUI(geometry)
+
+    #def reload_GUI(self):
+    #    self.UI._GUI__create_UI()
         
     def __initialize_camera(self, width, height):
         camera_target = np.mean([drawable.center for drawable in self.drawables], axis=0)

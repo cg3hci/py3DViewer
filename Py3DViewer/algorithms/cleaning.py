@@ -1,7 +1,6 @@
 import numpy as np
 from numba import njit, float64, int64
 from numba.types import Tuple
-from ..utils.utilities import mesh_is_surface
 
 @njit(Tuple((float64[:,::1], int64[:,::1]))(float64[:,::1],int64[:,::1]), cache=True)
 def __remove_duplicated_vertices(vertices, polys):
@@ -35,33 +34,32 @@ def __remove_duplicated_vertices(vertices, polys):
 
 
 def remove_isolated_vertices(mesh):
-    used_vertices = set(mesh.faces.flatten())
+    used_vertices = set(mesh.polys.flatten())
     all_vertices = set(range(mesh.num_vertices))
     isolated_vertices = np.array(list(all_vertices.difference(used_vertices)))
-    mesh.remove_vertices(isolated_vertices)
+    mesh.vertices_remove(isolated_vertices)
 
 
 def remove_duplicated_vertices(mesh):
     vertices = mesh.vertices
-    polys = None
-    if mesh_is_surface(mesh):
-        nv, ns = __remove_duplicated_vertices(vertices, mesh.faces)
-        mesh.vertices = nv
+    if mesh.mesh_is_surface:
+        nv, ns = __remove_duplicated_vertices(vertices, mesh.polys)
+        mesh.polys = nv
         mesh.faces = ns
-        if mesh.faces.shape[1] == 3:
+        if mesh.polys.shape[1] == 3:
             mesh._Trimesh__load_operations()
         else:
             mesh._Quadmesh__load_operations() 
 
-    elif hasattr(mesh, 'hexes'):
-        nv, ns = __remove_duplicated_vertices(vertices, mesh.hexes)
+    elif mesh.polys.shape[1] == 8:
+        nv, ns = __remove_duplicated_vertices(vertices, mesh.polys)
         mesh.vertices = nv
-        mesh.hexes = ns
+        mesh.polys = ns
         mesh._Hexmesh__load_operations() 
     else:
-        nv, ns = __remove_duplicated_vertices(vertices, mesh.tets)
+        nv, ns = __remove_duplicated_vertices(vertices, mesh.polys)
         mesh.vertices = nv
-        mesh.tets = ns
+        mesh.polys = ns
         mesh._Tetmesh__load_operations() 
     
     

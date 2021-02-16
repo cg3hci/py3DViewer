@@ -36,26 +36,41 @@ class AbstractMesh(Observer, Subject):
 
     def __init__(self):
 
-        self.__finished_loading  = False
-        self.vertices            = None #npArray (Nx3)
-        self.faces               = None #npArray (NxM)
-        self.edges               = None #npArray (Nx2)
-        self.uvcoords            = None
-        self.coor                = [] #Mappatura indici coordinate uv per faccia
-        self._dont_update        = False
-        self.__adj_vtx2face          = None #npArray (NxM)
-        self.__adj_vtx2vtx           = None #npArray (Nx1)
-        self.__adj_face2face         = None
-        self.__adj_vtx2edge          = None
-        self.__bounding_box      = None #npArray (2x3)
-        self.simplex_metrics     = dict() #dictionary[propertyName : ((min, max), npArray (Nx1))]
-        self.__simplex_centroids = None #npArray (Nx1)
-        self.__clipping          = Clipping()
         self.__boundary_needs_update = True
         self.__boundary_cached   = None
+        self.__finished_loading  = False        
+        self._dont_update        = False
+        self.__poly_size         = None
+
+        self.vertices              = None #npArray (Nx3)
+        self.__edges               = None #npArray (Nx2)
+        self.__polys               = None #npArray (NxM)
+        self.labels                = None # npArray (Nx1)
+        
+        self.uvcoords            = None
+        self.coor                = [] #Mappatura indici coordinate uv per faccia
         self.texture             = None
         self.material            = {}
         self.smoothness          = False
+
+        self.__adj_vtx2vtx           = None
+        self.__adj_vtx2edge          = None
+        self.__adj_vtx2poly          = None #npArray (NxM)
+        self.__adj_edge2vtx          = None
+        self.__adj_edge2edge         = None
+        self.__adj_edge2poly         = None
+        self.__adj_poly2vtx          = None
+        self.__adj_poly2edge         = None
+        self.__adj_poly2poly         = None
+
+        self.__bounding_box      = None #npArray (2x3)
+        self.__simplex_centroids = None #npArray (Nx1)
+        self.__clipping          = Clipping()
+        self.__visible_polys     = None
+
+        self.simplex_metrics     = dict() #dictionary[propertyName : ((min, max), npArray (Nx1))]
+        
+       
         Observer.__init__(self)
         Subject.__init__(self)
 
@@ -68,11 +83,10 @@ class AbstractMesh(Observer, Subject):
             self.update()
 
     def copy(self):
-        """
-        Remember to add that this doesn't copy observer, vtx2vtx and vtx2face, and this is a value copy"""
+
         new = type(self)()
         for key in self.__dict__.keys():
-            if "observer" not in key and "vtx2vtx" not in key and "vtx2face" not in key and "vtx2poly" not in key and "vtx2poly" not in key:
+            if "observer" not in key and ("adj" not in key or "poly2poly" in key):
                 setattr(new, key, copy.deepcopy(getattr(self, key)))
         return new
 
@@ -97,19 +111,12 @@ class AbstractMesh(Observer, Subject):
 
             Viewer: The viewer object
         """
-        texture = self.texture
 
         view = Viewer(self, width = width, height = height, reactive=reactive)
         view.show()
         return view
 
-    @property
-    def clipping(self):
-
-        return self.__clipping
-
-
-
+    
     def set_clipping(self, min_x = None, max_x = None,
                       min_y = None, max_y = None,
                       min_z = None, max_z = None,
@@ -191,9 +198,12 @@ class AbstractMesh(Observer, Subject):
         return self.simplex_metrics[property_name][id_element]
 
     @property
-    def simplex_centroids(self):
+    def clipping(self):
+        return self.__clipping
 
-        raise NotImplementedError('This method must be implemented in the subclasses')
+    @property
+    def visible_polys(self):
+        return self.__visible_polys
 
 
     def __compute_metrics(self):
@@ -212,10 +222,6 @@ class AbstractMesh(Observer, Subject):
 
         raise NotImplementedError('This method must be implemented in the subclasses')
 
-    @property
-    def num_triangles(self):
-
-        raise NotImplementedError('This method must be implemented in the subclasses')
 
     def boundary(self):
 
@@ -231,7 +237,7 @@ class AbstractMesh(Observer, Subject):
         flip_x = self.clipping.flip.x
         flip_y = self.clipping.flip.y
         flip_z = self.clipping.flip.z
-        centroids = np.array(self.simplex_centroids)
+        centroids = np.array(self.poly_centroids)
         x_range = np.logical_xor(flip_x,((centroids)[:,0] >= min_x) & (centroids[:,0] <= max_x))
         y_range = np.logical_xor(flip_y,((centroids[:,1] >= min_y) & (centroids[:,1] <= max_y)))
         z_range = np.logical_xor(flip_z,((centroids[:,2] >= min_z) & (centroids[:,2] <= max_z)))
@@ -239,7 +245,7 @@ class AbstractMesh(Observer, Subject):
         return clipping_range
 
 
-    def add_vertex(self, x, y, z):
+    def vertex_add(self, x, y, z):
 
         """
         Add a new vertex to the current mesh. It affects the mesh geometry.
@@ -260,7 +266,7 @@ class AbstractMesh(Observer, Subject):
         self.update()
 
 
-    def add_vertices(self, new_vertices):
+    def vertices_add(self, new_vertices):
 
         """
         Add a list of new vertices to the current mesh. It affects the mesh geometry.
@@ -278,18 +284,16 @@ class AbstractMesh(Observer, Subject):
         self.update()
 
 
-    '''
-    approccio iniziale
-    index = 0
-    for r in self.vertices[:]:
-       vertix = np.resize(r, (4, 1))
-       vertix[-1, :] = 1
-       aux = matrix @ vertix
-       self.vertices[index] = np.resize(aux, (1, 3))
-       index += 1
-    '''
 
-    def translation (self, t):
+    def transform_translate(self, t):
+        """
+        Translate the mesh by a given value for each axis. It affects the mesh geometry.
+
+        Parameters:
+
+            t (Array (3x1) type=float): Translation value for each axis.
+
+        """
         self._dont_update = True
         matrix = np.identity(4)
         t = np.resize(t, (1, 4))
@@ -304,7 +308,16 @@ class AbstractMesh(Observer, Subject):
         self._dont_update = False
         self.update()
 
-    def scaleT (self, t):
+    def  transform_scale(self, t):
+        """
+        Scale the mesh by a given value for each axis. It affects the mesh geometry.
+
+        Parameters:
+
+            t (Array (3x1) type=float): Scale value for each axis.
+
+        """
+
         self._dont_update = True
         t = np.append(t, 1)
         matrix = np.diag(t)
@@ -318,7 +331,8 @@ class AbstractMesh(Observer, Subject):
         self.update()
 
 
-    def matrixRotation(self, alpha, c):
+    #Move to matrices file
+    def __matrixRotation(self, alpha, c):
 
         sin = np.sin(np.radians(alpha))
         if alpha > 0:
@@ -342,8 +356,17 @@ class AbstractMesh(Observer, Subject):
         else:
             raise Exception('Not a str')
 
-    def rotation(self, angle, axis):
-        matrix = self.matrixRotation(angle, axis)
+    def transform_rotation(self, angle, axis):
+        """
+        Rotate the mesh by a given angle for a given axis. It affects the mesh geometry.
+
+        Parameters:
+
+            angle (float): Rotation angle.
+            axis  (string): Rotation axis. It can be 'x', 'y' or 'z'
+
+        """
+        matrix = self.__matrixRotation(angle, axis)
         #crea un array colonna con il vettore vertices e nell'ultima colonna un vettore di soli 1
         a = np.hstack((self.vertices, np.ones((self.vertices.shape[0], 1))))#(nx3)->(nx4)
         #moltiplica l'array appena creato con la matrice di trasformazione trasposta (per non trasporre tutte le righe di vertices)
@@ -361,6 +384,26 @@ class AbstractMesh(Observer, Subject):
     def num_vertices(self):
 
         return self.vertices.shape[0]
+
+    @property
+    def num_edges(self):
+
+        return self.__edges.shape[0]
+    
+    @property
+    def num_polys(self):
+
+        return self.__polys.shape[0]
+
+    @property
+    def edges(self):
+        return self.__edges
+
+    @property
+    def polys(self):
+        return self.__polys
+
+    
 
     @property
     def center(self):
@@ -389,8 +432,54 @@ class AbstractMesh(Observer, Subject):
                                         [max_x_coord, max_y_coord, max_z_coord]])
 
 
+
+    def polys_add(self, new_polys):
+
+
+        self._dont_update = True
+        new_polys = np.array(new_polys)
+        new_polys.shape = (-1, self.__poly_size)
+
+        if new_polys.max() >= self.num_vertices:
+            raise Exception('The id of a vertex must be less than the number of vertices')
+
+        self.__polys = np.concatenate([self.__polys, new_polys])
+        #it should update the mesh locally
+
+
+
+    def polys_remove(self, poly_ids):
+
+        self._dont_update = True
+        poly_ids = np.array(poly_ids)
+        mask = np.ones(self.num_polys)
+        mask[poly_ids] = 0
+        mask = mask.astype(np.bool)
+
+        self.__polys = self.__polys[mask]
+        if self.labels is not None:
+            self.labels = self.labels[mask]
+
+    
+
+    @property
+    def poly_centroids(self):
+
+        if self.__simplex_centroids is None:
+            self.__simplex_centroids = np.asarray(self.vertices[self.polys].mean(axis=1))
+        return self.__simplex_centroids
+
+
     def __repr__(self):
-        return f"Mesh of {self.num_faces} polygons."
+        return f"Mesh of {self.num_vertices} vertices and {self.num_polys} polygons."
+
+    @property
+    def mesh_is_volumetric(self):
+        return hasattr(self, 'faces')
+
+    @property
+    def mesh_is_surface(self):
+        return not self.mesh_is_volumetric
 
     #adjacencies
 
@@ -399,12 +488,38 @@ class AbstractMesh(Observer, Subject):
         return self.__adj_vtx2vtx
 
     @property
-    def adj_vtx2face(self):
-        return self.__adj_vtx2face 
-    
-    @property
     def adj_vtx2edge(self):
         return self.__adj_vtx2edge
+
+    @property
+    def adj_vtx2poly(self):
+        return self.__adj_vtx2poly
+
+    @property
+    def adj_edge2vtx(self):
+        return self.__adj_edge2vtx
+    
+    @property
+    def adj_edge2edge(self):
+        return self.__adj_edge2edge
+    
+    @property
+    def adj_edge2poly(self):
+        return self.__adj_edge2poly
+
+    @property
+    def adj_poly2vtx(self):
+        return self.__adj_poly2vtx
+    
+    @property
+    def adj_poly2edge(self):
+        return self.__adj_poly2edge
+
+    @property
+    def adj_poly2poly(self):
+        return self.__adj_poly2poly 
+    
+    
 
     #deprecated
 

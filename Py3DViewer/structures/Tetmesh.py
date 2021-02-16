@@ -3,8 +3,8 @@ from .Trimesh import Trimesh
 from ..algorithms.cleaning import remove_isolated_vertices as rm_isolated
 import numpy as np
 from ..utils import IO, ObservableArray, deprecated
-from ..utils.load_operations import compute_tet_mesh_adjs as compute_adjacencies
-from ..utils.load_operations import _compute_three_vertex_normals as compute_three_normals, compute_adj_f2f_volume as compute_f2f
+from ..utils.load_operations import get_connectivity_info_volume_tet, get_connectivity_info_volume_faces as get_connectivity_info_surf
+from ..utils.load_operations import _compute_three_vertex_normals as compute_three_normals
 from ..utils.metrics import tet_scaled_jacobian, tet_volume
 
 class Tetmesh(AbstractMesh):
@@ -17,201 +17,67 @@ class Tetmesh(AbstractMesh):
 
         filename (string): The name of the file to load 
         vertices (Array (Nx3) type=float): The list of vertices of the mesh
-        tets (Array (Nx4) type=int): The list of tetrahedra of the mesh
+        polys (Array (Nx4) type=int): The list of tetrahedra of the mesh
         labels (Array (Nx1) type=int): The list of labels of the mesh (Optional)
 
     
     """
     
-    def __init__(self, filename = None, vertices = None, tets = None, labels = None, texture=None, mtl=None, smoothness=False):
+    def __init__(self, filename = None, vertices = None, polys = None, labels = None):
         
         super(Tetmesh, self).__init__()
-        self.tets             = None #npArray (Nx4) 
-        self.labels           = None #npArray (Nx1) 
-        self.__adj_poly2poly          = None #npArray (Nx4?) 
-        self.__adj_vtx2poly          = None #npArray (NxM)
-        self.__adj_face2poly         = None #npArray (Nx2?) NOT IMPLEMENTED YET
-        self.__adj_poly2face         = None #npArray (Nx6) NOT IMPLEMENTED YET
-        self.__internal_tets = None
-        self.__map_face_indexes = None
-        self.texture = texture
-        self.groups = {}
-        self.smoothness = smoothness
+        
+        self.__adj_vtx2face          = None #npArray (Nx4?) 
+        self.__adj_edge2face         = None #npArray (NxM)
+        self.__adj_poly2face         = None #npArray (Nx2?) NOT IMPLEMENTED YET
+        self.__adj_face2vtx          = None #npArray (Nx6) NOT IMPLEMENTED YET
+        self.__adj_face2edge         = None
+        self.__adj_face2face         = None
+        self.__adj_face2poly         = None
 
-        if mtl is not None:
-            self.__load_from_file(mtl)
+        self.__faces                 = None
+        self.__threejs_faces         = None
+        self.__face_centroids        = None
+
+        self.__internal_tets = None
+        self.__map_poly_indices  = None
 
         
         if filename is not None:
             
             self.__load_from_file(filename)
         
-        elif vertices is not None and tets is not None:
+        elif vertices is not None and polys is not None:
             
             vertices = np.array(vertices)
-            tets = np.array(tets)
+            polys = np.array(polys)
             self.vertices = ObservableArray(vertices.shape)
             self.vertices[:] = vertices
             self.vertices.attach(self)
-            self.tets = ObservableArray(tets.shape, dtype=np.int)
-            self.tets[:] = tets
-            self.tets.attach(self)
+            self._AbstractMesh__polys = ObservableArray(polys.shape, dtype=np.int)
+            self._AbstractMesh__polys[:] = polys
+            self._AbstractMesh__polys.attach(self)
             self.__load_operations()
         
             if labels is not None:
                 labels = np.array(labels)
-                assert(labels.shape[0] == self.tets.shape[0])
+                assert(labels.shape[0] == self.polys.shape[0])
                 self.labels = ObservableArray(labels.shape, dtype=np.int)
                 self.labels[:] = labels
                 self.labels.attach(self)
             else:
-                self.labels = ObservableArray(tets.shape[0], dtype=np.int)
+                self.labels = ObservableArray(polys.shape[0], dtype=np.int)
                 self.labels[:] = np.zeros(self.labels.shape, dtype=np.int)
                 self.labels.attach(self)
          
+        self._AbstractMesh__poly_size = 4
         self._AbstractMesh__finished_loading = True
     
     # ==================== METHODS ==================== #
     
     @property
     def num_faces(self):
-        
-        return self.faces.shape[0]
-
-    @property
-    def num_tets(self):
-        
-        return self.tets.shape[0]
-
-    def add_tet(self, tet_id0, tet_id1, tet_id2, tet_id3):
-        """
-        Add a new tetrahedron to the current mesh. It affects the mesh topology. 
-
-        Parameters:
-
-            tet_id0 (int): The index of the first vertex composing the new tetrahedron
-            tet_id1 (int): The index of the second vertex composing the new tetrahedron
-            tet_id2 (int): The index of the third vertex composing the new tetrahedron
-            tet_id3 (int): The index of the fourth vertex composing the new tetrahedron
-            
-        """
-        
-        self.add_tets([tet_id0, tet_id1, tet_id2, tet_id3])
-        
-        
-    def add_tets(self, new_tets):
-        """
-        Add a list of new tetrahedra to the current mesh. It affects the mesh topology. 
-
-        Parameters:
-
-            new_tets (Array (Nx4) type=int): List of tetrahedra to add. Each tetrahedron is in the form [int,int,int,int]
-    
-        """
-        self._dont_update = True
-        new_tets = np.array(new_tets)
-        new_tets.shape = (-1,4)
-                
-        if new_tets[(new_tets[:,0] > self.num_vertices) | 
-                     (new_tets[:,1] > self.num_vertices) | 
-                     (new_tets[:,2] > self.num_vertices) | 
-                     (new_tets[:,3] > self.num_vertices)].shape[0] > self.num_vertices:
-            raise Exception('The ID of a vertex must be less than the number of vertices')
-
-        self.tets = np.concatenate([self.tets, new_tets])
-        self.__load_operations()
-        
-    
-    def remove_tet(self, tet_id):
-        """
-        Remove a tetrahedron from the current mesh. It affects the mesh topology. 
-
-        Parameters:
-
-            tet_id (int): The index of the tetrahedron to remove 
-    
-        """
-        
-        self.remove_tets([tet_id])
-        
-        
-    def remove_tets(self, tet_ids):
-        """
-        Remove a list of tetrahedra from the current mesh. It affects the mesh topology. 
-
-        Parameters:
-
-            tet_ids (Array (Nx1 / 1xN) type=int): List of tethrahedra to remove. Each tetrahedron is in the form [int]
-    
-        """
-        self._dont_update = True
-        tet_ids = np.array(tet_ids)
-        mask = np.ones(self.num_tets)
-        mask[tet_ids] = 0
-        mask = mask.astype(np.bool)
-        
-        self.tets = self.tets[mask]
-                    
-        if self.labels is not None:
-            self.labels = self.labels[mask]
-        
-        self.__load_operations()
-        
-    
-    def remove_vertex(self,vtx_id):
-        """
-        Remove a vertex from the current mesh. It affects the mesh geometry. 
-
-        Parameters:
-
-            vtx_id (int): The index of the vertex to remove 
-    
-        """
-        
-        self.remove_vertices([vtx_id])
-    
-    
-    def remove_vertices(self, vtx_ids):
-        """
-        Remove a list of vertices from the current mesh. It affects the mesh geoemtry. 
-
-        Parameters:
-
-            vtx_ids (Array (Nx1 / 1xN) type=int): List of vertices to remove. Each vertex is ifn the form [int]
-    
-        """ 
-        self._dont_update = True
-        vtx_ids = np.array(vtx_ids)
-        
-        for v_id in vtx_ids:
-                        
-            self.vertices = np.delete(self.vertices, v_id, 0)
-            
-            condition = ((self.tets[:,0] != v_id) & 
-                        (self.tets[:,1] != v_id) & 
-                        (self.tets[:,2] != v_id) & 
-                        (self.tets[:,3] != v_id))
-            
-            if self.labels is not None:
-                self.labels = self.labels[condition]
-                
-            self.tets = self.tets[condition]
-            
-            self.tets[(self.tets[:,0] > v_id)] -= np.array([1, 0, 0, 0])
-            self.tets[(self.tets[:,1] > v_id)] -= np.array([0, 1, 0, 0])
-            self.tets[(self.tets[:,2] > v_id)] -= np.array([0, 0, 1, 0])
-            self.tets[(self.tets[:,3] > v_id)] -= np.array([0, 0, 0, 1])
-            
-            vtx_ids[vtx_ids > v_id] -= 1;
-            
-        self.__load_operations()
-    
-    
-    def __compute_edges(self):
-
-        edges =  np.c_[self.faces[:,:2], self.faces[:,1:], self.faces[:,2], self.faces[:,0]]
-        edges.shape = (-1,2)
-        self.edges = edges
+        return self.__faces.shape[0]
 
         
     def __load_operations(self):
@@ -220,26 +86,32 @@ class Tetmesh(AbstractMesh):
         self._AbstractMesh__simplex_centroids = None
         self.__internal_tets = None
 
-        self.__compute_faces()
-        self.__compute_edges()
-        self.__adj_poly2poly, self._AbstractMesh__adj_vtx2vtx, self.__adj_vtx2poly, self._AbstractMesh__adj_vtx2face, _ = compute_adjacencies(self.faces, self.edges, self.num_vertices)
+        self.__faces, \
+        self._AbstractMesh__edges, \
+        self._AbstractMesh__adj_vtx2vtx, \
+        self._AbstractMesh__adj_vtx2edge, \
+        self.__adj_vtx2face, \
+        self._AbstractMesh__adj_vtx2poly, \
+        self._AbstractMesh__adj_edge2vtx, \
+        self._AbstractMesh__adj_edge2edge, \
+        self.__adj_edge2face, \
+        self._AbstractMesh__adj_edge2poly, \
+        self.__adj_face2vtx, \
+        self.__adj_face2edge, \
+        self.__adj_face2face, \
+        self.__adj_face2poly, \
+        self._AbstractMesh__adj_poly2vtx, \
+        self._AbstractMesh__adj_poly2edge, \
+        self.__adj_poly2face,\
+        self._AbstractMesh__adj_poly2poly = get_connectivity_info_volume_tet(self.num_vertices, self.polys) 
+        
         self._AbstractMesh__update_bounding_box()
         self.reset_clipping()
         self.__compute_metrics()
-        self._AbstractMesh__face2face = None
+        self._AbstractMesh__simplex_centroids = None
+        self.__face_centroids = None
         self._dont_update = False
         self.update()
-
-    
-    def __compute_faces(self):
-        self.faces = np.c_[self.tets[:,0], self.tets[:,2], self.tets[:, 1], 
-                           self.tets[:,0], self.tets[:,1], self.tets[:,3],
-                           self.tets[:,1], self.tets[:,2], self.tets[:,3],
-                           self.tets[:,0], self.tets[:,3], self.tets[:,2]].reshape(-1,3)
-        tmp = ObservableArray(self.faces.shape, dtype=np.int)
-        tmp[:] = self.faces
-        self.faces = tmp
-        self.faces.attach(self)
     
     
         
@@ -250,9 +122,9 @@ class Tetmesh(AbstractMesh):
         
         
         if ext == 'mesh':
-            self.vertices, self.tets, self.labels = IO.read_mesh(filename)
+            self.vertices, self._AbstractMesh__polys, self.labels = IO.read_mesh(filename)
             self.vertices.attach(self)
-            self.tets.attach(self)
+            self._AbstractMesh__polys.attach(self)
             self.labels.attach(self)
             
         else:
@@ -280,16 +152,31 @@ class Tetmesh(AbstractMesh):
         
     
     def __compute_metrics(self): 
-        self.simplex_metrics['scaled_jacobian'] = tet_scaled_jacobian(self.vertices, self.tets)
-        self.simplex_metrics['volume'] = tet_volume(self.vertices, self.tets)
+        self.simplex_metrics['scaled_jacobian'] = tet_scaled_jacobian(self.vertices, self.polys)
+        self.simplex_metrics['volume'] = tet_volume(self.vertices, self.polys)
         
     @property
     def internals(self):
         
         if self.__internal_tets is None:
-            self.__internal_tets = np.all(self.__adj_poly2poly != -1, axis = 1)
+            self.__internal_tets = np.all(self.adj_poly2poly != -1, axis = 1)
         
         return self.__internal_tets
+
+    @property
+    def _threejs_faces(self):
+        if self.__threejs_faces is None:
+            self.__threejs_faces = np.c_[self.polys[:,0], self.polys[:,2], self.polys[:, 1], 
+                           self.polys[:,0], self.polys[:,1], self.polys[:,3],
+                           self.polys[:,1], self.polys[:,2], self.polys[:,3],
+                           self.polys[:,0], self.polys[:,3], self.polys[:,2]].reshape(-1,3)
+
+            tmp = ObservableArray(self.__threejs_faces.shape, dtype=np.int)
+            tmp[:] = self.__threejs_faces
+            self.__threejs_faces = tmp
+            self.__threejs_faces.attach(self)
+
+        return self.__threejs_faces
         
     
     def boundary(self):
@@ -301,21 +188,24 @@ class Tetmesh(AbstractMesh):
         if (self._AbstractMesh__boundary_needs_update):
             clipping_range = super(Tetmesh, self).boundary()
             indices = np.where(self.internals)[0]
-            clipping_range[indices[np.all(clipping_range[self.__adj_poly2poly[indices]], axis=1)]] = False
+            
+            adjs = self._AbstractMesh__adj_poly2poly
+            clipping_range[indices[np.all(clipping_range[adjs[indices]], axis=1)]] = False
 
-            self.__map_face_indexes = []
+            self.__map_poly_indices = []
             counter = 0
             for c in clipping_range:
                 if c:
-                    self.__map_face_indexes.append(counter)
+                    self.__map_poly_indices.append(counter)
                 else:
                     counter = counter + 1
 
+            self._AbstractMesh__visible_polys = clipping_range
             clipping_range = np.repeat(clipping_range, 4)
             self._AbstractMesh__boundary_cached = clipping_range
             self._AbstractMesh__boundary_needs_update = False
         
-        return self.faces[self._AbstractMesh__boundary_cached], self._AbstractMesh__boundary_cached
+        return self._threejs_faces[self._AbstractMesh__boundary_cached], self._AbstractMesh__boundary_cached
 
     def as_edges_flat(self):
         
@@ -344,61 +234,172 @@ class Tetmesh(AbstractMesh):
     
     @property
     def num_triangles(self):
-        return self.num_faces
+        return self.num_polys*4
 
     @property
-    def map_face_indexes(self):
-        return self.__map_face_indexes
+    def _map_poly_indices (self):
+        return self.__map_poly_indices
+
     
-    @property
-    def simplex_centroids(self):
+
+    
+    def vertex_remove(self, vtx_id):
+
+        """
+        Remove a vertex from the current mesh. It affects the mesh geometry. 
+        Parameters:
+            vtx_id (int): The index of the vertex to remove 
+        """
+
+        self.vertices_remove([vtx_id])
+
+    def vertices_remove(self, vtx_ids):
+        """
+        Remove a list of vertices from the current mesh. It affects the mesh geoemtry. 
+        Parameters:
+            vtx_ids (Array (Nx1 / 1xN) type=int): List of vertices to remove. Each vertex is in the form [int]
+        """
+        self._dont_update = True
+        vtx_ids = np.array(vtx_ids)
+
+        for v_id in vtx_ids:
+
+            self.vertices = np.delete(self.vertices, v_id, 0)
+            condition = ((self._AbstractMesh__polys[:, 0] != v_id) &
+                         (self._AbstractMesh__polys[:, 1] != v_id) &
+                         (self._AbstractMesh__polys[:, 2] != v_id) &
+                         (self._AbstractMesh__polys[:, 3] != v_id))
+
+            if self.labels is not None:
+                self.labels = self.labels[condition]
+
+            self._AbstractMesh__polys = self._AbstractMesh__polys[condition]
+
+            self._AbstractMesh__polys[(self._AbstractMesh__polys[:, 0] > v_id)] -= np.array([1, 0, 0, 0])
+            self._AbstractMesh__polys[(self._AbstractMesh__polys[:, 1] > v_id)] -= np.array([0, 1, 0, 0])
+            self._AbstractMesh__polys[(self._AbstractMesh__polys[:, 2] > v_id)] -= np.array([0, 0, 1, 0])
+            self._AbstractMesh__polys[(self._AbstractMesh__polys[:, 3] > v_id)] -= np.array([0, 0, 0, 1])
+
+            vtx_ids[vtx_ids > v_id] -= 1
+
+        self.__load_operations()
+    
+    def poly_add(self, new_poly):
+        """
+        Add a new face to the current mesh. It affects the mesh topology. 
+
+        Parameters:
+
+            new_poly (Array (Nx1) type=int): Poly to add in the form [int, ..., int]
+
+        """
+        self.polys_add(new_poly)
+
+    def polys_add(self, new_polys):
+
+        """
+        Add a list of new faces to the current mesh. It affects the mesh topology. 
+
+        Parameters:
+
+            new_polys (Array (NxM) type=int): List of faces to add. Each face is in the form [int, ..., int]
+        """
+
+        AbstractMesh.polys_add(self, new_polys)
+        self.__load_operations()
         
-        if self._AbstractMesh__simplex_centroids is None:
-            self._AbstractMesh__simplex_centroids = np.asarray(self.vertices[self.tets].mean(axis = 1))
+
+
+    def poly_remove(self, poly_id):
+
+        """
+        Remove a poly from the current mesh. It affects the mesh topology. 
+
+        Parameters:
+
+            poly_id (int): The index of the face to remove 
+
+        """
+
+        self.polys_remove([poly_id])
+
+    
+    def polys_remove(self, poly_ids):
+
+        """
+        Remove a list of polys from the current mesh. It affects the mesh topology. 
+
+        Parameters:
+
+            poly_ids (Array (Nx1 / 1xN) type=int): List of polys to remove. Each face is in the form [int]
+
+        """
+        AbstractMesh.polys_remove(self, poly_ids)
+        self.__load_operations()
         
-        return self._AbstractMesh__simplex_centroids
-    
-    
 
     @property
-    def surface_faces(self):
-        return np.where(self.face2face == -1)[0]
-    
-    def face_is_on_surface(self, face_ids):
-        res = self.face2face[face_ids] == -1
-        return res if res.size > 1 else res.item()
-    
-    def vert_is_on_surface(self, vert_id):
-        verts = np.where((self.faces[:,0] == vert_id) | 
-        (self.faces[:,1] == vert_id) |
-        (self.faces[:,2] == vert_id))
+    def faces(self):
+        return self.__faces
 
-        return np.intersect1d(verts, self.surface_faces).size > 0
-    
-    def extract_surface_mesh(self, remove_isolated_vertices=False):
-        faces = self.faces[self.surface_faces]
-        vertices = self.vertices
-        result = Trimesh(vertices=vertices, faces=faces)
-        if remove_isolated_vertices:
-            rm_isolated(result)
-        return result
 
+    @property
+    def face_centroids(self):
+
+        if self.__face_centroids is None:
+            self.__face_centroids = np.asarray(self.vertices[self.faces].mean(axis=1))
+        return self.__face_centroids
+
+    
+    def extract_surface(self, keep_original_vertices=True):
+        
+        polys = self.faces[self.face_is_on_surface]
+        surface = Trimesh(vertices=self.vertices, polys=polys)
+        if not keep_original_vertices:
+            rm_isolated(surface)
+        return surface
 
     #adjacencies
     @property
-    def adj_poly2poly(self):
-        return self.__adj_poly2poly
+    def adj_vtx2face(self):
+       return self.__adj_vtx2face
     
     @property
-    def adj_vtx2poly(self):
-        
-        return self.__adj_vtx2poly
-
+    def adj_edge2face(self):
+       return self.__adj_edge2face
+    
+    @property
+    def adj_poly2face(self):
+       return self.__adj_poly2face
+    
+    @property
+    def adj_face2vtx(self):
+       return self.__adj_face2vtx
+    
+    @property
+    def adj_face2edge(self):
+       return self.__adj_face2edge
+    
     @property
     def adj_face2face(self):
-        if self._AbstractMesh__adj_face2face is None: 
-            self._AbstractMesh__adj_face2face = compute_f2f(self.faces) 
-        return self._AbstractMesh__adj_face2face
+       return self.__adj_face2face
+
+    @property
+    def adj_face2poly(self):
+       return self.__adj_face2poly
+
+    
+    @property
+    def poly_is_on_surface(self):
+        return np.logical_not(np.all(self.adj_poly2poly != -1, axis = 1))
+
+    @property
+    def face_is_on_surface(self):
+        return np.logical_not(np.all(self.adj_face2poly != -1, axis = 1))
+    
+    @property
+    def num_faces_per_poly(self):
+        return 4    
 
 
     #deprecated
