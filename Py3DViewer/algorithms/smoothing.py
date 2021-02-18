@@ -10,6 +10,7 @@ def laplacian_smoothing(mesh, lambda_=1.0, iterations=1):
     e = mesh.edges
     A = sp_matrix((n, n))
     A[e[:,0], e[:,1]] = 1
+    A[e[:,1], e[:,0]] = 1
     D = sp_matrix(A.shape)
     D.setdiag(np.sum(A, axis=1))
     L = D - A
@@ -23,6 +24,7 @@ def __taubin_smoothing_internal(n, e, vertices, lambda_, mu, iterations):
     A = np.zeros((n, n))
     for i in range(e.shape[0]):
         A[e[i][0], e[i][1]] = 1
+        A[e[i][1], e[i][0]] = 1
     for i in range(A.shape[0]):
         A[i]/=np.sum(A[i])
     I = np.eye(n)
@@ -35,4 +37,4 @@ def __taubin_smoothing_internal(n, e, vertices, lambda_, mu, iterations):
 def taubin_smoothing(mesh, lambda_ = 0.89, mu = -0.9, iterations = 1):
     n = mesh.num_vertices
     e = mesh.edges
-    mesh.vertices = __taubin_smoothing_internal(n, e, mesh.vertices, lambda_, mu, iterations)
+    mesh.vertices[:] = __taubin_smoothing_internal(n, e, mesh.vertices, lambda_, mu, iterations)

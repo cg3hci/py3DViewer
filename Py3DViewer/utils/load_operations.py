@@ -285,9 +285,7 @@ def get_connectivity_info_volume_tet(num_vertices, polys):
         vtx2poly.append(tmp1)
     
 
-    tmp_2 = L()
-    tmp_2.append(-1)
-    edge2poly.append(tmp_2)
+   
 
     face2poly = np.zeros((polys.shape[0]*4, 2), dtype=np.int64)-1  
     poly2face = np.zeros((polys.shape[0], 4), dtype=np.int64)-1 
@@ -346,6 +344,26 @@ def get_connectivity_info_volume_tet(num_vertices, polys):
 
     edges, vtx2vtx, vtx2edge, vtx2face, edges, edge2edge, edge2face, faces, face2edge, face2face = get_connectivity_info_volume_faces(num_vertices, faces)
 
+    for i in range(edges.shape[0]):
+        tmp_2 = L()
+        tmp_2.append(-1)
+        edge2poly.append(tmp_2)
+
+    for pid in range(polys.shape[0]):
+        adj_edges = []
+        for fid in poly2face[pid]:
+            for eid in face2edge[fid]:
+                adj_edges.append(eid)
+        
+        unique = np.unique(np.array(adj_edges))
+        poly2edge[pid] = unique
+        for eid in unique:
+            if(edge2poly[eid][0] == -1):
+                edge2poly[eid][0] = pid
+            else:
+               edge2poly[eid].append(pid) 
+
+
     return faces, edges, vtx2vtx, vtx2edge, vtx2face, vtx2poly, edges, edge2edge, edge2face, edge2poly, faces, face2edge, face2face, face2poly, polys, poly2edge, poly2face, poly2poly 
 
 
@@ -362,9 +380,6 @@ def get_connectivity_info_volume_hex(num_vertices, polys):
         vtx2poly.append(tmp1)
     
 
-    tmp_2 = L()
-    tmp_2.append(-1)
-    edge2poly.append(tmp_2)
 
     face2poly = np.zeros((polys.shape[0]*6, 2), dtype=np.int64)-1  
     poly2face = np.zeros((polys.shape[0], 6), dtype=np.int64)-1 
@@ -429,6 +444,25 @@ def get_connectivity_info_volume_hex(num_vertices, polys):
     face2poly = face2poly[:faces.shape[0]]
 
     edges, vtx2vtx, vtx2edge, vtx2face, edges, edge2edge, edge2face, faces, face2edge, face2face = get_connectivity_info_volume_faces(num_vertices, faces)
+
+    for i in range(edges.shape[0]):
+        tmp_2 = L()
+        tmp_2.append(-1)
+        edge2poly.append(tmp_2)
+        
+    for pid in range(polys.shape[0]):
+        adj_edges = []
+        for fid in poly2face[pid]:
+            for eid in face2edge[fid]:
+                adj_edges.append(eid)
+        
+        unique = np.unique(np.array(adj_edges))
+        poly2edge[pid] = unique
+        for eid in unique:
+            if(edge2poly[eid][0] == -1):
+                edge2poly[eid][0] = pid
+            else:
+               edge2poly[eid].append(pid) 
 
     return faces, edges, vtx2vtx, vtx2edge, vtx2face, vtx2poly, edges, edge2edge, edge2face, edge2poly, faces, face2edge, face2face, face2poly, polys, poly2edge, poly2face, poly2poly
 

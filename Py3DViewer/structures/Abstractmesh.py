@@ -1,6 +1,6 @@
 import numpy as np
 from ..visualization import Viewer
-from ..utils import Subject, Observer, deprecated
+from ..utils import Subject, Observer, deprecated, matrices
 import copy
 
 class Clipping(object):
@@ -285,7 +285,7 @@ class AbstractMesh(Observer, Subject):
 
 
 
-    def transform_translate(self, t):
+    def transform_translation(self, t):
         """
         Translate the mesh by a given value for each axis. It affects the mesh geometry.
 
@@ -331,30 +331,7 @@ class AbstractMesh(Observer, Subject):
         self.update()
 
 
-    #Move to matrices file
-    def __matrixRotation(self, alpha, c):
-
-        sin = np.sin(np.radians(alpha))
-        if alpha > 0:
-            cos = np.cos(np.radians(alpha))
-        else:
-            cos = -np.cos(np.radians(np.abs(alpha)))
-
-        if type(c) is str or type(c) is int:
-            if c == 'x' or c == 0:
-                matrix = np.identity(4)
-                matrix[1:3, 1:3] = [[cos, -sin], [sin, cos]]
-            elif c =='y' or c == 1:
-                matrix = np.identity(4)
-                matrix[:3, :3] = [[cos, 0, sin], [0, 1, 0], [-sin, 0, cos]]
-            elif c == 'z' or c == 2:
-                matrix = np.identity(4)
-                matrix[:2, :2] = [[cos, -sin], [sin, cos]]
-            else:
-                raise Exception('Not a valid axis')
-            return matrix
-        else:
-            raise Exception('Not a str')
+    
 
     def transform_rotation(self, angle, axis):
         """
@@ -366,13 +343,39 @@ class AbstractMesh(Observer, Subject):
             axis  (string): Rotation axis. It can be 'x', 'y' or 'z'
 
         """
-        matrix = self.__matrixRotation(angle, axis)
+        self._dont_update = True
+        matrix = matrices.rotation_matrix(angle, axis)
         #crea un array colonna con il vettore vertices e nell'ultima colonna un vettore di soli 1
         a = np.hstack((self.vertices, np.ones((self.vertices.shape[0], 1))))#(nx3)->(nx4)
         #moltiplica l'array appena creato con la matrice di trasformazione trasposta (per non trasporre tutte le righe di vertices)
         self.vertices = a.dot(matrix.T)[:,:-1]
         self._dont_update = False
         self.update()
+
+    def transform_reflection(self, axis):
+        """
+        reflect the mesh with respect a given axis or plane. It affects the mesh geometry.
+
+        Parameters:
+
+            axis  (string): Reflection plane. It can be 'x', 'y', 'z' or xy', 'xz', 'yz'
+
+        """
+
+        self._dont_update = True
+        matrix = np.array([[-1,0,0],[0,-1,0],[0,0,-1]]);
+        if 'x' in axis:
+            matrix[0][0] = 1
+        if 'y' in axis:
+            matrix[1][1] = 1
+        if 'z' in axis:
+            matrix[2][2] = 1
+        
+        self.vertices = self.vertices.dot(matrix).reshape(-1, 3)
+        self._dont_update = False
+        self.update()
+
+
 
     @property
     def bbox(self):
@@ -469,6 +472,14 @@ class AbstractMesh(Observer, Subject):
             self.__simplex_centroids = np.asarray(self.vertices[self.polys].mean(axis=1))
         return self.__simplex_centroids
 
+    @property
+    def mesh_centroid(self):
+        return np.asarray(self.vertices.mean(axis=1))
+    
+    @property
+    def edge_length(self):
+        return np.linalg.norm(self.vertices[self.edges[:,0]]-self.vertices[self.edges[:,1]], axis=1)
+
 
     def __repr__(self):
         return f"Mesh of {self.num_vertices} vertices and {self.num_polys} polygons."
@@ -480,6 +491,22 @@ class AbstractMesh(Observer, Subject):
     @property
     def mesh_is_surface(self):
         return not self.mesh_is_volumetric
+
+    
+    @property
+    def euler_characteristic(self):
+        
+        if self.mesh_is_volumetric:
+            return self.num_vertices - self.num_edges + self.num_faces - self.num_polys
+        else:
+            return self.num_vertices - self.num_edges + self.num_polys
+    
+    @property
+    def genus(self):
+        if self.mesh_is_volumetric:
+            return int(1-self.euler_characteristic)
+        else:
+            return int((2-self.euler_characteristic)*0.5)
 
     #adjacencies
 

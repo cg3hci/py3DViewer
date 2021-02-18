@@ -396,6 +396,20 @@ class Tetmesh(AbstractMesh):
     @property
     def face_is_on_surface(self):
         return np.logical_not(np.all(self.adj_face2poly != -1, axis = 1))
+
+    @property
+    def edge_is_on_surface(self):
+        surf_edges = self.adj_face2edge[self.face_is_on_surface]
+        bool_vec = np.zeros((self.num_edges), dtype=np.bool)
+        bool_vec[surf_edges] = True
+        return bool_vec
+    
+    @property
+    def vert_is_on_surface(self):
+        surf_verts = self.adj_face2vtx[self.face_is_on_surface]
+        bool_vec = np.zeros((self.num_vertices), dtype=np.bool)
+        bool_vec[surf_verts] = True
+        return bool_vec
     
     @property
     def num_faces_per_poly(self):
@@ -418,6 +432,4 @@ class Tetmesh(AbstractMesh):
     @property
     @deprecated("Use the method adj_face2face instead")
     def face2face(self):
-        if self._AbstractMesh__adj_face2face is None: 
-            self._AbstractMesh__adj_face2face = compute_f2f(self.faces) 
-        return self._AbstractMesh__adj_face2face
+        return self.__adj_face2face

@@ -372,6 +372,20 @@ class Hexmesh(AbstractMesh):
     @property
     def face_is_on_surface(self):
         return np.logical_not(np.all(self.adj_face2poly != -1, axis = 1))
+    
+    @property
+    def edge_is_on_surface(self):
+        surf_edges = self.adj_face2edge[self.face_is_on_surface]
+        bool_vec = np.zeros((self.num_edges), dtype=np.bool)
+        bool_vec[surf_edges] = True
+        return bool_vec
+    
+    @property
+    def vert_is_on_surface(self):
+        surf_verts = self.adj_face2vtx[self.face_is_on_surface]
+        bool_vec = np.zeros((self.num_vertices), dtype=np.bool)
+        bool_vec[surf_verts] = True
+        return bool_vec
         
     def extract_surface(self, keep_original_vertices=True):
         

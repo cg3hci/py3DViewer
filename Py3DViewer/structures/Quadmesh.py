@@ -292,6 +292,20 @@ class Quadmesh(AbstractMesh):
     @property
     def poly_is_on_boundary(self):
         return np.logical_not(np.all(self.adj_poly2poly != -1, axis = 1))
+    
+    @property
+    def edge_is_on_boundary(self):
+        boundary_edges = self.adj_poly2edge[self.poly_is_on_boundary]
+        bool_vec = np.zeros((self.num_edges), dtype=np.bool)
+        bool_vec[boundary_edges] = True
+        return bool_vec
+    
+    @property
+    def vert_is_on_boundary(self):
+        boundary_verts = self.adj_poly2vtx[self.poly_is_on_boundary]
+        bool_vec = np.zeros((self.num_vertices), dtype=np.bool)
+        bool_vec[boundary_verts] = True
+        return bool_vec
 
 
     #deprecated
