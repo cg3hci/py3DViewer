@@ -246,6 +246,11 @@ class Hexmesh(AbstractMesh):
         if self.__face_centroids is None:
             self.__face_centroids = np.asarray(self.vertices[self.faces].mean(axis=1))
         return self.__face_centroids
+
+    def pick_face(self, point):
+        point = np.repeat(np.asarray(point).reshape(-1,3), self.num_faces, axis=0)
+        idx = np.argmin(np.linalg.norm(self.face_centroids - point, axis=1), axis=0)
+        return idx
     
     
     @property

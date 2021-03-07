@@ -477,6 +477,15 @@ class AbstractMesh(Observer, Subject):
         return np.asarray(self.vertices.mean(axis=1))
     
     @property
+    def edge_centroids(self):
+        return self.vertices[self.edges].mean(axis=1)
+
+
+    def edges_sample_at(self, value):
+        assert(value >= 0 and value <=1)
+        return (1.0-value)*self.vertices[self.edges[:,0]] + value*self.vertices[self.edges[:,1]]
+    
+    @property
     def edge_length(self):
         return np.linalg.norm(self.vertices[self.edges[:,0]]-self.vertices[self.edges[:,1]], axis=1)
 
@@ -507,6 +516,23 @@ class AbstractMesh(Observer, Subject):
             return int(1-self.euler_characteristic)
         else:
             return int((2-self.euler_characteristic)*0.5)
+
+    
+    def pick_vertex(self, point):
+        point = np.repeat(np.asarray(point).reshape(-1,3), self.num_vertices, axis=0)
+        idx = np.argmin(np.linalg.norm(self.vertices - point, axis=1), axis=0)
+        return idx
+    
+    def pick_edge(self, point):
+        point = np.repeat(np.asarray(point).reshape(-1,3), self.num_edges, axis=0)
+        idx = np.argmin(np.linalg.norm(self.edge_centroids - point, axis=1), axis=0)
+        return idx
+    
+    def pick_poly(self, point):
+        point = np.repeat(np.asarray(point).reshape(-1,3), self.num_polys, axis=0)
+        idx = np.argmin(np.linalg.norm(self.poly_centroids - point, axis=1), axis=0)
+        return idx
+    
 
     #adjacencies
 

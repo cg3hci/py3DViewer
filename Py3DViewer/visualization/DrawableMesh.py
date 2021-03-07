@@ -83,10 +83,20 @@ class DrawableMesh (Observer):
             #interleaved is made up of the triangle soup, the new colors and the normals of this vertices
             self.mesh.geometry.attributes['color'].data.array = interleaved
 
-    def update_poly_color(self, new_color, poly_index, num_triangles, geometry=None):
+    def update_poly_color(self, new_color, poly_index, num_triangles=None, geometry=None):
 
         if geometry is None:
             geometry = self.geometry
+        
+        if num_triangles is None:
+            if "Quadmesh" in str(type(self.geometry)):
+                num_triangles = 2
+            elif "Tetmesh" in str(type(self.geometry)):
+                num_triangles = 4
+            elif "Hexmesh" in str(type(self.geometry)):
+                num_triangles = 12
+            else:
+                num_triangles = 1
 
         start = poly_index*num_triangles*3
         end   = start+num_triangles*3
@@ -94,9 +104,11 @@ class DrawableMesh (Observer):
 
         self.geometry_color[indices] = new_color
         colors = geometry._as_threejs_colors()
-        new_colors = self.geometry_color[colors]
+        new_colors = self.geometry_color[colors].astype(np.float32)
         tris, vtx_normals = geometry._as_threejs_triangle_soup()
-        interleaved = np.concatenate((tris, new_colors, vtx_normals), axis=1).astype(np.float32)
+        interleaved = np.c_[tris, new_colors, vtx_normals].astype(np.float32)
+       
+
         self.mesh.geometry.attributes['color'].data.array = interleaved
 
     def update_external_color(self, new_color, geometry = None):

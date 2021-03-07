@@ -148,11 +148,11 @@ class GUI(Observer):
             continuous_update=True
         )
 
-        tab_titles = ['Poly', 'Vertex', 'Face', 'Edge'] if self.drawable.geometry.mesh_is_volumetric else ['Poly', 'Vertex', 'Edge']
+        tab_titles = ['Poly', 'Vertex', 'Edge', 'Face'] if self.drawable.geometry.mesh_is_volumetric else ['Poly', 'Vertex', 'Edge']
         children = [
             widgets.HTML(
                 value="",
-                layout={'width': '100','margin': '50 0 0 0'},
+                layout={'width': '100','margin': '5 0 0 0'},
                 disabled=False,
                 continuous_update=True
             ) for title in tab_titles]
@@ -247,13 +247,13 @@ class GUI(Observer):
             )
             mesh_colors += [self.color_internal]
 
-        #self.color_picking = widgets.ColorPicker(
-        #    concise=True,
-        #    description="Click Color",
-        #    value=colors.rgb2hex(colors.purple),
-        #    layout = self.invisible_layout,
-        #    disabled=False,
-        #)
+        self.color_picking = widgets.ColorPicker(
+            concise=True,
+            description="Click Color",
+            value=colors.rgb2hex(colors.purple),
+            layout = self.invisible_layout,
+            disabled=False,
+        )
         self.color_external = widgets.ColorPicker(
             concise=True,
             description='External',
@@ -261,7 +261,7 @@ class GUI(Observer):
             disabled=False,
         )
         mesh_colors += [self.color_external]
-        #mesh_colors += [self.color_picking]
+        mesh_colors += [self.color_picking]
         
         self.widgets += [widgets.HBox(mesh_colors)]
         
@@ -438,7 +438,10 @@ class GUI(Observer):
         
 
         vertex_coords = self.drawable.geometry.vertices[vids]
-        nearest_vertex, nearest_vertex_coords = self.find_nearest_vertex(vids, vertex_coords, change.owner.point)
+        nearest_vertex, nearest_vertex_coords = self.__find_nearest_vertex(vids, vertex_coords, change.owner.point)
+        if self.drawable.geometry.mesh_is_volumetric:
+            nearest_face = self.__find_nearest_face(self.drawable.geometry.adj_poly2face[poly_index], self.drawable.geometry.face_centroids[self.drawable.geometry.adj_poly2face[poly_index]], change.owner.point)
+        nearest_edge = self.__find_nearest_edge(self.drawable.geometry.adj_poly2edge[poly_index], self.drawable.geometry.edge_centroids[self.drawable.geometry.adj_poly2edge[poly_index]], change.owner.point)
         
 
         nearest_polys = np.array(self.drawable.geometry.adj_vtx2poly[nearest_vertex]).astype("int32")
@@ -447,14 +450,27 @@ class GUI(Observer):
         self.picking_tab.children[0].value = 'Poly index: %d' % poly_index + '<br>'
         self.picking_tab.children[0].value += 'Vertex indices: '
         self.picking_tab.children[0].value += ', '.join([str(v) for v in vids]) + '<br>'
-        self.picking_tab.children[0].value += ''.join(
-            'Vertex ' + str(a) + ' coords: (%.3f, %.3f, %.3f)' % tuple(b) + '<br>' for a, b in
-            zip(vids, vertex_coords))
+        #self.picking_tab.children[0].value += ''.join(
+        #    'Vertex ' + str(a) + ' coords: (%.3f, %.3f, %.3f)' % tuple(b) + '<br>' for a, b in
+        #    zip(vids, vertex_coords))
 
         self.picking_tab.children[1].value = 'Vertex index: %d' % nearest_vertex + '<br>'
         self.picking_tab.children[1].value += 'Vertex coords: (%.3f, %.3f, %.3f)' % tuple(nearest_vertex_coords) + '<br>'
-        self.picking_tab.children[1].value += 'Nearest Polys: '
+        self.picking_tab.children[1].value += 'Adjacent Polys: '
         self.picking_tab.children[1].value += ', '.join([str(v) for v in nearest_polys]) + '<br>'
+
+        self.picking_tab.children[2].value = 'Edge index: %d' % nearest_edge + '<br>'
+        self.picking_tab.children[2].value += 'Vertex indices: '
+        self.picking_tab.children[2].value += ', '.join([str(v) for v in self.drawable.geometry.edges[nearest_edge]]) + '<br>'
+        self.picking_tab.children[2].value += 'Adjacent Polys: '
+        self.picking_tab.children[2].value += ', '.join([str(v) for v in self.drawable.geometry.adj_edge2poly[nearest_edge]]) + '<br>'
+
+        if self.drawable.geometry.mesh_is_volumetric: 
+            self.picking_tab.children[3].value = 'Face index: %d' % nearest_face + '<br>'
+            self.picking_tab.children[3].value += 'Vertex indices: '
+            self.picking_tab.children[3].value += ', '.join([str(v) for v in self.drawable.geometry.faces[nearest_face]]) + '<br>'
+            self.picking_tab.children[3].value += 'Adjacent Polys: '
+            self.picking_tab.children[3].value += ', '.join([str(v) for v in self.drawable.geometry.adj_face2poly[nearest_face]]) + '<br>'
 
 
         #if self.old_picked_face is not None:
@@ -471,8 +487,8 @@ class GUI(Observer):
     def __toggle_picking(self, change):
 
         if self.enable_picking_button.value:
-            self.picking_tab.layout = {'margin': '0 0 0 20px'}
-            self.picking_label.layout = {'margin': '0 0 0 20px'}
+            self.picking_tab.layout = {'margin': '0 0 0 10px'}
+            self.picking_label.layout = {'margin': '0 0 0 10px'}
             self.enable_picking_button.description = 'Hide Picking Info'
             #self.color_picking.layout = self.visible_layout
         else:
@@ -480,7 +496,7 @@ class GUI(Observer):
             self.picking_label.layout = self.invisible_layout
             #self.color_picking.layout = self.invisible_layout
             self.enable_picking_button.description = 'Show Picking Info'
-            self.__change_color_type(None)
+            #self.__change_color_type(None)
 
 
 
@@ -511,9 +527,25 @@ class GUI(Observer):
         self.clipping_slider_z.value = z_range
 
     @staticmethod
-    def find_nearest_vertex(vertices, vertex_coords, click_coords):
+    def __find_nearest_vertex(vertices, vertex_coords, click_coords):
         click_coords = np.array(click_coords).reshape(-1,3)
         click_coords = np.repeat(click_coords, vertices.size, axis=0)
         dist = np.linalg.norm(click_coords-vertex_coords, axis=1)
         idx_arg_min = np.argmin(dist)
         return vertices[idx_arg_min], vertex_coords[idx_arg_min]
+
+    @staticmethod
+    def __find_nearest_face(faces, face_centroids, click_coords):
+        click_coords = np.array(click_coords).reshape(-1,3)
+        click_coords = np.repeat(click_coords, faces.size, axis=0)
+        dist = np.linalg.norm(click_coords-face_centroids, axis=1)
+        idx_arg_min = np.argmin(dist)
+        return faces[idx_arg_min]
+
+    @staticmethod
+    def __find_nearest_edge(edges, edge_centers, click_coords):
+        click_coords = np.array(click_coords).reshape(-1,3)
+        click_coords = np.repeat(click_coords, edges.size, axis=0)
+        dist = np.linalg.norm(click_coords-edge_centers, axis=1)
+        idx_arg_min = np.argmin(dist)
+        return edges[idx_arg_min]
