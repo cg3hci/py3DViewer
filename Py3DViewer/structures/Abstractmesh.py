@@ -69,6 +69,8 @@ class AbstractMesh(Observer, Subject):
         self.__visible_polys     = None
 
         self.simplex_metrics     = dict() #dictionary[propertyName : ((min, max), npArray (Nx1))]
+
+        self.__filename          = ''
         
        
         Observer.__init__(self)
@@ -464,6 +466,9 @@ class AbstractMesh(Observer, Subject):
             self.labels = self.labels[mask]
 
     
+    @property
+    def filename(self):
+        return self.__filename
 
     @property
     def poly_centroids(self):

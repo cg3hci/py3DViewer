@@ -46,6 +46,7 @@ class Tetmesh(AbstractMesh):
         if filename is not None:
             
             self.__load_from_file(filename)
+            self._AbstractMesh__filename = filename.split('/')[-1]
         
         elif vertices is not None and polys is not None:
             
