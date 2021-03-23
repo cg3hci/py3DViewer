@@ -1,48 +1,46 @@
-Utils
+Algorithms
 =============================
 
 .. contents:: Contents
     :local:
 
-IO
+Cleaning
 -----------------------------------------
 
-.. automodule:: Py3DViewer.utils.IO
+.. automodule:: Py3DViewer.algorithms.cleaning
    :members:
    :undoc-members:
    :show-inheritance:
 
-Metrics
+Dijsktra
 -------------------------------------
 
-.. automodule:: Py3DViewer.utils.metrics
+.. automodule:: Py3DViewer.algorithms.dijsktra
    :members:
    :undoc-members:
    :show-inheritance:
 
 
-ColorMap
+HeatFlow
 ------------------------------------
 
-.. automodule:: Py3DViewer.utils.ColorMap
+.. automodule:: Py3DViewer.algorithms.heat_flow
    :members:
    :undoc-members:
    :show-inheritance:
 
-
-Matrices
+Smoothing
 ------------------------------------
 
-.. automodule:: Py3DViewer.utils.matrices
+.. automodule:: Py3DViewer.algorithms.smoothing
    :members:
    :undoc-members:
-   :show-inheritance
+   :show-inheritance:
 
-
-Utilities
+Subdivision
 ------------------------------------
 
-.. automodule:: Py3DViewer.utils.utilities
+.. automodule:: Py3DViewer.algorithms.subdivision
    :members:
    :undoc-members:
-   :show-inheritance
+   :show-inheritance:

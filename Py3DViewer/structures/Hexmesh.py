@@ -376,6 +376,17 @@ class Hexmesh(AbstractMesh):
         return result.item() if result.size == 1 else result
 
     @property
+    def edge_is_manifold(self):
+    
+        surface_edges = self.edge_is_on_surface.nonzero()[0]
+        surface_faces = self.face_is_on_surface.nonzero()[0]
+        face_edges = self.adj_face2edge[surface_faces]
+        result = np.array(list(map(lambda x : np.count_nonzero(face_edges == x), surface_edges)))
+        all_ = np.ones(self.num_edges, dtype=np.bool)
+        all_[surface_edges] = np.logical_or(result == 0, result == 2)
+        return all_
+
+    @property
     def num_faces_per_poly(self):
         return 6
 

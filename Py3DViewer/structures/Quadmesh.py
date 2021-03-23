@@ -289,6 +289,11 @@ class Quadmesh(AbstractMesh):
         """
         AbstractMesh.polys_remove(self, poly_ids)
         self.__load_operations()
+
+    @property
+    def edge_is_manifold(self):
+        val = self.edge_valence
+        return np.logical_and(val > 0, val < 3)
     
     @property
     def poly_is_on_boundary(self):

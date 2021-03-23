@@ -1,5 +1,4 @@
 import numpy as np
-from ..algorithms import cleaning
 
 def __tet_barycentric_coords(vertices, tets, points):
     

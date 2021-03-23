@@ -26,6 +26,7 @@ mesh cutting along an axis, color selection, quality visualization and more.
    modules/structures
    modules/visualization
    modules/utils
+   modules/algorithms
 
 
 
