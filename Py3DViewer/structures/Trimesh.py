@@ -301,14 +301,15 @@ class Trimesh(AbstractMesh):
     
     @property
     def edge_is_on_boundary(self):
-        boundary_edges = self.adj_poly2edge[self.poly_is_on_boundary]
+        boundary_edges = self.adj_poly2edge[self.poly_is_on_boundary].reshape(-1)
+        boundary_edges = [e for e in boundary_edges if len(self.adj_edge2poly[e]) == 1]
         bool_vec = np.zeros((self.num_edges), dtype=np.bool)
         bool_vec[boundary_edges] = True
         return bool_vec
     
     @property
     def vert_is_on_boundary(self):
-        boundary_verts = self.adj_poly2vtx[self.poly_is_on_boundary]
+        boundary_verts = self.edges[self.edge_is_on_boundary].reshape(-1)
         bool_vec = np.zeros((self.num_vertices), dtype=np.bool)
         bool_vec[boundary_verts] = True
         return bool_vec

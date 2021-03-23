@@ -96,3 +96,9 @@ def hex_to_tet_subdivision(hexes, subdivision_rule=3):
     tetrahedra = np.ascontiguousarray(hexes[:,split_rules])
     tetrahedra.shape = (-1,4)
     return tetrahedra
+
+def quad_to_tri_subdivision(mesh):
+    
+    tris = np.c_[mesh.polys[:, :3], mesh.polys[:, 2:] , mesh.polys[:,0]]
+    tris.shape = (-1,3)
+    return tris

@@ -2,6 +2,15 @@ import numpy as np
 from ..visualization import Viewer
 from ..utils import Subject, Observer, deprecated, matrices
 import copy
+from numba import njit, int64, float64
+from numba.types import ListType as LT
+
+@njit(int64[:](LT(LT(int64))), cache=True)
+def _valence(adj_x2y):
+    valences = np.zeros(len(adj_x2y), dtype=np.int64)
+    for idx, row in enumerate(adj_x2y):
+        valences[idx] = len(row)
+    return valences
 
 class Clipping(object):
 
@@ -377,7 +386,32 @@ class AbstractMesh(Observer, Subject):
         self._dont_update = False
         self.update()
 
+    def vert_id(self, vert, strict=False):
+        
+        if strict:
+            result = (self.vertices == vert).all(axis=1).nonzero()[0]
+        else:
+            verts = np.around(self.vertices, decimals=5)
+            vert  = np.around(vert, decimals=5) 
+            result = (verts == vert).all(axis=1).nonzero()[0]
+    
+        return result.item() if result.size == 1 else result
 
+    def edge_id(self, v0, v1):
+    
+        or_cond_1 = np.logical_or(self.edges[:,0] == v0 , self.edges[:,1] == v0)
+        or_cond_2 = np.logical_or(self.edges[:,0] == v1 , self.edges[:,1] == v1)
+        condition = np.logical_and(or_cond_1, or_cond_2)
+        result = np.nonzero(condition)[0]
+        return result.item() if result.size == 1 else result
+
+    def poly_id(self, verts):
+    
+        verts = np.sort(verts)
+        polys = np.sort(self.polys, axis=1)
+        result = (polys == verts).all(axis=1).nonzero()[0]
+    
+        return result.item() if result.size == 1 else result
 
     @property
     def bbox(self):
@@ -522,7 +556,14 @@ class AbstractMesh(Observer, Subject):
         else:
             return int((2-self.euler_characteristic)*0.5)
 
-    
+    @property
+    def edge_valence(self):
+        return _valence(self.adj_edge2poly)
+
+    @property
+    def vert_valence(self):
+        return _valence(self.adj_vtx2vtx)
+
     def pick_vertex(self, point):
         point = np.repeat(np.asarray(point).reshape(-1,3), self.num_vertices, axis=0)
         idx = np.argmin(np.linalg.norm(self.vertices - point, axis=1), axis=0)

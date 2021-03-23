@@ -338,6 +338,13 @@ class Tetmesh(AbstractMesh):
         AbstractMesh.polys_remove(self, poly_ids)
         self.__load_operations()
         
+    def face_id(self, verts):
+    
+        verts = np.sort(verts)
+        faces = np.sort(self.faces, axis=1)
+        result = (faces == verts).all(axis=1).nonzero()[0]
+    
+        return result.item() if result.size == 1 else result
 
     @property
     def faces(self):

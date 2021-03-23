@@ -31,13 +31,13 @@ def __dijsktra(vertices, adj_vtx2vtx, start):
 
 
 def dijsktra(mesh, start):
-     """
-        Returns the shortest distance between a vertex and all the other vertices of the mesh by using
-        the dijsktra algorithm.
+    """
+    Returns the shortest distance between a vertex and all the other vertices of the mesh by using
+    the dijsktra algorithm.
 
-        Parameters:
+    Parameters:
 
-            mesh : a mesh of any type
-            start (int) : the starting vertex
-        """
+        mesh : a mesh of any type
+        start (int) : the starting vertex
+    """
     return __dijsktra(mesh.vertices, mesh.adj_vtx2vtx, start)
