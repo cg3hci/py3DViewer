@@ -102,6 +102,9 @@ class AbstractMesh(Observer, Subject):
         return new
 
     def update(self):
+        """
+            Update the mesh manually when the Viewer is set as not reactive.
+        """
         self.__boundary_needs_update = True
         self.__update_bounding_box()
         if (not self._dont_update):
@@ -210,6 +213,9 @@ class AbstractMesh(Observer, Subject):
 
     @property
     def clipping(self):
+        """
+            Return the clipping region of the current mesh.
+        """
         return self.__clipping
 
     @property
@@ -365,7 +371,7 @@ class AbstractMesh(Observer, Subject):
 
     def transform_reflection(self, axis):
         """
-        reflect the mesh with respect a given axis or plane. It affects the mesh geometry.
+        Reflect the mesh with respect a given axis or plane. It affects the mesh geometry.
 
         Parameters:
 
@@ -387,6 +393,17 @@ class AbstractMesh(Observer, Subject):
         self.update()
 
     def vert_id(self, vert, strict=False):
+
+        """
+        Return the id of a vertex given its coordinates. If the vertex doesn't exist 
+        or there are multiple matches then an array with all the matches is returned.
+
+        Parameters:
+
+            vert (Array (,3) type=float): The coordinates of the vertex
+            strict (bool): if False there is a tolerance of 1e-5 
+
+        """
         
         if strict:
             result = (self.vertices == vert).all(axis=1).nonzero()[0]
@@ -398,6 +415,16 @@ class AbstractMesh(Observer, Subject):
         return result.item() if result.size == 1 else result
 
     def edge_id(self, v0, v1):
+
+        """
+        Return the id of an edge given its 2 vertices. If the edge doesn't exist 
+        or there are multiple matches then an array with all the matches is returned.
+
+        Parameters:
+
+            v0 (int): index of the first vertex
+            v1 (int): index of the second vertex
+        """
     
         or_cond_1 = np.logical_or(self.edges[:,0] == v0 , self.edges[:,1] == v0)
         or_cond_2 = np.logical_or(self.edges[:,0] == v1 , self.edges[:,1] == v1)
@@ -406,6 +433,15 @@ class AbstractMesh(Observer, Subject):
         return result.item() if result.size == 1 else result
 
     def poly_id(self, verts):
+
+        """
+        Return the id of a poly given its vertices. If the poly doesn't exist 
+        or there are multiple matches then an array with all the matches is returned.
+
+        Parameters:
+
+            verts (Array (n, m) type=int): indices of the vertices composing the poly
+        """
     
         verts = np.sort(verts)
         polys = np.sort(self.polys, axis=1)
@@ -415,37 +451,55 @@ class AbstractMesh(Observer, Subject):
 
     @property
     def bbox(self):
-
+        """
+        Return the axis aligned bounding box of the current mesh.
+        """
         return self.__bounding_box
 
 
     @property
     def num_vertices(self):
-
+        """
+        Return the number of vertices of the current mesh.
+        """
         return self.vertices.shape[0]
 
     @property
     def num_edges(self):
+        """
+        Return the number of edges of the current mesh.
+        """
 
         return self.__edges.shape[0]
     
     @property
     def num_polys(self):
-
+        """
+        Return the number of polys of the current mesh.
+        """
         return self.__polys.shape[0]
 
     @property
     def edges(self):
+        """
+        Return the edges of the current mesh as an Array (n, 2).
+        """
         return self.__edges
 
     @property
     def polys(self):
+        """
+        Return the edges of the current mesh as an Array (n, m).
+        """
         return self.__polys
 
     
 
     @property
     def center(self):
+        """
+        Return the center of the bounding box as an Array (n, 3).
+        """
 
         x1, x2 = self.__bounding_box[0][0], self.__bounding_box[1][0]
         y1, y2 = self.__bounding_box[0][1], self.__bounding_box[1][1]
@@ -455,7 +509,9 @@ class AbstractMesh(Observer, Subject):
 
     @property
     def scale(self):
-
+        """
+        Return the scale of the current mesh calculated as the distance between the minimun and maximum point of the bounding box.
+        """
         return np.linalg.norm(self.__bounding_box[0]-self.__bounding_box[1])
 
     def __update_bounding_box(self):
@@ -473,6 +529,7 @@ class AbstractMesh(Observer, Subject):
 
 
     def polys_add(self, new_polys):
+
 
 
         self._dont_update = True
@@ -502,30 +559,51 @@ class AbstractMesh(Observer, Subject):
     
     @property
     def filename(self):
+        """
+        Return the filename of the current mesh.
+        """
         return self.__filename
 
     @property
     def poly_centroids(self):
-
+        """
+        Return the centroids of the polys of the current mesh as an Array (n,3).
+        """
         if self.__simplex_centroids is None:
             self.__simplex_centroids = np.asarray(self.vertices[self.polys].mean(axis=1))
         return self.__simplex_centroids
 
     @property
     def mesh_centroid(self):
+        """
+        Return the centroid of the current mesh as an Array (,3).
+        """
         return np.asarray(self.vertices.mean(axis=1))
     
     @property
     def edge_centroids(self):
+        """
+        Return the centroids of the current mesh edges as an Array (n,3).
+        """
         return self.vertices[self.edges].mean(axis=1)
 
 
     def edges_sample_at(self, value):
+        """
+        Sample the edges at a given value.
+        
+        Parameters:
+
+            value (float): The value used to sample the point. It must be a value in the range (0,1)
+        """
         assert(value >= 0 and value <=1)
         return (1.0-value)*self.vertices[self.edges[:,0]] + value*self.vertices[self.edges[:,1]]
     
     @property
     def edge_length(self):
+        """
+        Return the length of the edges of the current mesh as an Array (n,1).
+        """
         return np.linalg.norm(self.vertices[self.edges[:,0]]-self.vertices[self.edges[:,1]], axis=1)
 
 
@@ -534,16 +612,24 @@ class AbstractMesh(Observer, Subject):
 
     @property
     def mesh_is_volumetric(self):
+        """
+        Return True if the current mesh is a Hexmesh or a Tetmesh.
+        """
         return hasattr(self, 'faces')
 
     @property
     def mesh_is_surface(self):
+        """
+        Return True if the current mesh is a Trimesh or a Quadmesh.
+        """
         return not self.mesh_is_volumetric
 
     
     @property
     def euler_characteristic(self):
-        
+        """
+        Return the Euler characteristic of the current mesh.
+        """
         if self.mesh_is_volumetric:
             return self.num_vertices - self.num_edges + self.num_faces - self.num_polys
         else:
@@ -551,6 +637,9 @@ class AbstractMesh(Observer, Subject):
     
     @property
     def genus(self):
+        """
+        Return the genus of the current mesh.
+        """
         if self.mesh_is_volumetric:
             return int(1-self.euler_characteristic)
         else:
@@ -558,23 +647,50 @@ class AbstractMesh(Observer, Subject):
 
     @property
     def edge_valence(self):
+        """
+        Return the valence of each edge.
+        """
         return _valence(self.adj_edge2poly)
 
     @property
     def vert_valence(self):
+        """
+        Return the valence of each vertex.
+        """
         return _valence(self.adj_vtx2vtx)
 
     def pick_vertex(self, point):
+        """
+        Return the nearest vertex id given a point.
+
+        Parameters:
+
+            point (Array (, 3) type=float): Coordinates of the point
+        """
         point = np.repeat(np.asarray(point).reshape(-1,3), self.num_vertices, axis=0)
         idx = np.argmin(np.linalg.norm(self.vertices - point, axis=1), axis=0)
         return idx
     
     def pick_edge(self, point):
+        """
+        Return the nearest edge id given a point.
+
+        Parameters:
+
+            point (Array (, 3) type=float): Coordinates of the point
+        """
         point = np.repeat(np.asarray(point).reshape(-1,3), self.num_edges, axis=0)
         idx = np.argmin(np.linalg.norm(self.edge_centroids - point, axis=1), axis=0)
         return idx
     
     def pick_poly(self, point):
+        """
+        Return the nearest poly id given a point.
+
+        Parameters:
+
+            point (Array (, 3) type=float): Coordinates of the point
+        """
         point = np.repeat(np.asarray(point).reshape(-1,3), self.num_polys, axis=0)
         idx = np.argmin(np.linalg.norm(self.poly_centroids - point, axis=1), axis=0)
         return idx
@@ -584,38 +700,65 @@ class AbstractMesh(Observer, Subject):
 
     @property
     def adj_vtx2vtx(self):
+        """
+        Return the adjacencies between vertex and vertex 
+        """
         return self.__adj_vtx2vtx
 
     @property
     def adj_vtx2edge(self):
+        """
+        Return the adjacencies between vertex and edge 
+        """
         return self.__adj_vtx2edge
 
     @property
     def adj_vtx2poly(self):
+        """
+        Return the adjacencies between vertex and poly 
+        """
         return self.__adj_vtx2poly
 
     @property
     def adj_edge2vtx(self):
+        """
+        Return the adjacencies between edge and vertex 
+        """
         return self.__adj_edge2vtx
     
     @property
     def adj_edge2edge(self):
+        """
+        Return the adjacencies between edge and edge 
+        """
         return self.__adj_edge2edge
     
     @property
     def adj_edge2poly(self):
+        """
+        Return the adjacencies between edge and poly 
+        """
         return self.__adj_edge2poly
 
     @property
     def adj_poly2vtx(self):
+        """
+        Return the adjacencies between poly and vertex 
+        """
         return self.__adj_poly2vtx
     
     @property
     def adj_poly2edge(self):
+        """
+        Return the adjacencies between poly and edge 
+        """
         return self.__adj_poly2edge
 
     @property
     def adj_poly2poly(self):
+        """
+        Return the adjacencies between poly and poly 
+        """
         return self.__adj_poly2poly 
     
     
