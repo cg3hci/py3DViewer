@@ -38,5 +38,11 @@ def volumetric_barycentric_coords(vertices, polys, points):
 
 
 
-
+def pca(P):
+    
+    B       = np.mean(P, axis=0)
+    p       = P-B
+    C       = np.matmul(np.transpose(p) , p)
+    U, S, V = np.linalg.svd(C)
+    return B, np.transpose(V)
 
