@@ -25,9 +25,11 @@ class Viewer(object):
 
         if with_gui:
             if len(self.drawables) > 1:
-                print("WARNING: GUI only supports one geometry at a time, so far.")
+                print("WARNING: Picking works only on the first mesh")
+                print("Use the show_controls_for_geometry method to add the GUI for a given geometry")
+
             
-            if "Skeleton" in str(type(self.drawables[0])):
+            if "Skeleton" in str(type(self.drawables[0])) or "PointCloud" in str(type(self.drawables[0])):
                 print("WARNING: GUI only supports meshes, so far.")
             
             else:
@@ -52,6 +54,10 @@ class Viewer(object):
         
     def __initialize_GUI(self, geometry):
         return GUI(geometry)
+
+    def show_controls_for_geometry(self, idx):
+        assert(idx < len(self.drawables))
+        self.UI = self.__initialize_GUI(self.drawables[idx])
 
     #def reload_GUI(self):
     #    self.UI._GUI__create_UI()
