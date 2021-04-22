@@ -46,3 +46,16 @@ def pca(P):
     U, S, V = np.linalg.svd(C)
     return B, np.transpose(V)
 
+
+def angle_between_vectors(a, b, rad=False):
+    
+    dot = np.dot(a, b)
+    la = np.linalg.norm(a)
+    lb = np.linalg.norm(b)
+    alpha  =  np.arccos(dot / (la*lb))
+    axis = np.cross(a, b)
+    if rad: 
+        return alpha, axis
+    else:
+        return alpha * 180 / np.pi, axis
+

@@ -1,7 +1,7 @@
 from .Abstractmesh import AbstractMesh
 from .Quadmesh import Quadmesh
 import numpy as np
-from ..utils import IO, ObservableArray, deprecated
+from ..utils import IO, ObservableArray, deprecated, NList
 from ..algorithms.cleaning import remove_isolated_vertices as rm_isolated
 from ..utils.load_operations import get_connectivity_info_volume_hex, get_connectivity_info_volume_faces as get_connectivity_info_surf
 from ..utils.load_operations import _compute_three_vertex_normals as compute_three_normals
@@ -157,6 +157,9 @@ class Hexmesh(AbstractMesh):
     def __compute_metrics(self): 
         self.simplex_metrics['scaled_jacobian'] = hex_scaled_jacobian(self.vertices, self.polys)
         self.simplex_metrics['volume'] = hex_volume(self.vertices, self.polys)
+    
+    def update_metrics(self):
+        self.__compute_metrics()
         
     @property
     def internals(self):
@@ -247,6 +250,10 @@ class Hexmesh(AbstractMesh):
         if self.__face_centroids is None:
             self.__face_centroids = np.asarray(self.vertices[self.faces].mean(axis=1))
         return self.__face_centroids
+    
+    @property
+    def volume(self):
+        return np.sum(self.simplex_metrics['volume'][1])
 
     def pick_face(self, point):
         point = np.repeat(np.asarray(point).reshape(-1,3), self.num_faces, axis=0)
@@ -411,6 +418,15 @@ class Hexmesh(AbstractMesh):
         bool_vec = np.zeros((self.num_vertices), dtype=np.bool)
         bool_vec[surf_verts] = True
         return bool_vec
+
+    @property
+    def volume(self):
+        return np.sum(self.simplex_metrics['volume'][1])
+
+    def normalize_volume(self):
+        scale_factor = 1.0/np.power(self.volume, 1.0/3.0)
+        self.transform_scale([scale_factor, scale_factor, scale_factor])
+        self.simplex_metrics['volume'] = hex_volume(self.vertices, self.polys)
         
     def extract_surface(self, keep_original_vertices=True):
         
@@ -431,11 +447,11 @@ class Hexmesh(AbstractMesh):
         #adjacencies
     @property
     def adj_vtx2face(self):
-       return self.__adj_vtx2face
+       return NList.NList(self.__adj_vtx2face)
     
     @property
     def adj_edge2face(self):
-       return self.__adj_edge2face
+       return NList.NList(self.__adj_edge2face)
     
     @property
     def adj_poly2face(self):
@@ -451,7 +467,7 @@ class Hexmesh(AbstractMesh):
     
     @property
     def adj_face2face(self):
-       return self.__adj_face2face
+       return NList.NList(self.__adj_face2face)
 
     @property
     def adj_face2poly(self):

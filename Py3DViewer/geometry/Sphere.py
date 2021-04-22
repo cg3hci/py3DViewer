@@ -70,7 +70,7 @@ class Sphere:
     def volume(self):
         return (4.0/3.0)*np.pi*(self.radius*self.radius*self.radius)
     
-    def point_is_inside(self, point, strict=True):
+    def contains_point(self, point, strict=True):
         
         point = np.array(point)
         dist = np.linalg.norm(self.origin-point, axis=1)

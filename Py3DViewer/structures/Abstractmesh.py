@@ -1,6 +1,6 @@
 import numpy as np
 from ..visualization import Viewer
-from ..utils import Subject, Observer, deprecated, matrices
+from ..utils import Subject, Observer, deprecated, matrices, NList
 import copy
 from numba import njit, int64, float64
 from numba.types import ListType as LT
@@ -356,11 +356,23 @@ class AbstractMesh(Observer, Subject):
 
         Parameters:
 
-            angle (float): Rotation angle.
-            axis  (string): Rotation axis. It can be 'x', 'y' or 'z'
+            angle (float): Rotation angle, degrees.
+            axis  (string): Rotation axis. It can be 'x', 'y' or 'z' or an array of size 3
 
         """
         self._dont_update = True
+
+        axis_tmp = np.zeros(3, dtype=np.float)
+        if axis == 'x' or axis == 0:
+            axis_tmp[0] = 1
+            axis = axis_tmp
+        elif axis == 'y' or axis == 1:
+            axis_tmp[1] = 1
+            axis = axis_tmp
+        elif axis == 'z' or axis == 2:
+            axis_tmp[2] = 1
+            axis = axis_tmp
+
         matrix = matrices.rotation_matrix(angle, axis)
         #crea un array colonna con il vettore vertices e nell'ultima colonna un vettore di soli 1
         a = np.hstack((self.vertices, np.ones((self.vertices.shape[0], 1))))#(nx3)->(nx4)
@@ -694,7 +706,7 @@ class AbstractMesh(Observer, Subject):
         point = np.repeat(np.asarray(point).reshape(-1,3), self.num_polys, axis=0)
         idx = np.argmin(np.linalg.norm(self.poly_centroids - point, axis=1), axis=0)
         return idx
-    
+
 
     #adjacencies
 
@@ -703,21 +715,21 @@ class AbstractMesh(Observer, Subject):
         """
         Return the adjacencies between vertex and vertex 
         """
-        return self.__adj_vtx2vtx
+        return NList.NList(self.__adj_vtx2vtx)
 
     @property
     def adj_vtx2edge(self):
         """
         Return the adjacencies between vertex and edge 
         """
-        return self.__adj_vtx2edge
+        return NList.NList(self.__adj_vtx2edge)
 
     @property
     def adj_vtx2poly(self):
         """
         Return the adjacencies between vertex and poly 
         """
-        return self.__adj_vtx2poly
+        return NList.NList(self.__adj_vtx2poly)
 
     @property
     def adj_edge2vtx(self):
@@ -731,14 +743,14 @@ class AbstractMesh(Observer, Subject):
         """
         Return the adjacencies between edge and edge 
         """
-        return self.__adj_edge2edge
+        return NList.NList(self.__adj_edge2edge)
     
     @property
     def adj_edge2poly(self):
         """
         Return the adjacencies between edge and poly 
         """
-        return self.__adj_edge2poly
+        return NList.NList(self.__adj_edge2poly)
 
     @property
     def adj_poly2vtx(self):

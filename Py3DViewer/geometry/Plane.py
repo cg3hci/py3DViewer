@@ -1,12 +1,16 @@
 import numpy as np
+from ..utils.utilities import angle_between_vectors
+from ..utils.matrices import rotation_matrix
 
 class Plane:
     
-    def __init__(self, tile=(2,2), scale=(1,1), direction='z'):
+    def __init__(self, tile=(2,2), center=(0,0,0), direction = (0,0,1), scale=(1,1)):
         
         self.scale  = (*scale,1)
         self.tile   = tile
-        self.direction = direction
+        self.center = np.array(center, dtype=np.float)
+        self.direction = np.array(direction, dtype=np.float)
+        self.direction /= np.linalg.norm(self.direction)
         
     def __compute_geometry_and_topology(self):
         
@@ -30,10 +34,12 @@ class Plane:
     @property
     def vertices(self):
         verts = self.__compute_geometry_and_topology()[0]*np.array(self.scale)
-        if self.direction == 'x':
-            verts[:,[0,1,2]] = verts[:,[2,1,0]]
-        elif self.direction == 'y':
-            verts[:,[0,1,2]] = verts[:,[0,2,1]]
+        angle, axis = angle_between_vectors(np.array([0.0,0.0,1.0]), self.direction)
+        R = rotation_matrix(angle, axis)
+        a = np.hstack((verts, np.ones((verts.shape[0], 1))))
+        verts = a.dot(R.T)[:,:-1]
+        verts += self.center
+        
         return verts
         
     @property
@@ -45,4 +51,20 @@ class Plane:
     
     @property
     def topology_quad(self):
-        return self.__compute_geometry_and_topology()[1]  
+        return self.__compute_geometry_and_topology()[1]
+
+    
+    def contains_point(self, point, eps=1e-5):
+        point = np.array(point, dtype=np.float)
+        dot = np.dot(point-self.center, self.direction)
+        return dot <= eps and dot >= -eps
+    
+    def ray_intersect(self, ray, eps=1e-5):
+            
+        d = np.dot(self.direction, ray.direction)
+        if np.abs(d) > eps:
+            t = np.dot((self.center - ray.origin), self.direction) / d
+            if t>= eps:
+                return True
+        
+        return False

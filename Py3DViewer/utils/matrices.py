@@ -42,26 +42,58 @@ def mass_matrix(mesh):
     return MM
 
 
-def rotation_matrix(alpha, c):
+#def rotation_matrix(alpha, c):
+#
+#    sin = np.sin(np.radians(alpha))
+#    if alpha > 0:
+#        cos = np.cos(np.radians(alpha))
+#    else:
+#        cos = -np.cos(np.radians(np.abs(alpha)))
+#
+#    if type(c) is str or type(c) is int:
+#        if c == 'x' or c == 0:
+#            matrix = np.identity(4)
+#            matrix[1:3, 1:3] = [[cos, -sin], [sin, cos]]
+#        elif c =='y' or c == 1:
+#            matrix = np.identity(4)
+#            matrix[:3, :3] = [[cos, 0, sin], [0, 1, 0], [-sin, 0, cos]]
+#        elif c == 'z' or c == 2:
+#            matrix = np.identity(4)
+#            matrix[:2, :2] = [[cos, -sin], [sin, cos]]
+#        else:
+#            raise Exception('Not a valid axis')
+#        return matrix
+#    else:
+#        raise Exception('Not a str')
 
-    sin = np.sin(np.radians(alpha))
-    if alpha > 0:
-        cos = np.cos(np.radians(alpha))
-    else:
-        cos = -np.cos(np.radians(np.abs(alpha)))
 
-    if type(c) is str or type(c) is int:
-        if c == 'x' or c == 0:
-            matrix = np.identity(4)
-            matrix[1:3, 1:3] = [[cos, -sin], [sin, cos]]
-        elif c =='y' or c == 1:
-            matrix = np.identity(4)
-            matrix[:3, :3] = [[cos, 0, sin], [0, 1, 0], [-sin, 0, cos]]
-        elif c == 'z' or c == 2:
-            matrix = np.identity(4)
-            matrix[:2, :2] = [[cos, -sin], [sin, cos]]
-        else:
-            raise Exception('Not a valid axis')
-        return matrix
-    else:
-        raise Exception('Not a str')
+def rotation_matrix(angle, axis):
+    
+    angle = np.array(angle, dtype=np.float)
+    assert(angle.size == 1 or angle.size == 3)
+    assert(axis.size == 3)
+    
+    if(angle.size == 1):
+        angle = np.repeat(angle, 3)
+    
+    angle[axis == 0] = 0 
+        
+    tx = np.radians(angle[0]) 
+    ty = np.radians(angle[1])
+    tz = np.radians(angle[2])
+
+    sinx = np.sin(tx)
+    siny = np.sin(ty)
+    sinz = np.sin(tz)
+
+
+    cosx = np.cos(tx) if tx >= 0 else -np.cos(tx)
+    cosy = np.cos(ty) if ty >= 0 else -np.cos(ty)
+    cosz = np.cos(tz) if tz >= 0 else -np.cos(tz)
+
+    matrix = np.identity(4)
+    matrix[:3, :3] = [[cosy*cosz, -cosy*sinz, siny],\
+                       [sinx*siny*cosz + cosx*sinz, -sinx*siny*sinz + cosx*cosz, -sinx*cosy],\
+                       [-cosx*siny*cosz + sinx*sinz, cosx*siny*sinz + sinx*cosz, cosx*cosy]]
+    
+    return matrix

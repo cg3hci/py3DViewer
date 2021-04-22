@@ -87,8 +87,8 @@ class Quadmesh(AbstractMesh):
 
         self._AbstractMesh__update_bounding_box()
         self.reset_clipping()
-        self.face_normals = compute_face_normals(self.vertices, self.polys, quad=True)
-        self.vtx_normals = compute_vertex_normals(self.face_normals, self.adj_vtx2poly)
+        self.poly_normals = compute_face_normals(self.vertices, self.polys, quad=True)
+        self.vtx_normals = compute_vertex_normals(self.poly_normals, self.adj_vtx2poly._NList__list)
         self.__compute_metrics()
         self._AbstractMesh__simplex_centroids = None
 
@@ -100,11 +100,11 @@ class Quadmesh(AbstractMesh):
         ext = filename.split('.')[-1]
 
         if ext == 'obj':
-            self.vertices, self._AbstractMesh__polys, self.face_normals, self.uvcoords, self.coor, self.groups = IO.read_obj(filename)
+            self.vertices, self._AbstractMesh__polys, self.poly_normals, self.uvcoords, self.coor, self.groups = IO.read_obj(filename)
             # self.vertices, self.faces, self.face_normals = IO.read_obj(filename)
             self.vertices.attach(self)
             self._AbstractMesh__polys.attach(self)
-            self.face_normals.attach(self)
+            self.poly_normals.attach(self)
             self.uvcoords.attach(self)
             self.coor.attach(self)
         elif ext == 'mtl':
@@ -151,6 +151,9 @@ class Quadmesh(AbstractMesh):
 
         self.simplex_metrics['area'] = quad_area(self.vertices, self.polys)
         self.simplex_metrics['aspect_ratio'] = quad_aspect_ratio(self.vertices, self.polys)
+    
+    def update_metrics(self):
+        self.__compute_metrics()
 
     def boundary(self):
 
@@ -313,6 +316,15 @@ class Quadmesh(AbstractMesh):
         bool_vec = np.zeros((self.num_vertices), dtype=np.bool)
         bool_vec[boundary_verts] = True
         return bool_vec
+
+    @property
+    def area(self):
+        return np.sum(self.simplex_metrics['area'][1])
+    
+    def normalize_area(self):
+        scale_factor = 1.0/np.sqrt(self.area)
+        self.transform_scale([scale_factor, scale_factor, scale_factor])
+        self.simplex_metrics['area'] = quad_area(self.vertices, self.polys)
 
 
     #deprecated
