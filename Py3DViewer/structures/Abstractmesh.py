@@ -582,7 +582,7 @@ class AbstractMesh(Observer, Subject):
         Return the centroids of the polys of the current mesh as an Array (n,3).
         """
         if self.__simplex_centroids is None:
-            self.__simplex_centroids = np.asarray(self.vertices[self.polys].mean(axis=1))
+            self.__simplex_centroids = np.asarray(self.vertices[self.polys].mean(axis=0))
         return self.__simplex_centroids
 
     @property
@@ -590,14 +590,14 @@ class AbstractMesh(Observer, Subject):
         """
         Return the centroid of the current mesh as an Array (,3).
         """
-        return np.asarray(self.vertices.mean(axis=1))
+        return np.asarray(self.vertices.mean(axis=0))
     
     @property
     def edge_centroids(self):
         """
         Return the centroids of the current mesh edges as an Array (n,3).
         """
-        return self.vertices[self.edges].mean(axis=1)
+        return self.vertices[self.edges].mean(axis=0)
 
 
     def edges_sample_at(self, value):

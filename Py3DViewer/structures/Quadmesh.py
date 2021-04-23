@@ -114,7 +114,7 @@ class Quadmesh(AbstractMesh):
         elif ext == 'off':
             self.vertices, self._AbstractMesh__polys = IO.read_off(filename)
             self.vertices.attach(self)
-            self._AbstractMesh__polys.attachi(self)
+            self._AbstractMesh__polys.attach(self)
 
         else:
             raise Exception("Only .obj and .off files are supported")

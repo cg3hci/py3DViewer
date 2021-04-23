@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.spatial.distance import directed_hausdorff
 
 def __tet_barycentric_coords(vertices, tets, points):
     
@@ -35,6 +36,8 @@ def volumetric_barycentric_coords(vertices, polys, points):
     
     if polys.shape == (4,) or polys.shape[1] == 4:
         return __tet_barycentric_coords(vertices, polys, points)
+    else:
+        raise Exception('Implemented only for tetrahedra')
 
 
 
@@ -80,8 +83,24 @@ def solid_angle(v0,v1,v2,p):
 
 
 def winding_number(mesh, p):
+    
+    assert(mesh.mesh_is_surface)
+
     p = np.array(p, dtype=np.float64)
     tris = mesh.vertices[mesh.tessellate()]
     sa = solid_angle(tris[:,0], tris[:,1], tris[:,2], p)
     w = np.sum(sa)
     return np.int(np.round(w))
+
+def hausdorff_distance(A, B, directed=True):
+    
+    if(directed):
+        return directed_hausdorff(A, B)[0]
+    else:
+        return np.maximum(directed_hausdorff(A, B)[0], directed_hausdorff(B, A)[0])
+
+
+def compactness(P):
+    P=np.array(P, dtype=np.float64)
+    barycenter = P.mean(axis=0)
+    return np.std(np.power(np.linalg.norm(P-barycenter, axis=1),2), axis=0)

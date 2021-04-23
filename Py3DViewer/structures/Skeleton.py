@@ -7,7 +7,7 @@ class Skeleton(Observer, Subject):
     
     """
     This class represent a skeleton composed of joints and bones. It is possible to load the mesh from a file (.skel) or
-    from raw geometry and topology data.
+    from raw geometry and topology data. It can also be used to draw segment soups.
 
     Parameters:
 

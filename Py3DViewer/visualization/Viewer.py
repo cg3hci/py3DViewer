@@ -40,8 +40,8 @@ class Viewer(object):
         self.renderer = self.__initialize_renderer(width, height)
         self.controls.exec_three_obj_method("update")
     
-    def set_poly_color(self, poly_idx, color):
-        self.drawables[0].update_poly_color(np.array(color), poly_idx)
+    def set_poly_color(self, poly_idx, color, geometry_idx=0):
+        self.drawables[geometry_idx].update_poly_color(np.array(color), poly_idx)
     
     def __get_drawable_from_geometry(self, geometry, color, reactive):
         geometry_type = str(type(geometry))
