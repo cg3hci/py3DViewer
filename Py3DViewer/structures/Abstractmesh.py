@@ -706,6 +706,11 @@ class AbstractMesh(Observer, Subject):
         point = np.repeat(np.asarray(point).reshape(-1,3), self.num_polys, axis=0)
         idx = np.argmin(np.linalg.norm(self.poly_centroids - point, axis=1), axis=0)
         return idx
+    
+    def normalize_bbox(self):
+        diag = np.linalg.norm(self.bbox[0]-self.bbox[1])
+        s = 1.0/diag
+        self.transform_scale([s,s,s])
 
 
     #adjacencies

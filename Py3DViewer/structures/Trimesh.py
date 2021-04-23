@@ -297,6 +297,9 @@ class Trimesh(AbstractMesh):
         AbstractMesh.polys_remove(self, poly_ids)
         self.__load_operations()
     
+    def tessellate(self):
+        return self.polys
+    
     @property
     def edge_is_manifold(self):
         val = self.edge_valence

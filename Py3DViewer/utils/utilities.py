@@ -59,3 +59,29 @@ def angle_between_vectors(a, b, rad=False):
     else:
         return alpha * 180 / np.pi, axis
 
+def solid_angle(v0,v1,v2,p):
+    
+    a = v0-p
+    b = v1-p
+    c = v2-p
+    
+    al = np.linalg.norm(a,axis=1)
+    bl = np.linalg.norm(b,axis=1)
+    cl = np.linalg.norm(c, axis=1)
+    
+    ab = np.einsum("ij,ij->i", a, b)
+    ac = np.einsum("ij,ij->i", a, c)
+    bc = np.einsum("ij,ij->i", b, c)
+    
+    cross = np.cross(b,c)
+    det = np.einsum("ij,ij->i", a, cross)
+    res = np.arctan2(det, (al*bl*cl + ab*cl + ac*bl + bc*al))/(2*np.pi)
+    return res 
+
+
+def winding_number(mesh, p):
+    p = np.array(p, dtype=np.float64)
+    tris = mesh.vertices[mesh.tessellate()]
+    sa = solid_angle(tris[:,0], tris[:,1], tris[:,2], p)
+    w = np.sum(sa)
+    return np.int(np.round(w))

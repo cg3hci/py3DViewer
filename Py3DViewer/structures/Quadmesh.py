@@ -114,7 +114,7 @@ class Quadmesh(AbstractMesh):
         elif ext == 'off':
             self.vertices, self._AbstractMesh__polys = IO.read_off(filename)
             self.vertices.attach(self)
-            self._AbstractMesh__polys.attach(self)
+            self._AbstractMesh__polys.attachi(self)
 
         else:
             raise Exception("Only .obj and .off files are supported")
@@ -292,6 +292,11 @@ class Quadmesh(AbstractMesh):
         """
         AbstractMesh.polys_remove(self, poly_ids)
         self.__load_operations()
+    
+    def tessellate(self):
+        tris = np.c_[self.polys[:,:3],self.polys[:,2:],self.polys[:,0]]
+        tris.shape = (-1,3)
+        return tris
 
     @property
     def edge_is_manifold(self):
