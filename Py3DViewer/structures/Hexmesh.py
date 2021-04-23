@@ -248,7 +248,7 @@ class Hexmesh(AbstractMesh):
     def face_centroids(self):
 
         if self.__face_centroids is None:
-            self.__face_centroids = np.asarray(self.vertices[self.faces].mean(axis=0))
+            self.__face_centroids = np.asarray(self.vertices[self.faces].mean(axis=1))
         return self.__face_centroids
     
     @property
