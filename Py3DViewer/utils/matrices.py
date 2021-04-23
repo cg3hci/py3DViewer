@@ -2,17 +2,50 @@ import numpy as np
 from scipy.sparse import lil_matrix as sp_matrix
 from .metrics import *
 
-def laplacian_matrix(mesh):
+def adjacency_matrix(mesh, type='std'):
+    assert(type=='std' or type=='cot')
     n = mesh.num_vertices
-    #e =  np.c_[mesh.faces[:,:2], mesh.faces[:,1:], mesh.faces[:,2], mesh.faces[:,0]]
     e = mesh.edges
-    A = sp_matrix((n, n))
-    A[e[:,0], e[:,1]] = 1
-    A[e[:,1], e[:,0]] = 1
-    D = sp_matrix(A.shape)
+    A = sp_matrix((n, n), dtype=np.float64)
+    if type=='std':
+        A[e[:,0], e[:,1]] = 1
+        A[e[:,1], e[:,0]] = 1
+    else:
+        raise NotImplementedError("not implemented yet")
+
+    return A
+
+def degree_matrix(A):
+    D = sp_matrix(A.shape, dtype=np.float64)
     D.setdiag(np.sum(A, axis=1))
+    return D
+
+
+
+def laplacian_matrix(mesh, type='std'):
+    assert(type=='std' or type=='cot')
+    A = adjacency_matrix(mesh, type)
+    D = degree_matrix(A)
     L = D-A
     return L
+
+def symmetric_normalized_laplacian_matrix(mesh, type='std'):
+    assert(type=='std' or type=='cot')
+    A = adjacency_matrix(mesh, type)
+    D = degree_matrix(A)
+    L = D-A
+    D=D.power(-0.5) 
+    return D*L*D
+
+def random_walk_normalized_laplacian(mesh, type='std'):
+    assert(type=='std' or type=='cot')
+    A = adjacency_matrix(mesh, type)
+    D = degree_matrix(A)
+    L = D-A
+    D=D.power(-1) 
+    return D*L
+    
+
 
 
 def mass_matrix(mesh):
