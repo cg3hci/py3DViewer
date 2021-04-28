@@ -1,6 +1,6 @@
 from .Abstractmesh import AbstractMesh
 import numpy as np
-from ..utils import IO, ObservableArray, deprecated
+from ..utils import IO, ObservableArray, deprecated, utilities
 from ..utils.load_operations import get_connectivity_info_surface as get_connectivity_info 
 from ..utils.load_operations import compute_vertex_normals, compute_face_normals
 from ..utils.load_operations import _compute_three_vertex_normals as compute_three_normals
@@ -330,6 +330,11 @@ class Quadmesh(AbstractMesh):
         scale_factor = 1.0/np.sqrt(self.area)
         self.transform_scale([scale_factor, scale_factor, scale_factor])
         self.simplex_metrics['area'] = quad_area(self.vertices, self.polys)
+
+    def sharp_creases(self, threshold=1.0472):
+        e2p = self.adj_edge2poly
+        result = np.array([utilities.angle_between_vectors(self.poly_normals[e2p[i][0]], self.poly_normals[e2p[i][1]], True)[0] > threshold if len(e2p[i]) == 2 else True for i in range(self.num_edges)])
+        return result
 
 
     #deprecated

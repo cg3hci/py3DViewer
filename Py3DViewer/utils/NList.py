@@ -20,3 +20,10 @@ class NList():
     
     def __repr__(self):
         return repr(self.__list)
+
+    @property
+    def content(self):
+        return self.__list
+
+    def __len__(self):
+        return len(self.__list)

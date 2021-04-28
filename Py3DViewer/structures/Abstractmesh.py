@@ -662,14 +662,14 @@ class AbstractMesh(Observer, Subject):
         """
         Return the valence of each edge.
         """
-        return _valence(self.adj_edge2poly)
+        return _valence(self.adj_edge2poly.content)
 
     @property
     def vert_valence(self):
         """
         Return the valence of each vertex.
         """
-        return _valence(self.adj_vtx2vtx)
+        return _valence(self.adj_vtx2vtx.content)
 
     def pick_vertex(self, point):
         """
