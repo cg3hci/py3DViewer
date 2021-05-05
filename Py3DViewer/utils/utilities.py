@@ -52,9 +52,15 @@ def pca(P):
 
 def angle_between_vectors(a, b, rad=False):
     
-    dot = np.dot(a, b)
-    la = np.linalg.norm(a)
-    lb = np.linalg.norm(b)
+    assert(a.shape==b.shape)
+    
+    if a.size == 3:
+        a = np.expand_dims(a, axis=0)
+        b = np.expand_dims(b, axis=0)
+        
+    dot = np.einsum("ij,ij->i", a, b)
+    la = np.linalg.norm(a, axis=1)
+    lb = np.linalg.norm(b, axis=1)
     alpha  =  np.arccos(dot / (la*lb))
     axis = np.cross(a, b)
     if rad: 

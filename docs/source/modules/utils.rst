@@ -46,3 +46,11 @@ Utilities
    :members:
    :undoc-members:
    :show-inheritance
+
+For_loop_utils
+------------------------------------
+
+.. automodule:: Py3DViewer.utils.for_loop_utils
+   :members:
+   :undoc-members:
+   :show-inheritance

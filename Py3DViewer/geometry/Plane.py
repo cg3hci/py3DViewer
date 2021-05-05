@@ -35,7 +35,7 @@ class Plane:
     def vertices(self):
         verts = self.__compute_geometry_and_topology()[0]*np.array(self.scale)
         angle, axis = angle_between_vectors(np.array([0.0,0.0,1.0]), self.direction)
-        R = rotation_matrix(angle, axis)
+        R = rotation_matrix(angle[0], axis[0])
         a = np.hstack((verts, np.ones((verts.shape[0], 1))))
         verts = a.dot(R.T)[:,:-1]
         verts += self.center

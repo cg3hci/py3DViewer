@@ -24,16 +24,16 @@ class Viewer(object):
                     self.drawables.append(self.__get_drawable_from_geometry(geometries[i], mesh_color[i], reactive or with_gui))
 
         if with_gui:
-            if len(self.drawables) > 1:
-                print("WARNING: Picking works only on the first mesh")
-                print("Use the show_controls_for_geometry method to add the GUI for a given geometry")
-
-            
+                        
             if "Skeleton" in str(type(self.drawables[0])) or "PointCloud" in str(type(self.drawables[0])):
-                print("WARNING: GUI only supports meshes, so far.")
+                if len(self.drawables) == 1:
+                    print("WARNING: GUI only supports meshes so far")
+                else:
+                    print("WARNING: GUI requires the first element of the list to be a mesh")
             
             else:
-                self.UI = self.__initialize_GUI(self.drawables[0])
+                self.UI = self.__initialize_GUI(self.drawables)
+
         self.camera = self.__initialize_camera(width, height)
         self.scene = self.__initialize_scene()
         self.controls = self.__initialize_controls()
@@ -55,12 +55,7 @@ class Viewer(object):
     def __initialize_GUI(self, geometry):
         return GUI(geometry)
 
-    def show_controls_for_geometry(self, idx):
-        assert(idx < len(self.drawables))
-        self.UI = self.__initialize_GUI(self.drawables[idx])
 
-    #def reload_GUI(self):
-    #    self.UI._GUI__create_UI()
         
     def __initialize_camera(self, width, height):
         camera_target = np.mean([drawable.center for drawable in self.drawables], axis=0)

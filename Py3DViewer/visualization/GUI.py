@@ -9,19 +9,26 @@ import numpy as np
 
 class GUI(Observer):
     
-    def __init__(self, drawable_mesh):
-        self.drawable = drawable_mesh
-        self.mesh = drawable_mesh.geometry
+    def __init__(self, drawable_objects):
+        self.__prev_geom = 0
+        self.__drawables = drawable_objects
+        self.drawable = drawable_objects[0]
+        self.mesh = self.drawable.geometry
         self.mesh.attach(self)
         self.widgets = []
-        self.click_picker = self.__initialize_picker()
+        self.click_picker = self.__initialize_picker(self.drawable.mesh)
         self.old_picked_face = None
         self.old_picked_face_internal = False
         self.__clipping_in_queue = False
         self.__dont_update_clipping = False
+        self.thread_list = []
         
         self.__create_UI()
         #self.wireframe_thickness_slider.observe(self.__update_wireframe_thickness, names='value')
+        self.__values = {}
+        for idx in range(len(self.__drawables)):
+            if not ("Skeleton" in str(type(self.__drawables[idx])) or "PointCloud" in str(type(self.__drawables[idx]))):
+                self.__set_values(idx, True)
         
         for widget in self.widgets:
             ipydisplay(widget)
@@ -37,6 +44,20 @@ class GUI(Observer):
         self.slider_layout = {
             
         }
+
+        self.geometries_dropdown = widgets.Dropdown(
+            options= [(idx, idx) for idx in range(len(self.__drawables))],
+            value=0,
+            description='Geometry',
+            layout = self.visible_layout
+        )
+
+        self.warning_label = widgets.Label(
+            llayout=self.visible_layout,
+            disabled=False,
+            continuous_update=True
+        )
+
         self.flip_x_button = widgets.ToggleButton(
                     value=False,
                     description='Flip x',
@@ -178,7 +199,7 @@ class GUI(Observer):
             description='Color-Map:',
             layout = self.invisible_layout,
         )
-        self.widgets += [self.color_map]
+        #self.widgets += [self.color_map]
         
         self.metric_menu = widgets.Dropdown(
             options= [(i, idx) for idx, i in enumerate(self.mesh.simplex_metrics.keys())],
@@ -186,17 +207,21 @@ class GUI(Observer):
             description='Metric:',
             layout = self.invisible_layout,
         )
-        self.widgets += [self.metric_menu]
+        #self.widgets += [self.metric_menu]
 
         self.coloring_type_menu = widgets.Dropdown(
             options=[('Default', 0), ('Simplex Quality', 1), ('Label',2)],
             value=0,
             description='Color Type:',
+            layout = self.visible_layout
         )
         self.widgets += [
         widgets.HBox([
         
         widgets.VBox([
+            widgets.HBox([
+            self.geometries_dropdown, self.warning_label
+            ]),
             widgets.HBox([
                 self.clipping_slider_x, self.flip_x_button
             ]),
@@ -212,6 +237,9 @@ class GUI(Observer):
             
             widgets.HBox([
             self.coloring_type_menu
+            ]),
+            widgets.HBox([
+            self.color_map, self.metric_menu
             ]),
 
             widgets.VBox([
@@ -238,14 +266,14 @@ class GUI(Observer):
                 
 
         mesh_colors = []
-        if hasattr(self.mesh, "internals"):
-            self.color_internal = widgets.ColorPicker(
-                concise=True,
-                description='Internal',
-                value=colors.rgb2hex(self.drawable._internal_color),
-                disabled=False,
-            )
-            mesh_colors += [self.color_internal]
+        self.color_internal = widgets.ColorPicker(
+            concise=True,
+            description='Internal',
+            value=colors.rgb2hex(self.drawable._internal_color),
+            disabled=False,
+            layout = self.invisible_layout if self.mesh.mesh_is_surface else self.visible_layout
+        )
+        mesh_colors += [self.color_internal]
 
         self.color_picking = widgets.ColorPicker(
             concise=True,
@@ -277,15 +305,14 @@ class GUI(Observer):
         self.widgets += [self.color_label_pickers]
         
         
-        
+        self.geometries_dropdown.observe(self.__change_geometry, names='value')
         self.flip_x_button.observe(self.__update_clipping, names='value')
         self.flip_y_button.observe(self.__update_clipping, names='value')
         self.flip_z_button.observe(self.__update_clipping, names='value')
         self.clipping_slider_x.observe(self.__update_clipping, names='value')
         self.clipping_slider_y.observe(self.__update_clipping, names='value')
         self.clipping_slider_z.observe(self.__update_clipping, names='value')
-        if hasattr(self.mesh, "internals"): 
-            self.color_internal.observe(self.__update_internal_color, names='value')
+        self.color_internal.observe(self.__update_internal_color, names='value')
         self.color_external.observe(self.__update_external_color, names='value')
         self.color_wireframe.observe(self.__update_wireframe_color, names='value')
         self.wireframe_opacity_slider.observe(self.__update_wireframe_opacity, names='value')
@@ -350,11 +377,138 @@ class GUI(Observer):
                 self.color_label_pickers.layout = self.visible_layout
                 self.__change_color_label(None)
 
-    def __initialize_picker(self):
-        pickable_objects = self.drawable.mesh
-        picker = three.Picker(controlling=pickable_objects, event='click')
+    def __initialize_picker(self, mesh):
+        picker = three.Picker(controlling=mesh, event='dblclick')
         return picker
+    
+    def __change_picker(self, mesh_idx):
         
+        self.click_picker.controlling = self.__drawables[mesh_idx].mesh
+
+    def __change_geometry(self, change):
+
+        if ("Skeleton" in str(type(self.__drawables[self.geometries_dropdown.value])) or "PointCloud" in str(type(self.__drawables[self.geometries_dropdown.value]))):
+            self.warning_label.value = 'WARNING: GUI ONLY SUPPORTS MESHES'
+            return
+
+        self.__set_values(self.__prev_geom)
+        idx = self.geometries_dropdown.value
+        self.drawable = self.__drawables[idx]
+        self.mesh = self.drawable.geometry
+        self.mesh.attach(self)
+        self.__change_picker(idx)
+        self.__prev_geom = idx
+        self.__write_values(idx)
+        tab_titles = ['Poly', 'Vertex', 'Edge', 'Face'] if self.drawable.geometry.mesh_is_volumetric else ['Poly', 'Vertex', 'Edge']
+        children = [
+            widgets.HTML(
+                value="",
+                layout={'width': '100','margin': '5 0 0 0'},
+                disabled=False,
+                continuous_update=True
+            ) for title in tab_titles]
+        self.picking_tab.children = children
+        for i in range(len(children)):
+            self.picking_tab.set_title(i, tab_titles[i])
+
+        self.__update_clipping(None)
+
+    def __set_values(self, idx, init=False):
+
+        x_value = self.clipping_slider_x.value 
+        y_value = self.clipping_slider_y.value 
+        z_value = self.clipping_slider_z.value
+        x_min, x_max = self.clipping_slider_x.min, self.clipping_slider_x.max 
+        y_min, y_max = self.clipping_slider_y.min, self.clipping_slider_y.max 
+        z_min, z_max = self.clipping_slider_z.min, self.clipping_slider_z.max
+        x_step = self.clipping_slider_x.step 
+        y_step = self.clipping_slider_y.step 
+        z_step = self.clipping_slider_z.step 
+
+
+
+        if init:
+            x_value = self.__drawables[idx].geometry.bbox[0][0], self.__drawables[idx].geometry.bbox[1][0]
+            y_value = self.__drawables[idx].geometry.bbox[0][1], self.__drawables[idx].geometry.bbox[1][1]
+            z_value = self.__drawables[idx].geometry.bbox[0][2], self.__drawables[idx].geometry.bbox[1][2]
+            
+            x_step = abs(x_value[0]-x_value[1])/100
+            x_min, x_max = x_value[0]-x_step, x_value[1]+x_step 
+            y_step = abs(y_value[0]-y_value[1])/100
+            y_min, y_max = y_value[0]-y_step, y_value[1]+y_step
+            z_step = abs(z_value[0]-z_value[1])/100
+            z_min, z_max = z_value[0]-z_step, z_value[1]+z_step 
+
+
+        
+        self.__values[idx] = [
+                              (x_min, x_max),\
+                              (y_min, y_max),\
+                              (z_min, z_max),\
+                              (x_step, y_step, z_step),\
+                              (x_value, y_value, z_value),\
+                              self.flip_x_button.value,\
+                              self.flip_y_button.value,\
+                              self.flip_z_button.value,\
+                              self.wireframe_opacity_slider.value,\
+                              self.color_wireframe.value,\
+                              self.coloring_type_menu.value,\
+                              ]
+        if self.coloring_type_menu.value != 0:
+            self.__values[idx].append(self.metric_menu.value)
+            self.__values[idx].append(self.color_map.value)
+
+        self.__values[idx].append(self.color_external.value)
+
+        if self.__drawables[idx].geometry.mesh_is_volumetric:
+            self.__values[idx].append(self.color_internal.value)
+        
+        
+
+    def __write_values(self, idx):
+        
+        for thread in self.thread_list:
+            if thread.is_alive():
+                thread.join()
+
+        self.thread_list.clear()
+        self.__dont_update_clipping = True
+        self.clipping_slider_x.min, self.clipping_slider_x.max = self.__values[idx][0]
+        self.clipping_slider_y.min, self.clipping_slider_y.max = self.__values[idx][1]
+        self.clipping_slider_z.min, self.clipping_slider_z.max = self.__values[idx][2]
+        self.clipping_slider_x.step, self.clipping_slider_y.step, self.clipping_slider_z.step = self.__values[idx][3]
+        self.clipping_slider_x.value, self.clipping_slider_y.value ,self.clipping_slider_z.value  = self.__values[idx][4]
+
+        self.flip_x_button.value = self.__values[idx][5]
+        self.flip_y_button.value = self.__values[idx][6]
+        self.flip_z_button.value = self.__values[idx][7]
+        self.__dont_update_clipping = False
+        self.__clipping_in_queue = False
+        self.wireframe_opacity_slider.value = self.__values[idx][8]
+        self.color_wireframe.value = self.__values[idx][9]
+        self.coloring_type_menu.value = self.__values[idx][10]
+
+        if self.coloring_type_menu.value != 0:
+            self.metric_menu.value = self.__values[idx][11]
+            self.color_map.value = self.__values[idx][12]
+            self.color_external.value = self.__values[idx][13]
+        else:
+            self.color_external.value = self.__values[idx][11]
+            self.color_external.layout = self.visible_layout
+        
+        
+        if self.__drawables[idx].geometry.mesh_is_volumetric:
+            self.color_internal.value = self.__values[idx][-1]
+            self.color_internal.layout = self.visible_layout if self.coloring_type_menu.value == 0 else self.invisible_layout
+        else:
+            self.color_internal.layout = self.invisible_layout
+        
+
+
+        
+
+
+    
     def __change_metric(self, change):
         
         self.__change_color_map(None)
@@ -373,25 +527,7 @@ class GUI(Observer):
          
         self.drawable.compute_color_map(metric_string, c_map_string)
         
-    def __clipping_updater(self):
-            
-        self.__dont_update_clipping = True
-        flip_x = self.flip_x_button.value
-        flip_y = self.flip_y_button.value
-        flip_z = self.flip_z_button.value
-        min_x, max_x = self.clipping_slider_x.value
-        min_y, max_y = self.clipping_slider_y.value
-        min_z, max_z = self.clipping_slider_z.value
-        self.mesh.set_clipping(min_x = min_x, max_x = max_x, 
-                               min_y = min_y, max_y = max_y, 
-                               min_z = min_z, max_z = max_z,
-                               flip_x = flip_x, flip_y = flip_y, flip_z = flip_z)
-        if self.__clipping_in_queue:
-            self.__clipping_in_queue = False
-            self.__dont_update_clipping = False
-            self.__update_clipping(None)
-        else:
-            self.__dont_update_clipping = False
+    
 
     def on_click(self, change):
 
@@ -424,6 +560,7 @@ class GUI(Observer):
         internal = False
 
         if num_triangles <= 2:
+            poly_index = poly_index + self.drawable.geometry._map_poly_indices[poly_index]
             vids = self.drawable.geometry.polys[poly_index].astype("int32")
         elif num_triangles == 4:
             poly_index = poly_index + self.drawable.geometry._map_poly_indices[poly_index]
@@ -490,6 +627,7 @@ class GUI(Observer):
             self.picking_tab.layout = {'margin': '0 0 0 10px'}
             self.picking_label.layout = {'margin': '0 0 0 10px'}
             self.enable_picking_button.description = 'Hide Picking Info'
+            self.picking_label.value = "Double click to pick"
             #self.color_picking.layout = self.visible_layout
         else:
             self.picking_tab.layout = self.invisible_layout
@@ -498,16 +636,37 @@ class GUI(Observer):
             self.enable_picking_button.description = 'Show Picking Info'
             #self.__change_color_type(None)
 
-
+    def __clipping_updater(self):
+            
+        self.__dont_update_clipping = True
+        flip_x = self.flip_x_button.value
+        flip_y = self.flip_y_button.value
+        flip_z = self.flip_z_button.value
+        min_x, max_x = self.clipping_slider_x.value
+        min_y, max_y = self.clipping_slider_y.value
+        min_z, max_z = self.clipping_slider_z.value
+        self.mesh.set_clipping(min_x = min_x, max_x = max_x, 
+                               min_y = min_y, max_y = max_y, 
+                               min_z = min_z, max_z = max_z,
+                               flip_x = flip_x, flip_y = flip_y, flip_z = flip_z)
+        if self.__clipping_in_queue:
+            self.__clipping_in_queue = False
+            self.__dont_update_clipping = False
+            self.__update_clipping(None)
+        else:
+            self.__dont_update_clipping = False
 
     def __update_clipping(self, change): 
        
+    
         if self.__dont_update_clipping:
             self.__clipping_in_queue = True
         else:
             thread = threading.Thread(target=self.__clipping_updater, args=())
             thread.daemon = True
             thread.start()
+            self.thread_list.append(thread)
+        
 
     def update(self):
         clipping = self.mesh.clipping

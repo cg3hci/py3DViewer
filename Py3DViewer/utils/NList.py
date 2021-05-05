@@ -9,6 +9,24 @@ def fast_indexing(l, item):
         indexed.append(l[el])
     return indexed
 
+@njit(cache=True)
+def _to_array(nb_l):
+    
+    dim1 = len(nb_l)
+    dim2 = 0
+    
+    for el in nb_l:
+        if len(el) > dim2:
+            dim2=len(el)
+    
+    array = np.zeros((dim1, dim2), dtype=np.int64)-1
+    
+    for idx, row in enumerate(nb_l):
+        for idy, column in enumerate(row):
+            array[idx][idy] = column
+            
+    return array 
+
 class NList():
     def __init__(self, l):
         self.__list = l
@@ -24,6 +42,10 @@ class NList():
     @property
     def content(self):
         return self.__list
+
+    @property
+    def array(self):
+        return _to_array(self.__list)
 
     def __len__(self):
         return len(self.__list)

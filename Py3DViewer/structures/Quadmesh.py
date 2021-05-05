@@ -31,6 +31,7 @@ class Quadmesh(AbstractMesh):
         self.material = {}
         self.groups = {}
         self.smoothness = smoothness
+        self.__map_poly_indices = []
 
         if mtl is not None:
             self.__load_from_file(mtl)
@@ -154,6 +155,10 @@ class Quadmesh(AbstractMesh):
     
     def update_metrics(self):
         self.__compute_metrics()
+    
+    @property
+    def _map_poly_indices(self):
+        return self.__map_poly_indices
 
     def boundary(self):
 
@@ -165,6 +170,14 @@ class Quadmesh(AbstractMesh):
             self._AbstractMesh__visible_polys = clipping_range
             self._AbstractMesh__boundary_cached = clipping_range
             self._AbstractMesh__boundary_needs_update = False
+
+            self.__map_poly_indices  = []
+            counter = 0
+            for c in clipping_range:
+                if c:
+                    self.__map_poly_indices.append(counter)
+                else:
+                    counter = counter + 1
 
         return self.polys[self._AbstractMesh__boundary_cached], self._AbstractMesh__boundary_cached
 
@@ -332,8 +345,11 @@ class Quadmesh(AbstractMesh):
         self.simplex_metrics['area'] = quad_area(self.vertices, self.polys)
 
     def sharp_creases(self, threshold=1.0472):
-        e2p = self.adj_edge2poly
-        result = np.array([utilities.angle_between_vectors(self.poly_normals[e2p[i][0]], self.poly_normals[e2p[i][1]], True)[0] > threshold if len(e2p[i]) == 2 else True for i in range(self.num_edges)])
+        e2p = self.adj_edge2poly.array
+        indices = np.logical_not(np.all(e2p != -1, axis=1)) 
+        angles = utilities.angle_between_vectors(self.poly_normals[e2p[:,0]], self.poly_normals[e2p[:,1]], True)[0]
+        result = angles > threshold
+        result[indices] = True
         return result
 
 
