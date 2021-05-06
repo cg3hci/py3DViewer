@@ -1,83 +1,103 @@
 import numpy as np
 from numba import njit, float64, int64
 from numba.types import Tuple
+from numba.typed import List as L
+
+hex_split_scheme = [[[0], [0,1], [0,1,2,3], [0,3], [0,4], [0,1,4,5], [0,1,2,3,4,5,6,7], [0,3,4,7]],\
+                    [[0,1], [1], [1,2], [0,1,2,3], [0,1,4,5], [1,5], [1,2,5,6], [0,1,2,3,4,5,6,7]],\
+                    [[0,1,2,3], [1,2], [2], [2,3], [0,1,2,3,4,5,6,7], [1,2,5,6], [2,6], [2,3,6,7]],\
+                    [[0,3], [0,1,2,3], [2,3], [3], [0,3,4,7], [0,1,2,3,4,5,6,7], [2,3,6,7], [3,7]],\
+                    [[0,4], [0,1,4,5], [0,1,2,3,4,5,6,7], [0,3,4,7], [4], [4,5], [4,5,6,7], [4,7]],\
+                    [[0,1,4,5], [1,5], [1,2,5,6], [0,1,2,3,4,5,6,7], [4,5], [5], [5,6], [4,5,6,7]],\
+                    [[0,1,2,3,4,5,6,7], [1,2,5,6], [2,6], [2,3,6,7], [4,5,6,7], [5,6], [6], [6,7]],\
+                    [[0,3,4,7], [0,1,2,3,4,5,6,7], [2,3,6,7], [3,7], [4,7], [4,5,6,7], [6,7],[7]],\
+                   ]
+tris_split_scheme = [[[0],[1],[0,1,2]],\
+                     [[1], [2], [0,1,2]],\
+                     [[2],[0],[0,1,2]],\
+                    ]
+tris_split_scheme_edges = [[[0],[0,1],[0,2]],\
+                     [[0,1], [1], [1,2]],\
+                     [[2],[0,2],[1,2]],\
+                     [[0,1],[1,2],[0,2]],\
+                    ]
+
+quad_split_scheme = [[[0],[0,1],[0,1,2,3],[0,3]],\
+                     [[0,1], [1], [1,2],[0,1,2,3]],\
+                     [[0,1,2,3],[1,2],[2],[2,3]],\
+                     [[0,3],[0,1,2,3],[2,3],[3]],\
+                    ]
+
+tet_split_scheme = [[[0],[1],[2],[0,1,2,3]],\
+                     [[0], [1], [3],[0,1,2,3]],\
+                     [[0],[2],[3],[0,1,2,3]],\
+                     [[1],[2],[3],[0,1,2,3]],\
+                    ]
 
 
-@njit(Tuple((float64[:,::1], int64[:,::1]))(float64[:,::1],int64[:,::1], int64[:,::1]), cache=True)
-def _mid_point_subdivision_trimesh(vertices, faces, edges):
+
+@njit(cache=True)
+def __numba_split(split_scheme, num_p, p2v, v):
+    vmap = dict()
+    new_verts = []
+    new_polys = []
     
-    vtx_dictionary = dict()
-    support_set = set()
-    vtx_dictionary[(-1.,-1.,-1.)] = -1
-    support_set.add((-1.,-1.,-1.))
-    n_vertices = vertices.shape[0]
+    for i in range(num_p):
+        for scheme in split_scheme:
+            verts = []
+            for p in scheme:
+                s = np.zeros((len(p), 3), dtype=np.float64)
+                for idx, el in enumerate(p):
+                    s[idx]=v[p2v[i][int(el)]]
+                tmp_vert = np.sum(s, axis=0)/len(p)
+                verts.append([tmp_vert[0], tmp_vert[1], tmp_vert[2]])
+
+            new_poly=[]
+            for vert in verts:
+                vert_t = (vert[0], vert[1], vert[2])
+                if vert_t in vmap:
+                    new_poly.append(vmap[vert_t])
+                else:
+                    new_verts.append(vert)
+                    new_poly.append(len(new_verts)-1)
+                    vmap[vert_t] = new_poly[-1]
+
+            new_polys.append(new_poly)
     
-    new_vertices = np.empty((edges.shape[0], 3), dtype=np.float64)
-    new_faces    = np.empty((faces.shape[0]*4, 3), dtype=np.int64)
-    
-    j = 0
-    for i in range(faces.shape[0]):
-        
-        new_vtx1 = (vertices[edges[i*3][0]] + vertices[edges[i*3][1]]) / 2
-        new_vtx2 = (vertices[edges[i*3+1][0]] + vertices[edges[i*3+1][1]]) / 2
-        new_vtx3 = (vertices[edges[i*3+2][0]] + vertices[edges[i*3+2][1]]) / 2
-        
-        index0 = 0
-        index1 = 0
-        index2 = 0
-        
-        v1 = (new_vtx1[0], new_vtx1[1], new_vtx1[2])
-        v2 = (new_vtx2[0], new_vtx2[1], new_vtx2[2])
-        v3 = (new_vtx3[0], new_vtx3[1], new_vtx3[2])
-        
-        if v1 not in support_set:
-            
-            new_vertices[j] = new_vtx1
-            vtx_dictionary[v1] = j+n_vertices
-            index0 = j+n_vertices
-            j+=1
-            
-        else:
-            index0 = vtx_dictionary[v1]
-        
-        if v2 not in support_set:
-            
-            new_vertices[j] = new_vtx2
-            vtx_dictionary[v2] = j+n_vertices
-            index1 = j+n_vertices
-            j+=1
-            
-        else:
-            index1 = vtx_dictionary[v2]
-            
-        if v3 not in support_set:
-            
-            new_vertices[j] = new_vtx3
-            vtx_dictionary[v3] = j+n_vertices
-            index2 = j+n_vertices
-            j+=1
-            
-        else:
-            index2 = vtx_dictionary[v3]
-            
-        
-        new_faces[i*4] = np.array([faces[i][0], index0, index2])
-        new_faces[i*4+1] = np.array([index0, index1, index2])
-        new_faces[i*4+2] = np.array([index0, faces[i][1], index1])
-        new_faces[i*4+3] = np.array([index2, index1, faces[i][2]])
-        
-    return np.concatenate((vertices, new_vertices[:j]), axis=0), new_faces
+                
+    return np.array(new_verts), np.array(new_polys)
 
 
+def mesh_subdivision(mesh, override_mesh=False, custom_scheme=None):
 
-def mid_point_subdivision(mesh):
-
-    if 'Trimesh' in type(mesh):
-        v, f = _mid_point_subdivision_trimesh(mesh.vertices, mesh.polys, mesh.edges)
+    if 'Trimesh' in str(type(mesh)):
+        subdivision_scheme_ = tris_split_scheme_edges if custom_scheme is None else custom_scheme
+    elif 'Quadmesh' in str(type(mesh)):
+        subdivision_scheme_ = quad_split_scheme if custom_scheme is None else custom_scheme
+    elif 'Tetmesh' in str(type(mesh)):
+        subdivision_scheme_ = tet_split_scheme if custom_scheme is None else custom_scheme
+    elif 'Hexmesh' in str(type(mesh)):
+        subdivision_scheme_ = hex_split_scheme if custom_scheme is None else custom_scheme
     else:
-        print("Implemented only for Trimesh")
+        raise Exception('Input must be a mesh')
+
+    subdivision_scheme = L()
+    for scheme in subdivision_scheme_:
+        p = L()
+        for poly in scheme:
+            element = L()
+            for el in poly:
+                element.append(el)
+            p.append(element)
+        subdivision_scheme.append(p)
+
+
+    
+    v, p = __numba_split(subdivision_scheme, mesh.num_polys, mesh.polys, mesh.vertices)
+    if override_mesh:
+        mesh.__init__(vertices=v, polys=p)
         return
-    mesh.__init__(vertices=v, faces=f)
+    return v, p
 
 
 def hex_to_tet_subdivision(hexes, subdivision_rule=3):

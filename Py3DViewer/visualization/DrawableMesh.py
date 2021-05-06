@@ -49,7 +49,7 @@ class DrawableMesh (Observer):
             #External color is teal, initialized in __init__ and represented with a numpy array 1x3
             color = np.repeat(self._external_color.reshape(1, 3), geometry.num_triangles*3, axis=0)
             # This condition is for initializing the color of the internal part of volumetric meshes
-            if hasattr(self.geometry, "internals"):
+            if self.geometry.mesh_is_volumetric:
                 internal_color = geometry.internal_triangles_idx()
                 color[internal_color] = self._internal_color
         else:
