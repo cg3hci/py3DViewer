@@ -32,7 +32,7 @@ class Clipping(object):
 
     def __repr__(self):
         return ("Clipping:\n" +
-                f"min_x: {self.min_x} \tmax_x: {self.max_x} \t{('flipped' if self.flip.x else '')}\n" +
+                f"min_x: {self.mini_x} \tmax_x: {self.max_x} \t{('flipped' if self.flip.x else '')}\n" +
                 f"min_y: {self.min_y} \tmax_y: {self.max_y} \t{('flipped' if self.flip.y else '')}\n" +
                 f"min_z: {self.min_z} \tmax_z: {self.max_z} \t{('flipped' if self.flip.z else '')}\n")
 
@@ -80,6 +80,7 @@ class AbstractMesh(Observer, Subject):
         self.simplex_metrics     = dict() #dictionary[propertyName : ((min, max), npArray (Nx1))]
 
         self.__filename          = ''
+
         
        
         Observer.__init__(self)
@@ -576,6 +577,7 @@ class AbstractMesh(Observer, Subject):
         """
         return self.__filename
 
+    #fix this
     @property
     def poly_centroids(self):
         """

@@ -1,46 +1,46 @@
-Algorithms
+Geometry
 =============================
 
 .. contents:: Contents
     :local:
 
-Cleaning
+Cube
 -----------------------------------------
 
-.. automodule:: Py3DViewer.algorithms.cleaning
+.. automodule:: Py3DViewer.geometry.Cube
    :members:
    :undoc-members:
    :show-inheritance:
 
-Dijsktra
+PLane
 -------------------------------------
 
-.. automodule:: Py3DViewer.algorithms.dijsktra
+.. automodule:: Py3DViewer.geometry.PLane
    :members:
    :undoc-members:
    :show-inheritance:
 
 
-HeatFlow
+Ray
 ------------------------------------
 
-.. automodule:: Py3DViewer.algorithms.heat_flow
+.. automodule:: Py3DViewer.geometry.Ray
    :members:
    :undoc-members:
    :show-inheritance:
 
-Smoothing
+Segment
 ------------------------------------
 
-.. automodule:: Py3DViewer.algorithms.smoothing
+.. automodule:: Py3DViewer.geometry.Segment
    :members:
    :undoc-members:
    :show-inheritance:
 
-Subdivision
+Sphere
 ------------------------------------
 
-.. automodule:: Py3DViewer.algorithms.subdivision
+.. automodule:: Py3DViewer.geometry.Sphere
    :members:
    :undoc-members:
    :show-inheritance:

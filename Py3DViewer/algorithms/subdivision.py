@@ -99,6 +99,63 @@ def mesh_subdivision(mesh, override_mesh=False, custom_scheme=None):
         return
     return v, p
 
+def catmull_clark_subdivision(mesh):
+    
+    @njit(cache=True)
+    def compute_new_verts(new_verts, face_verts, edge_verts, v2p, v2e):
+        
+        for i in range(new_verts.shape[0]):
+        
+            n = len(v2p[i])
+        
+            avgF = np.zeros((1,3), dtype=np.float64)
+            avgE = np.zeros((1,3), dtype=np.float64)
+            for f in v2p[i]:
+                avgF += face_verts[f]
+            avgF/=n
+            for e in v2e[i]:
+                avgE += edge_verts[e]
+            avgE/=n
+        
+            new_verts[i] = (avgF + 2*avgE + (n-3)*new_verts[i])/n
+    
+        return new_verts
+
+    @njit(cache=True)
+    def compute_faces(face_verts, edge_verts, new_verts, f2e, v2e, f2v):
+    
+        faces = []
+    
+        n_faces = len(face_verts)
+        n_edges = len(edge_verts)
+        n_overts = len(new_verts)
+    
+        for i in range(n_faces):
+            fc = f2v[i]
+            for j, v in enumerate(fc):
+                v+=n_faces+n_edges
+                face = [0]
+                face.append(v)
+                face.append(f2e[i,j]+n_faces)
+                face.append(i)
+                face.append(f2e[i, (j-1)%len(f2e[i])]+n_faces)
+                face.pop(0)
+                faces.append(face)
+    
+        return np.array(faces)
+    
+    face_verts = mesh.poly_centroids
+    
+    segment_centroids = face_verts[mesh.adj_edge2poly.array].mean(axis=1)
+    edge_verts = (mesh.edge_centroids + segment_centroids) * 0.5
+    
+    new_verts = compute_new_verts(mesh.vertices.copy(), face_verts, edge_verts, mesh.adj_vtx2poly.content, mesh.adj_vtx2edge.content)
+    
+    polys = compute_faces(face_verts, edge_verts, new_verts, mesh.adj_poly2edge, mesh.adj_vtx2edge.content, mesh.adj_poly2vtx)
+    new_verts = np.vstack((face_verts, edge_verts, new_verts))
+    
+    return new_verts, polys
+
 
 def hex_to_tet_subdivision(hexes, subdivision_rule=3):
 

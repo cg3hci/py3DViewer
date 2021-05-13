@@ -73,7 +73,6 @@ class Quadmesh(AbstractMesh):
 
         self._dont_update = True
         self._AbstractMesh__boundary_needs_update = True
-        self._AbstractMesh__simplex_centroids = None
 
         self._AbstractMesh__edges, \
         self._AbstractMesh__adj_vtx2vtx, \
@@ -351,6 +350,17 @@ class Quadmesh(AbstractMesh):
         result = angles > threshold
         result[indices] = True
         return result
+    
+    def fix_poly_order():
+        normals = self.poly_normals
+        center  = self.mesh_centroid
+        a = (normals-center)
+        norm = np.linalg.norm(a, axis=1)
+        norm.shape = (-1,1)
+        a /= norm
+        condition = np.einsum("ij,ij->i", a, normals) > 0
+        self.polys[condition] = np.flip(mesh.polys[condition], axis=1)
+        self.__load_operations()
 
 
     #deprecated

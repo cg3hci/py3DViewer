@@ -358,6 +358,17 @@ class Trimesh(AbstractMesh):
         result[indices] = True
         return result
     
+    def fix_poly_order():
+        normals = self.poly_normals
+        center  = self.mesh_centroid
+        a = (normals-center)
+        norm = np.linalg.norm(a, axis=1)
+        norm.shape = (-1,1)
+        a /= norm
+        condition = np.einsum("ij,ij->i", a, normals) > 0
+        self.polys[condition] = np.flip(mesh.polys[condition], axis=1)
+        self.__load_operations()
+    
 
     #deprecated
     @property
