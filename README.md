@@ -88,7 +88,7 @@ University of Cagliari (Italy)
 
 ### Other Contributors
 
-Chiara Manca, Giampaolo Perelli, Alessandra Perniciano (University of Cagliari).
+Chiara Manca, Giampaolo Perelli, Alessandra Perniciano, Alessandro Vacca (University of Cagliari).
 
 ## Contributing
 

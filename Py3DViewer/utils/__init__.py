@@ -8,3 +8,4 @@ from .matrices import *
 from .utilities import *
 from .deprecated import *
 from .for_loop_utils import *
+#from .Quaternion import *
