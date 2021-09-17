@@ -416,10 +416,8 @@ class DrawableMesh (Observer):
     def run(self, geometry):
 
         edges = self.geometry.vertices[self.geometry.as_edges_flat()].astype(np.float32)
-        self.wireframe.geometry.attributes['position'].array[:edges.shape[0]] = edges
-        self.wireframe.geometry.exec_three_obj_method('setDrawRange', 0, edges.shape[0])
-        self.wireframe.geometry.attributes['position'].array = self.wireframe.geometry.attributes['position'].array
-
+        self.wireframe.geometry.attributes['position'].array = edges
+        
         #initilization of the color
         self.geometry_color = self.__initialize_geometry_color(None, geometry)
         if self._color_map is None:
