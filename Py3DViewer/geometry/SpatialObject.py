@@ -9,7 +9,7 @@ spec = [('vertices', float64[:,:])]
 
 #Generic class that represents every object in the space (points, triangles, quad, tet, etc)
 @jitclass(spec)
-class SpaceObject:
+class SpatialObject:
     def __init__(self, vertices):
         self.vertices = vertices
     

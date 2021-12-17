@@ -10,7 +10,7 @@ from ..utils.metrics import tet_scaled_jacobian, tet_volume
 class Tetmesh(AbstractMesh):
     
     """
-    This class represent a volumetric mesh composed of tetrahedra. It is possible to load the mesh from a file (.mesh) or
+    This class represents a volumetric mesh composed of tetrahedra. It is possible to load the mesh from a file (.mesh) or
     from raw geometry and topology data.
 
     Parameters:

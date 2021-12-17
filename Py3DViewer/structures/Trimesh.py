@@ -9,7 +9,7 @@ from ..utils.metrics import triangle_aspect_ratio, triangle_area
 
 class Trimesh(AbstractMesh):
     """
-    This class represent a mesh composed of triangles. It is possible to load the mesh from a file (.obj) or
+    This class represents a mesh composed of triangles. It is possible to load the mesh from a file or
     from raw geometry and topology data.
 
     Parameters:
@@ -122,11 +122,16 @@ class Trimesh(AbstractMesh):
             self.vertices.attach(self)
             self._AbstractMesh__polys.attach(self)
 
+        elif ext == 'mesh':
+            self.vertices, self._AbstractMesh__polys, labels = IO.read_mesh(filename)
+            self.vertices.attach(self)
+            self._AbstractMesh__polys.attach(self)
+
         else:
-            raise Exception("Only .obj and .off files are supported")
+            raise Exception("Only .obj, .off and .mesh files are supported")
 
         self.labels = ObservableArray(self.num_polys, dtype=np.int)
-        self.labels[:] = np.zeros(self.labels.shape, dtype=np.int)
+        self.labels[:] = np.zeros(self.labels.shape, dtype=np.int) if ext != 'mesh' else labels
         self.labels.attach(self)
 
         self.__load_operations()
@@ -150,8 +155,10 @@ class Trimesh(AbstractMesh):
             IO.save_obj(self, filename)
         elif ext == 'off':
             IO.save_off(self, filename)
+        elif ext == 'mesh':
+            IO.save_mesh(self, filename)
         else:
-            raise Exception("Only .obj and .off files are supported")
+            raise Exception("Only .obj, .off and .mesh files are supported")
 
     def __compute_metrics(self):
 

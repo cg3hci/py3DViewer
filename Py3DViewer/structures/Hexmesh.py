@@ -10,7 +10,7 @@ from ..utils.metrics import hex_scaled_jacobian, hex_volume
 class Hexmesh(AbstractMesh):
     
     """
-    This class represent a volumetric mesh composed of hexahedra. It is possible to load the mesh from a file (.mesh) or
+    This class represents a volumetric mesh composed of hexahedra. It is possible to load the mesh from a file (.mesh) or
     from raw geometry and topology data.
 
     Parameters:

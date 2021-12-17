@@ -4,4 +4,4 @@ from .Sphere import *
 from .Ray import *
 from .Segment import *
 from .AABB import *
-from .SpaceObject import *
+from .SpatialObject import *

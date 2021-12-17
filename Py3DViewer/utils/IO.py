@@ -43,7 +43,7 @@ def read_mesh(filename):
 
         line = f.readline()
 
-        while "Tetrahedra" not in line and "Hexahedra" not in line and line != "":
+        while "Tetrahedra" not in line and "Hexahedra" not in line and "Quadrilaterals" not in line and "Triangles" not in line and line != "":
             line = f.readline()
 
         assert line != ""
@@ -57,13 +57,31 @@ def read_mesh(filename):
                 label = float(line.split()[-1])
                 tmp_simplices += [(a, b, c, d)]
                 tmp_labels += [label]
-        else:
+        elif "Hexahedra" in line:
             for i in range(num_simplices):
                 line = f.readline()
                 a, b, c, d, e, f_, g, h = list(map(lambda x: int(x) - 1, line.split()[:-1]))
                 label = float(line.split()[-1])
                 tmp_simplices += [(a, b, c, d, e, f_, g, h)]
                 tmp_labels += [label]
+        
+        elif "Quadrilaterals" in line:
+            for i in range(num_simplices):
+                line = f.readline()
+                a, b, c, d = list(map(lambda x: int(x) - 1, line.split()[:-1]))
+                label = float(line.split()[-1])
+                tmp_simplices += [(a, b, c, d)]
+                tmp_labels += [label]
+        
+        elif "Triangles" in line:
+            for i in range(num_simplices):
+                line = f.readline()
+                a, b, c, d = list(map(lambda x: int(x) - 1, line.split()[:-1]))
+                label = float(line.split()[-1])
+                tmp_simplices += [(a, b, c)]
+                tmp_labels += [label]
+        else:
+            assert False, "File is not valid."
 
         tmp_vtx = np.array(tmp_vtx)
         tmp_simplices = np.array(tmp_simplices)
@@ -99,18 +117,35 @@ def save_mesh(mesh, filename):
         for v in np.asarray(mesh.vertices):
             f.write(f'{float(v[0])} {float(v[1])} {float(v[2])} 0\n')
 
-        if mesh.polys.shape[1] == 4:
-            f.write('Tetrahedra\n')
-            f.write(f'{mesh.num_polys}\n')
-            for idx, t in enumerate(np.asarray(mesh.polys)):
-                f.write(f'{int(t[0]) + 1} {t[1] + 1} {int(t[2]) + 1} {int(t[3]) + 1} {np.asarray(mesh.labels)[idx]}\n')
+        if mesh.mesh_is_volumetric:
 
+            if mesh.polys.shape[1] == 4:
+                f.write('Tetrahedra\n')
+                f.write(f'{mesh.num_polys}\n')
+                for idx, t in enumerate(np.asarray(mesh.polys)):
+                    f.write(f'{int(t[0]) + 1} {t[1] + 1} {int(t[2]) + 1} {int(t[3]) + 1} {np.asarray(mesh.labels)[idx]}\n')
+
+            else:
+                f.write('Hexahedra\n')
+                f.write(f'{mesh.num_polys}\n')
+                for idx, h in enumerate(np.asarray(mesh.polys)):
+                    f.write(
+                        f'{int(h[0]) + 1} {int(h[1]) + 1} {int(h[2]) + 1} {int(h[3]) + 1} {int(h[4]) + 1} {int(h[5]) + 1} {int(h[6]) + 1} {int(h[7]) + 1} {np.asarray(mesh.labels)[idx]}\n')
+        
         else:
-            f.write('Hexahedra\n')
-            f.write(f'{mesh.num_polys}\n')
-            for idx, h in enumerate(np.asarray(mesh.polys)):
-                f.write(
-                    f'{int(h[0]) + 1} {int(h[1]) + 1} {int(h[2]) + 1} {int(h[3]) + 1} {int(h[4]) + 1} {int(h[5]) + 1} {int(h[6]) + 1} {int(h[7]) + 1} {np.asarray(mesh.labels)[idx]}\n')
+
+            if mesh.polys.shape[1] == 4:
+                f.write('Quadrilaterals\n')
+                f.write(f'{mesh.num_polys}\n')
+                for idx, t in enumerate(np.asarray(mesh.polys)):
+                    f.write(f'{int(t[0]) + 1} {t[1] + 1} {int(t[2]) + 1} {int(t[3]) + 1} {np.asarray(mesh.labels)[idx]}\n')
+
+            else:
+                f.write('Trianglese\n')
+                f.write(f'{mesh.num_polys}\n')
+                for idx, h in enumerate(np.asarray(mesh.polys)):
+                    f.write(
+                        f'{int(h[0]) + 1} {int(h[1]) + 1} {int(h[2]) + 1} {np.asarray(mesh.labels)[idx]}\n')
 
         f.write('End')
 

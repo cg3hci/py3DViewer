@@ -6,7 +6,7 @@ from ..utils import Observer, Subject, IO, ObservableArray
 class PointCloud(Observer, Subject):
     
     """
-    This class represent a Point Cloud. 
+    This class represents a Point Cloud. 
 
     Parameters:
 

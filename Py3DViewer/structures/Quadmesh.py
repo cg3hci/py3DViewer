@@ -9,7 +9,7 @@ from ..utils.metrics import quad_area, quad_aspect_ratio
 
 class Quadmesh(AbstractMesh):
     """
-    This class represent a mesh composed of quadrilaterals. It is possible to load the mesh from a file (.obj) or
+    This class represents a mesh composed of quadrilaterals. It is possible to load the mesh from a file or
     from raw geometry and topology data.
 
     Parameters:
@@ -116,11 +116,16 @@ class Quadmesh(AbstractMesh):
             self.vertices.attach(self)
             self._AbstractMesh__polys.attach(self)
 
+        elif ext == 'mesh':
+            self.vertices, self._AbstractMesh__polys, labels = IO.read_mesh(filename)
+            self.vertices.attach(self)
+            self._AbstractMesh__polys.attach(self)
+
         else:
-            raise Exception("Only .obj and .off files are supported")
+            raise Exception("Only .obj, .off and .mesh files are supported")
 
         self.labels = ObservableArray(self.num_polys, dtype=np.int)
-        self.labels[:] = np.zeros(self.labels.shape, dtype=np.int)
+        self.labels[:] = np.zeros(self.labels.shape, dtype=np.int) if ext != 'mesh' else labels
         self.labels.attach(self)
 
         self.__load_operations()
@@ -144,8 +149,10 @@ class Quadmesh(AbstractMesh):
             IO.save_obj(self, filename)
         elif ext == 'off':
             IO.save_off(self, filename)
+        elif ext == 'mesh':
+            IO.save_mesh(self, filename)
         else:
-            raise Exception("Only .obj and .off files are supported")
+            raise Exception("Only .obj, .off and .mesh files are supported")
 
     def __compute_metrics(self):
 
@@ -346,7 +353,7 @@ class Quadmesh(AbstractMesh):
     def sharp_creases(self, threshold=1.0472):
         e2p = self.adj_edge2poly.array
         indices = np.logical_not(np.all(e2p != -1, axis=1)) 
-        angles = utilities.angle_between_vectors(self.poly_normals[e2p[:,0]], self.poly_normals[e2p[:,1]], True)[0]
+        angles = utilities.angle_between_vectors(self.poly_normials[e2p[:,0]], self.poly_normals[e2p[:,1]], True)[0]
         result = angles > threshold
         result[indices] = True
         return result

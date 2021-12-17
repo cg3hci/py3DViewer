@@ -4,7 +4,7 @@ from numba.experimental import jitclass
 from numba.types import ListType as LT
 from numba.typed import List as L
 import numba
-from ..geometry import AABB, SpaceObject
+from ..geometry import AABB, SpatialObject
 
 spec_noctree_node = [
     ('father', int64),
@@ -30,7 +30,7 @@ class NOctreeNode:
 
 node_type = NOctreeNode.class_type.instance_type
 a_type = AABB.class_type.instance_type
-so_type = SpaceObject.class_type.instance_type
+so_type = SpatialObject.class_type.instance_type
 
 
 spec_noctree = [
@@ -150,13 +150,14 @@ def build_octree(t, verts_per_item):
 def search_p(nodes,shapes,aabbs,point,type_mesh,index=0):
         
         aabb = aabbs[index]
+        eps = 1e-6
         
-        if (point[0] < aabb.min[0]
-            or point[0] > aabb.max[0]
-            or point[1] < aabb.min[1]
-            or point[1] > aabb.max[1]
-            or point[2] < aabb.min[2]
-            or point[2] > aabb.max[2]):
+        if (point[0] < aabb.min[0]    - eps
+            or point[0] > aabb.max[0] + eps
+            or point[1] < aabb.min[1] - eps
+            or point[1] > aabb.max[1] + eps
+            or point[2] < aabb.min[2] - eps
+            or point[2] > aabb.max[2] + eps):
                 return False,-1
         
         if point[0] <= aabb.center[0]:
@@ -256,7 +257,7 @@ def intersects_ray(nodes, shapes, aabbs, r_origin, r_dir, type_mesh):
 def build_space_objects(polys):
     l = L()
     for p in polys:
-        l.append(SpaceObject(p))
+        l.append(SpatialObject(p))
     
     return l
 
