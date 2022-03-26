@@ -259,7 +259,7 @@ class Tetmesh(AbstractMesh):
 
     def vertices_remove(self, vtx_ids):
         """
-        Remove a list of vertices from the current mesh. It affects the mesh geoemtry. 
+        Remove a list of vertices from the current mesh. It affects the mesh geometry. 
         Parameters:
             vtx_ids (Array (Nx1 / 1xN) type=int): List of vertices to remove. Each vertex is in the form [int]
         """

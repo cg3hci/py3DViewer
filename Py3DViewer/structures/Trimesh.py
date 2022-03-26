@@ -236,7 +236,7 @@ class Trimesh(AbstractMesh):
 
     def vertices_remove(self, vtx_ids):
         """
-        Remove a list of vertices from the current mesh. It affects the mesh geoemtry. 
+        Remove a list of vertices from the current mesh. It affects the mesh geometry. 
 
         Parameters:
 
