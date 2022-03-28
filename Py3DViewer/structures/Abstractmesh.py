@@ -39,7 +39,7 @@ class Clipping(object):
 class AbstractMesh(Observer, Subject):
 
     """
-    This class represents a generic mesh. It must be estended by a specific mesh class. It stores all the information
+    This class represents a generic mesh. It must be extended by a specific mesh class. It stores all the information
     shared among the different kind of supported meshes.
     """
 
@@ -120,7 +120,7 @@ class AbstractMesh(Observer, Subject):
 
             UI (bool): Show or not show the graphic user interface of the viewer
             width (int): The width of the canvas
-            height (int): The height of thne canvas
+            height (int): The height of the canvas
 
         Return:
 
@@ -523,7 +523,7 @@ class AbstractMesh(Observer, Subject):
     @property
     def scale(self):
         """
-        Return the scale of the current mesh calculated as the distance between the minimun and maximum point of the bounding box.
+        Return the scale of the current mesh calculated as the distance between the minimum and maximum point of the bounding box.
         """
         return np.linalg.norm(self.__bounding_box[0]-self.__bounding_box[1])
 
