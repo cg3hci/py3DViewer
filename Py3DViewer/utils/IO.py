@@ -22,8 +22,10 @@ def read_mesh(filename):
     with open(filename) as f:
         reading_vertices = False
         tmp_vtx = []
-        tmp_simplices = []
-        tmp_labels = []
+        tmp_polygons = []
+        tmp_polyhedra = []
+        tmp_labels_polygons = []
+        tmp_labels_polyhedra = []
         num_vtx = 0
         num_simplices = 0
 
@@ -43,48 +45,52 @@ def read_mesh(filename):
 
         line = f.readline()
 
-        while "Tetrahedra" not in line and "Hexahedra" not in line and "Quadrilaterals" not in line and "Triangles" not in line and line != "":
-            line = f.readline()
+        while line != "":
+            while "Tetrahedra" not in line and "Hexahedra" not in line and "Quadrilaterals" not in line and "Triangles" not in line and line != "":
+                line = f.readline()
 
-        assert line != ""
+            if(line == ""):
+                continue
 
-        num_simplices = int(f.readline())
+            num_simplices = int(f.readline())
 
-        if "Tetrahedra" in line:
-            for i in range(num_simplices):
-                line = f.readline()
-                a, b, c, d = list(map(lambda x: int(x) - 1, line.split()[:-1]))
-                label = float(line.split()[-1])
-                tmp_simplices += [(a, b, c, d)]
-                tmp_labels += [label]
-        elif "Hexahedra" in line:
-            for i in range(num_simplices):
-                line = f.readline()
-                a, b, c, d, e, f_, g, h = list(map(lambda x: int(x) - 1, line.split()[:-1]))
-                label = float(line.split()[-1])
-                tmp_simplices += [(a, b, c, d, e, f_, g, h)]
-                tmp_labels += [label]
-        
-        elif "Quadrilaterals" in line:
-            for i in range(num_simplices):
-                line = f.readline()
-                a, b, c, d = list(map(lambda x: int(x) - 1, line.split()[:-1]))
-                label = float(line.split()[-1])
-                tmp_simplices += [(a, b, c, d)]
-                tmp_labels += [label]
-        
-        elif "Triangles" in line:
-            for i in range(num_simplices):
-                line = f.readline()
-                a, b, c, d = list(map(lambda x: int(x) - 1, line.split()[:-1]))
-                label = float(line.split()[-1])
-                tmp_simplices += [(a, b, c)]
-                tmp_labels += [label]
-        else:
-            assert False, "File is not valid."
+            if "Tetrahedra" in line:
+                for i in range(num_simplices):
+                    line = f.readline()
+                    a, b, c, d = list(map(lambda x: int(x) - 1, line.split()[:-1]))
+                    label = float(line.split()[-1])
+                    tmp_polyhedra += [(a, b, c, d)]
+                    tmp_labels_polyhedra += [label]
+            elif "Hexahedra" in line:
+                for i in range(num_simplices):
+                    line = f.readline()
+                    a, b, c, d, e, f_, g, h = list(map(lambda x: int(x) - 1, line.split()[:-1]))
+                    label = float(line.split()[-1])
+                    tmp_polyhedra += [(a, b, c, d, e, f_, g, h)]
+                    tmp_labels_polyhedra += [label]
+            
+            elif "Quadrilaterals" in line:
+                for i in range(num_simplices):
+                    line = f.readline()
+                    a, b, c, d = list(map(lambda x: int(x) - 1, line.split()[:-1]))
+                    label = float(line.split()[-1])
+                    tmp_polygons += [(a, b, c, d)]
+                    tmp_labels_polygons += [label]
+            
+            elif "Triangles" in line:
+                for i in range(num_simplices):
+                    line = f.readline()
+                    a, b, c = list(map(lambda x: int(x) - 1, line.split()[:-1]))
+                    label = float(line.split()[-1])
+                    tmp_polygons += [(a, b, c)]
+                    tmp_labels_polygons += [label]
+            else:
+                assert False, "File is not valid."
 
         tmp_vtx = np.array(tmp_vtx)
+        tmp_simplices = tmp_polyhedra if len(tmp_polyhedra) > 0 else tmp_polygons
         tmp_simplices = np.array(tmp_simplices)
+        tmp_labels = tmp_labels_polyhedra if len(tmp_labels_polyhedra) > 0 else tmp_labels_polygons
         tmp_labels = np.array(tmp_labels, dtype=np.int64)
 
         vtx = ObservableArray(tmp_vtx.shape)
