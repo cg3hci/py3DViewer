@@ -118,4 +118,4 @@ This project is licensed under the MIT License - see the [LICENSE.md](https://gi
 
 ## More Information
 
-For other information you can contact one of the main developers of the library: G. Cherchi (g.cherchi@unica.it) and L. Pitzalis (luca.pitzalis94@unica.it).
+For other information you can contact one of the main developers of the library: G. Cherchi (g.cherchi@unica.it) and L. Pitzalis (luca.pitzalis94@gmail.com).
